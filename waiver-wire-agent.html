@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Waiver Wire Agent Beta</title>
+  
+  <script>
+    try {
+      const savedTheme = localStorage.getItem("fantasyUiTheme") || localStorage.getItem("fantasyRankingsTheme");
+      if (savedTheme === "dark" || savedTheme === "light") {
+        document.documentElement.dataset.theme = savedTheme;
+        localStorage.setItem("fantasyUiTheme", savedTheme);
+      }
+    } catch (_) {}
+  </script>
+<style>
+    :root{
+      --taupe:#2E2823;
+      --mint:#DBFFD6;
+      --ivory:#FFFFED;
+      --sky:#84BAD7;
+      --gold:#D8A94A;
+      --panel-2:#39322B;
+      --muted:rgba(219,255,214,.78);
+      --line:rgba(132,186,215,.3);
+      --taupe-90:rgba(46,40,35,.9);
+      --panel-2-90:rgba(57,50,43,.9);
+      --ivory-90:rgba(255,255,237,.9);
+      --mint-90:rgba(219,255,214,.9);
+      --sky-90:rgba(132,186,215,.9);
+      --card-90:rgba(52,45,39,.9);
+      --shadow:0 18px 45px rgba(46,40,35,.25);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--taupe);background:var(--ivory-90)
+    }
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1400px,96vw);margin:0 auto;padding:28px 0 60px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:18px;
+      margin-bottom:18px;padding:18px 20px;background:var(--taupe-90);
+      border:1px solid rgba(132,186,215,.3);border-radius:18px;box-shadow:var(--shadow)
+    }
+    .brand{display:flex;align-items:center;gap:14px;min-width:0}
+    .brand-mark{
+      width:58px;height:58px;display:grid;place-items:center;flex:0 0 auto;
+      border-radius:14px;background:var(--mint-90);color:var(--taupe);
+      border:2px solid var(--sky);font-size:1.45rem;font-weight:1000
+    }
+    h1{margin:0;color:var(--mint);font-size:clamp(1.45rem,3vw,2.2rem);line-height:1.1}
+    .subtitle{margin:6px 0 0;color:var(--muted);max-width:780px}
+    .header-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+    .nav-button,.status-pill{
+      min-height:38px;display:inline-flex;align-items:center;justify-content:center;
+      padding:8px 12px;border-radius:999px;font-size:.82rem;font-weight:1000
+    }
+    .nav-button{
+      text-decoration:none;background:var(--sky-90);color:var(--taupe);
+      border:1px solid rgba(255,255,237,.48)
+    }
+    .status-pill{background:var(--panel-2-90);color:var(--mint);border:1px solid var(--line)}
+    .status-pill.ready{border-color:var(--mint)}
+    .status-pill.error{color:#E7A0A0;border-color:rgba(196,91,91,.65)}
+    .panel{
+      background:var(--taupe-90);color:var(--mint);border:1px solid rgba(132,186,215,.22);
+      border-radius:18px;box-shadow:var(--shadow)
+    }
+    .controls{padding:18px;margin-bottom:18px}
+    .control-grid{
+      display:grid;grid-template-columns:minmax(190px,1.3fr) repeat(3,minmax(120px,.72fr)) auto;
+      gap:12px;align-items:end
+    }
+    label{display:block;color:var(--muted);font-size:.76rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+    input,select{
+      width:100%;margin-top:7px;padding:11px 12px;border-radius:11px;
+      border:1px solid rgba(127,208,143,.42);background:var(--ivory-90);color:var(--taupe);outline:none
+    }
+    input:focus,select:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(132,186,215,.28)}
+    .primary,.secondary{
+      min-height:42px;padding:10px 15px;border-radius:11px;font-weight:1000
+    }
+    .primary{background:var(--mint-90);color:var(--taupe);border:1px solid rgba(46,40,35,.42);box-shadow:0 5px 14px rgba(0,0,0,.2)}
+    .secondary{background:var(--panel-2-90);color:var(--mint);border:1px solid rgba(127,208,143,.38)}
+    .primary:hover:not(:disabled),.nav-button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+    .primary:disabled,.secondary:disabled{opacity:.55;cursor:not-allowed}
+    .toolbar{margin-top:13px;padding-top:13px;border-top:1px solid var(--line);color:var(--muted);font-size:.84rem}
+    .model-card{
+      margin-bottom:18px;background:var(--sky-90);overflow:hidden;
+      border:2px solid var(--taupe);border-radius:18px;box-shadow:var(--shadow)
+    }
+    .model-card > summary{
+      display:flex;align-items:center;justify-content:space-between;gap:14px;
+      padding:14px 16px;cursor:pointer;list-style:none
+    }
+    .model-card > summary::-webkit-details-marker{display:none}
+    .model-summary-copy{display:flex;align-items:center;gap:12px;min-width:0}
+    .info-icon{
+      width:32px;height:32px;display:grid;place-items:center;flex:0 0 auto;
+      border-radius:50%;background:var(--taupe);color:var(--mint);border:2px solid var(--mint);
+      font-family:Georgia,serif;font-size:1rem;font-weight:1000
+    }
+    .model-summary-title{font-size:.96rem;font-weight:1000}
+    .model-summary-note{margin-top:2px;color:rgba(46,40,35,.72);font-size:.78rem}
+    .model-toggle{flex:0 0 auto;font-size:.72rem;font-weight:1000;text-transform:uppercase;letter-spacing:.05em}
+    .model-toggle::after{content:"View model"}
+    .model-card[open] .model-toggle::after{content:"Hide model"}
+    .model-body{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:12px;padding:0 16px 16px}
+    .weight-card{padding:12px;border-radius:12px;background:var(--ivory-90);border:1px solid rgba(46,40,35,.24)}
+    .weight-value{font-size:1.35rem;font-weight:1000}
+    .weight-label{margin-top:3px;font-size:.78rem;font-weight:900}
+    .weight-note{margin-top:3px;color:rgba(46,40,35,.68);font-size:.72rem}
+    .model-footnote{grid-column:1/-1;color:rgba(46,40,35,.72);font-size:.75rem;font-weight:750}
+    .loading-line{display:none;height:4px;overflow:hidden;border-radius:999px;background:var(--taupe-90);margin-bottom:16px}
+    .loading-line.show{display:block}
+    .loading-line::after{content:"";display:block;width:35%;height:100%;background:var(--sky-90);animation:load 1.1s linear infinite}
+    @keyframes load{from{transform:translateX(-110%)}to{transform:translateX(390%)}}
+    .error-box{display:none;margin-bottom:18px;padding:13px 15px;border-radius:12px;color:#7c2024;background:rgba(255,255,255,.9);border:1px solid rgba(166,61,64,.32)}
+    .error-box.show{display:block}
+    .metric-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+    .metric{padding:15px;background:var(--mint-90);border:2px solid var(--taupe);border-radius:16px;box-shadow:var(--shadow)}
+    .metric-label{font-size:.72rem;font-weight:1000;letter-spacing:.07em;text-transform:uppercase}
+    .metric-value{margin-top:5px;font-size:1.65rem;font-weight:1000}
+    .metric-note{margin-top:2px;font-size:.76rem;color:rgba(46,40,35,.7)}
+    .league-panel{display:none;padding:17px;margin-bottom:18px}
+    .league-panel.show{display:block}
+    .section-title{font-size:1.08rem;font-weight:1000}
+    .section-note{margin-top:3px;color:var(--muted);font-size:.82rem}
+    .league-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:13px}
+    .league-card{padding:12px;background:var(--ivory-90);color:var(--taupe);border:1px solid rgba(132,186,215,.5);border-radius:12px}
+    .league-name{font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .league-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .league-tag{padding:4px 7px;border-radius:999px;background:var(--sky-90);border:1px solid rgba(46,40,35,.22);font-size:.7rem;font-weight:900}
+    .results-panel{padding:18px}
+    .results-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px}
+    .result-filters{display:flex;gap:9px;align-items:end;flex-wrap:wrap}
+    .result-filters label{min-width:130px}
+    .result-filters .league-filter{min-width:220px}
+    .result-filters input{min-width:190px}
+    .results{display:grid;gap:11px}
+    .position-group{display:grid;gap:10px}
+    .position-group + .position-group{margin-top:10px}
+    .position-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px 7px;border-bottom:1px solid rgba(132,186,215,.3)}
+    .position-group-title{color:var(--mint);font-size:1rem;font-weight:1000;letter-spacing:.08em}
+    .position-group-count{color:var(--muted);font-size:.74rem;font-weight:900}
+    .position-list{display:grid;gap:10px}
+    .player-card{
+      display:grid;grid-template-columns:42px 62px minmax(190px,1fr) 118px;
+      gap:12px;align-items:center;padding:14px;background:var(--card-90);
+      border:1px solid rgba(132,186,215,.55);border-radius:16px
+    }
+    .rank{grid-column:1;grid-row:1;font-size:1.05rem;font-weight:1000;color:var(--sky);text-align:center}
+    .player-avatar{grid-column:2;grid-row:1;width:58px;height:58px;overflow:hidden;border-radius:50%;background:var(--panel-2-90);border:1px solid rgba(132,186,215,.55)}
+    .player-avatar img{width:100%;height:100%;display:block;object-fit:cover;object-position:center top}
+    .player-copy{grid-column:3;grid-row:1;min-width:0}
+    .player-name{font-size:1rem;font-weight:1000;color:var(--mint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .player-meta{margin-top:3px;color:var(--muted);font-size:.78rem}
+    .player-flags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+    .player-flag{padding:3px 6px;border-radius:999px;font-size:.62rem;font-weight:1000;letter-spacing:.03em;text-transform:uppercase;border:1px solid rgba(132,186,215,.28)}
+    .player-flag.good{background:var(--mint-90);color:var(--taupe)}
+    .player-flag.risk{background:rgba(231,160,160,.92);color:#552126}
+    .player-flag.context{background:var(--sky-90);color:var(--taupe)}
+    .injury{color:#E7A0A0}
+    .components{grid-column:3/-1;grid-row:2;display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:8px}
+    .component{padding:10px;border-radius:11px;color:var(--taupe);border:1px solid rgba(46,40,35,.35);box-shadow:0 4px 10px rgba(0,0,0,.12)}
+    .component.blue{background:var(--sky-90)}
+    .component.green{background:var(--mint-90)}
+    .component-head{display:flex;justify-content:space-between;gap:8px;font-size:.7rem;color:rgba(46,40,35,.75);font-weight:800}
+    .component strong{color:var(--taupe);font-size:.74rem}
+    .component-note{min-height:1.1em;margin-top:4px;color:rgba(46,40,35,.7);font-size:.64rem;font-weight:800}
+    .bar{height:6px;margin-top:8px;overflow:hidden;border-radius:999px;background:rgba(46,40,35,.18)}
+    .bar span{display:block;height:100%;background:var(--taupe);border-radius:inherit}
+    .component-footer{margin-top:5px;color:rgba(46,40,35,.68);font-size:.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .score{grid-column:4;grid-row:1;min-width:110px;padding:9px 8px;text-align:center;background:var(--mint-90);border:2px solid var(--sky);border-radius:12px}
+    .score-value{font-size:1.8rem;font-weight:1000;color:var(--taupe)}
+    .score-label{font-size:.64rem;color:rgba(46,40,35,.72);font-weight:1000;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+    .score-secondary{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(46,40,35,.2)}
+    .score-secondary span{font-size:.56rem;color:rgba(46,40,35,.72);font-weight:900;text-transform:uppercase}
+    .score-secondary strong{display:block;margin-top:1px;color:var(--taupe);font-size:.72rem}
+    .score-adjustment{margin-top:3px;color:#8B3035;font-size:.66rem;font-weight:1000}
+    .recent-games{grid-column:3/-1;grid-row:3;padding:9px;border:1px solid rgba(132,186,215,.42);border-radius:11px;background:rgba(46,40,35,.42)}
+    .recent-games-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--mint);font-size:.7rem;font-weight:1000;text-transform:uppercase;letter-spacing:.05em}
+    .recent-games-note{color:var(--sky);font-size:.6rem}
+    .recent-games-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+    .recent-game{padding:9px;background:var(--ivory-90);color:var(--taupe);border-radius:9px;border:1px solid rgba(132,186,215,.28)}
+    .recent-game.noisy{border-color:#B67937;box-shadow:inset 0 0 0 1px rgba(182,121,55,.22)}
+    .recent-game-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.68rem;font-weight:1000}
+    .recent-game-context{margin-top:2px;color:rgba(46,40,35,.64);font-size:.58rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .recent-stat-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+    .recent-stat{padding:3px 6px;border-radius:999px;background:var(--sky-90);border:1px solid rgba(46,40,35,.16);font-size:.62rem;font-weight:900;white-space:nowrap}
+    .recent-stat.green{background:var(--mint-90)}
+    .availability{grid-column:3/-1;grid-row:4;margin-top:1px;border:1px solid rgba(132,186,215,.42);border-radius:11px;background:rgba(46,40,35,.42);overflow:hidden}
+    .availability > summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;cursor:pointer;list-style:none;color:var(--mint);font-size:.72rem;font-weight:1000}
+    .availability > summary::-webkit-details-marker{display:none}
+    .availability-toggle{color:var(--sky);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em}
+    .availability-toggle::after{content:"Show leagues"}
+    .availability[open] .availability-toggle::after{content:"Hide leagues"}
+    .availability-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:6px;padding:0 8px 8px}
+    .availability-row{display:grid;grid-template-columns:minmax(160px,1fr) auto auto;align-items:center;gap:8px;padding:8px 9px;background:var(--ivory-90);color:var(--taupe);border-radius:9px}
+    .availability-league{min-width:0;font-size:.72rem;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .availability-meta{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .availability-pill{padding:3px 6px;border-radius:999px;background:var(--sky-90);border:1px solid rgba(46,40,35,.2);font-size:.62rem;font-weight:900;white-space:nowrap}
+    .taxi-badge{display:inline-flex;padding:3px 6px;border-radius:999px;background:var(--taupe);color:var(--mint);font-size:.6rem;font-weight:1000;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+    .empty{text-align:center;padding:42px 20px;color:var(--muted);border:1px dashed rgba(132,186,215,.4);border-radius:14px}
+    .footer-note{margin-top:14px;color:var(--muted);font-size:.74rem;text-align:center}
+    @media(max-width:1100px){
+      .control-grid{grid-template-columns:repeat(3,1fr)}
+      .model-body{grid-template-columns:repeat(2,1fr)}
+      .metric-grid{grid-template-columns:repeat(3,1fr)}
+      .player-card{grid-template-columns:38px 58px minmax(180px,1fr) 100px}
+    }
+    @media(max-width:760px){
+      .shell{width:min(94vw,680px);padding-top:18px}
+      .topbar{flex-direction:column;align-items:flex-start;padding:16px}
+      .header-actions{justify-content:flex-start}
+      .control-grid,.model-body,.metric-grid,.league-grid{grid-template-columns:1fr 1fr}
+      .results-head{align-items:flex-start;flex-direction:column}
+      .player-card{grid-template-columns:34px 52px minmax(0,1fr) 76px}
+      .components,.recent-games,.availability{grid-column:1/-1}
+      .components{grid-row:2}
+      .recent-games{grid-row:3}
+      .availability{grid-row:4}
+      .score{min-width:76px}
+      .availability-row{grid-template-columns:1fr}
+      .availability-meta{justify-content:flex-start}
+    }
+    @media(max-width:500px){
+      .control-grid,.model-body,.metric-grid,.league-grid{grid-template-columns:1fr}
+      .result-filters{width:100%}
+      .result-filters label{width:100%}
+      .player-card{grid-template-columns:30px 50px minmax(0,1fr)}
+      .score{grid-column:3;grid-row:2;width:max-content;min-width:110px;justify-self:start}
+      .components{grid-row:3}
+      .recent-games{grid-row:4}
+      .recent-games-grid{grid-template-columns:1fr}
+      .availability{grid-row:5}
+      .availability-list{grid-template-columns:1fr}
+      .model-summary-note{display:none}
+    }
+  
+    body{transition:background .2s ease,color .2s ease}
+    html[data-theme="dark"] body{background:#211C18;color:var(--ivory)}
+    html[data-theme="dark"] .topbar,html[data-theme="dark"] .panel,html[data-theme="dark"] .model-card{box-shadow:0 18px 45px rgba(0,0,0,.3)}
+    .nav-button.gold{background:rgba(216,169,74,.92);color:var(--taupe);border-color:rgba(255,255,237,.45)}
+    .theme-toggle{min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--panel-2-90);color:var(--mint);border:1px solid rgba(216,169,74,.48);font-size:.82rem;font-weight:1000;cursor:pointer}
+    .theme-toggle:hover{border-color:var(--gold);transform:translateY(-1px)}
+    .theme-toggle:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+    .theme-icon{font-size:.9rem}
+    .model-toggle{color:#6A4C12}
+    .info-icon{border-color:var(--gold);color:var(--gold)}
+
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">W</div>
+        <div>
+          <h1>Waiver Wire Agent Beta</h1>
+          <p class="subtitle">Rank available players across all of your Sleeper leagues and see exactly where each player is free.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="nav-button" href="./index.html">Owner Dashboard</a>
+        <a class="nav-button" href="./schedule-tool.html">Schedule Tool</a>
+        <a class="nav-button gold" href="./team-rankings.html">Team Rankings</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☾</span><span id="themeToggleLabel">Dark background</span></button>
+        <div class="status-pill" id="statusPill">Not loaded</div>
+      </div>
+    </header>
+
+    <section class="panel controls">
+      <div class="control-grid">
+        <label>Sleeper username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
+        <label>Season<input id="season" type="number" min="2018" max="2035" value="2026" /></label>
+        <label>Upcoming week<select id="week"></select></label>
+        <label>Per position
+          <select id="resultLimit">
+            <option value="5">Top 5</option>
+            <option value="10" selected>Top 10</option>
+            <option value="15">Top 15</option>
+            <option value="25">Top 25</option>
+          </select>
+        </label>
+        <button class="primary" id="analyzeBtn" type="button">Analyze Waiver Wire</button>
+      </div>
+      <div class="toolbar" id="loadNote">The analysis reads public Sleeper league data and does not submit waiver claims.</div>
+    </section>
+
+    <details class="model-card" aria-label="Scoring model">
+      <summary>
+        <div class="model-summary-copy">
+          <span class="info-icon" aria-hidden="true">i</span>
+          <div>
+            <div class="model-summary-title">How Add Priority, Role Confidence, and Upside work</div>
+            <div class="model-summary-note">Open this guide to understand the fixed benchmarks, context adjustments, and recent-game treatment.</div>
+          </div>
+        </div>
+        <span class="model-toggle" aria-hidden="true"></span>
+      </summary>
+      <div class="model-body">
+        <div class="weight-card"><div class="weight-value">30%</div><div class="weight-label">Upcoming projection</div><div class="weight-note">League-adjusted next-game points</div></div>
+        <div class="weight-card"><div class="weight-value">30%</div><div class="weight-label">Opportunity</div><div class="weight-note">Targets, carries and red-zone work</div></div>
+        <div class="weight-card"><div class="weight-value">20%</div><div class="weight-label">Role confidence</div><div class="weight-note">Depth chart, stability, continuity and sample</div></div>
+        <div class="weight-card"><div class="weight-value">10%</div><div class="weight-label">Non-TD production</div><div class="weight-note">Recent points after removing touchdowns</div></div>
+        <div class="weight-card"><div class="weight-value">10%</div><div class="weight-label">Team environment</div><div class="weight-note">Projected strength of the current offense</div></div>
+        <div class="model-footnote">Add Priority uses fixed positional benchmarks, so it no longer changes merely because a different group of waiver players is available. Role Confidence measures whether the workload is likely to continue; Upside measures projection, latest opportunity, trend, and offensive environment. Players without a positive next-game projection are excluded. A QB listed behind an available starter is also excluded, even when Sleeper supplies a token backup projection; a replacement QB remains eligible when the starter is unavailable. The model uses the last three appearances from a six-week lookback, skips DNPs and byes, reduces Week 18 weight, and discounts old-team usage after a team change. Low-volume touchdowns, isolated long plays, and temporary role spikes remain reliability deductions. QB points use each league's passing-TD, interception, rushing, and fumble settings.</div>
+      </div>
+    </details>
+
+    <div class="loading-line" id="loadingLine"></div>
+    <div class="error-box" id="errorBox"></div>
+
+    <section class="metric-grid">
+      <div class="metric"><div class="metric-label">Leagues checked</div><div class="metric-value" id="leagueMetric">0</div><div class="metric-note">with your roster</div></div>
+      <div class="metric"><div class="metric-label">Players ranked</div><div class="metric-value" id="playerMetric">0</div><div class="metric-note">available somewhere</div></div>
+      <div class="metric"><div class="metric-label">Upcoming week</div><div class="metric-value" id="weekMetric">—</div><div class="metric-note">projection window</div></div>
+      <div class="metric"><div class="metric-label">Historical games</div><div class="metric-value" id="previousMetric">3</div><div class="metric-note">last three appearances</div></div>
+      <div class="metric"><div class="metric-label">Score scale</div><div class="metric-value">0–100</div><div class="metric-note">fixed positional benchmarks</div></div>
+    </section>
+
+    <section class="panel league-panel" id="leaguePanel">
+      <div class="section-title">Your waiver position by league</div>
+      <div class="section-note">Waiver positions appear on each player. Dynasty leagues also show their taxi rules.</div>
+      <div class="league-grid" id="leagueGrid"></div>
+    </section>
+
+    <section class="panel results-panel">
+      <div class="results-head">
+        <div>
+          <div class="section-title">Recommended available players</div>
+          <div class="section-note" id="resultsNote">Run the analysis to rank your waiver options.</div>
+        </div>
+        <div class="result-filters">
+          <label class="league-filter">League
+            <select id="leagueFilter" disabled>
+              <option value="all">All leagues</option>
+            </select>
+          </label>
+          <label>Position
+            <select id="positionFilter">
+              <option value="all">All positions</option>
+              <option value="QB">QB</option>
+              <option value="RB">RB</option>
+              <option value="WR">WR</option>
+              <option value="TE">TE</option>
+              <option value="FLEX">FLEX (RB/WR/TE)</option>
+              <option value="K">K</option>
+              <option value="DEF">DEF</option>
+            </select>
+          </label>
+          <label>Sort by
+            <select id="sortFilter">
+              <option value="model" selected>Model score</option>
+              <option value="previous">Previous game points</option>
+              <option value="projection">Projected points</option>
+            </select>
+          </label>
+          <label>Find player<input id="playerSearch" placeholder="Search name or team" /></label>
+        </div>
+      </div>
+      <div class="results" id="results"><div class="empty">Enter your Sleeper username and select <strong>Analyze Waiver Wire</strong>.</div></div>
+      <div class="footer-note">Player, league, roster, waiver-position, projection, and game data provided by Sleeper.</div>
+    </section>
+  </main>
+
+  <script>
+    const SLEEPER_API = "https://api.sleeper.app/v1";
+    const SLEEPER_DATA_API = "https://api.sleeper.com";
+    const els = Object.fromEntries([...document.querySelectorAll("[id]")].map(el => [el.id, el]));
+    const POSITION_ORDER = ["QB", "RB", "WR", "TE", "K", "DEF"];
+    const FLEX_POSITIONS = new Set(["RB", "WR", "TE"]);
+    const state = { candidates: [], leagues: [], projectionWeek: null, loadedSeason: null, historySamples: [] };
+    const RECENT_GAME_WEIGHTS = [0.50, 0.30, 0.20];
+
+    for (let week = 1; week <= 18; week += 1) {
+      const option = document.createElement("option");
+      option.value = String(week);
+      option.textContent = `Week ${week}`;
+      els.week.appendChild(option);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    async function fetchJson(url, label) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`${label} failed (${response.status}).`);
+      return response.json();
+    }
+
+    async function optionalArray(url, label, warnings) {
+      try {
+        const result = await fetchJson(url, label);
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        warnings.push(`${label} was unavailable`);
+        return [];
+      }
+    }
+
+    function setLoading(loading, message = "") {
+      els.loadingLine.classList.toggle("show", loading);
+      els.analyzeBtn.disabled = loading;
+      els.statusPill.textContent = loading ? (message || "Analyzing…") : "Ready";
+      els.statusPill.className = `status-pill ${loading ? "" : "ready"}`;
+    }
+
+    function showError(error) {
+      els.errorBox.textContent = error instanceof Error ? error.message : String(error);
+      els.errorBox.classList.add("show");
+      els.statusPill.textContent = "Error";
+      els.statusPill.className = "status-pill error";
+    }
+
+    function clearError() {
+      els.errorBox.textContent = "";
+      els.errorBox.classList.remove("show");
+    }
+
+    function findOwnedRoster(rosters, userId) {
+      return (rosters || []).find(roster => {
+        const coOwners = Array.isArray(roster.co_owners) ? roster.co_owners.map(String) : [];
+        return String(roster.owner_id) === String(userId) || coOwners.includes(String(userId));
+      });
+    }
+
+    function scoringKey(league) {
+      const receptionPoints = Number(league.scoring_settings?.rec || 0);
+      if (receptionPoints >= 0.75) return "pts_ppr";
+      if (receptionPoints >= 0.25) return "pts_half_ppr";
+      return "pts_std";
+    }
+
+    function average(values) {
+      const valid = values.filter(Number.isFinite);
+      return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : 0;
+    }
+
+    function quarterbackPointsForLeague(record, league) {
+      const stats = record?.stats || {};
+      const settings = league.scoringSettings || {};
+      const supportedPrefixes = ["pass_", "rush_", "rec_", "fum", "bonus_pass_", "bonus_rush_", "bonus_rec_"];
+      let points = 0;
+      let matched = false;
+      for (const [key, scoringAmount] of Object.entries(settings)) {
+        if (!supportedPrefixes.some(prefix => key.startsWith(prefix))) continue;
+        const statAmount = Number(stats[key]);
+        const pointValue = Number(scoringAmount);
+        if (!Number.isFinite(statAmount) || !Number.isFinite(pointValue)) continue;
+        points += statAmount * pointValue;
+        matched = true;
+      }
+      return matched ? points : Number(stats.pts_ppr ?? stats.pts_half_ppr ?? stats.pts_std ?? 0);
+    }
+
+    function pointsForLeagues(record, leagues, position = "") {
+      const stats = record?.stats || {};
+      return average(leagues.map(league => {
+        if (position === "QB") return quarterbackPointsForLeague(record, league);
+        const preferred = Number(stats[league.scoringKey]);
+        const fallback = Number(stats.pts_ppr ?? stats.pts_half_ppr ?? stats.pts_std ?? 0);
+        return Number.isFinite(preferred) ? preferred : fallback;
+      }));
+    }
+
+    function statNumber(stats, key) {
+      const value = Number(stats?.[key]);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function clamp(value, minimum = 0, maximum = 1) {
+      return Math.max(minimum, Math.min(maximum, value));
+    }
+
+    function scoringValue(league, key, fallback) {
+      const value = Number(league.scoringSettings?.[key]);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function playerAppeared(record) {
+      const stats = record?.stats;
+      if (!stats) return false;
+      if (statNumber(stats, "gp") > 0) return true;
+      return [
+        "off_snp", "def_snp", "st_snp", "pass_att", "rush_att", "rec_tgt",
+        "rec", "fgm", "fga", "xpm", "xpa"
+      ].some(key => statNumber(stats, key) > 0);
+    }
+
+    function gameMetrics(record, league, sample = null, currentTeam = "", position = "", teamRecord = null) {
+      const stats = record?.stats || {};
+      const teamStats = teamRecord?.stats || {};
+      const targets = statNumber(stats, "rec_tgt");
+      const receptions = statNumber(stats, "rec");
+      const rushAttempts = statNumber(stats, "rush_att");
+      const passAttempts = statNumber(stats, "pass_att");
+      const passCompletions = statNumber(stats, "pass_cmp");
+      const passingYards = statNumber(stats, "pass_yd");
+      const passingTouchdowns = statNumber(stats, "pass_td");
+      const interceptions = statNumber(stats, "pass_int");
+      const redZoneTargets = statNumber(stats, "rec_rz_tgt");
+      const redZoneRushes = statNumber(stats, "rush_rz_att");
+      const airYards = Math.max(0, statNumber(stats, "rec_air_yd"));
+      const offensiveSnaps = statNumber(stats, "off_snp");
+      const teamOffensiveSnaps = statNumber(stats, "tm_off_snp");
+      const snapShare = teamOffensiveSnaps > 0 ? clamp(offensiveSnaps / teamOffensiveSnaps) : 0;
+      const receivingYards = statNumber(stats, "rec_yd");
+      const rushingYards = statNumber(stats, "rush_yd");
+      const scrimmageYards = Math.max(0, receivingYards + rushingYards);
+      const longestPlay = Math.max(0, statNumber(stats, "rec_lng"), statNumber(stats, "rush_lng"));
+      const longPlayShare = scrimmageYards > 0 ? clamp(longestPlay / scrimmageYards) : 0;
+      const receivingTouchdowns = statNumber(stats, "rec_td");
+      const rushingTouchdowns = statNumber(stats, "rush_td");
+      const touchdownPoints =
+        receivingTouchdowns * scoringValue(league, "rec_td", 6) +
+        rushingTouchdowns * scoringValue(league, "rush_td", 6);
+      const totalPoints = pointsForLeagues(record, [league], position);
+      const historicalTeam = String(record?.team || "").toUpperCase();
+      const historicalOpponent = String(record?.opponent || "").toUpperCase();
+      const normalizedCurrentTeam = String(currentTeam || "").toUpperCase();
+      const sameTeam = !historicalTeam || !normalizedCurrentTeam || historicalTeam === normalizedCurrentTeam;
+      const week = Number(sample?.week);
+      const teamTargets = statNumber(teamStats, "rec_tgt") || statNumber(teamStats, "pass_att");
+      const teamRushAttempts = statNumber(teamStats, "rush_att");
+      const teamAirYards = Math.max(0, statNumber(teamStats, "rec_air_yd"));
+      const teamRedZoneOpportunities = statNumber(teamStats, "rec_rz_tgt") + statNumber(teamStats, "rush_rz_att");
+
+      return {
+        played: playerAppeared(record),
+        label: sample?.label || "—",
+        week: Number.isFinite(week) ? week : null,
+        season: Number(sample?.season) || null,
+        historicalTeam,
+        historicalOpponent,
+        sameTeam,
+        contextFactor: week === 18 ? 0.35 : 1,
+        totalPoints,
+        nonTdPoints: totalPoints - touchdownPoints,
+        touchdownPoints,
+        targets,
+        receptions,
+        rushAttempts,
+        passAttempts,
+        passCompletions,
+        passingYards,
+        passingTouchdowns,
+        interceptions,
+        receivingYards,
+        rushingYards,
+        receivingTouchdowns,
+        rushingTouchdowns,
+        touchdowns: receivingTouchdowns + rushingTouchdowns,
+        redZoneTargets,
+        redZoneRushes,
+        redZoneOpportunities: redZoneTargets + redZoneRushes,
+        targetShare: teamTargets > 0 ? clamp(targets / teamTargets) : null,
+        rushShare: teamRushAttempts > 0 ? clamp(rushAttempts / teamRushAttempts) : null,
+        airYardShare: teamAirYards > 0 ? clamp(airYards / teamAirYards) : null,
+        redZoneShare: teamRedZoneOpportunities > 0
+          ? clamp((redZoneTargets + redZoneRushes) / teamRedZoneOpportunities)
+          : null,
+        airYards,
+        snapShare,
+        opportunities: targets + rushAttempts,
+        longPlayShare
+      };
+    }
+
+    function averageGameMetrics(metrics) {
+      const keys = [
+        "totalPoints", "nonTdPoints", "touchdownPoints", "targets", "receptions", "rushAttempts",
+        "passAttempts", "passCompletions", "passingYards", "passingTouchdowns", "interceptions",
+        "receivingYards", "rushingYards", "receivingTouchdowns", "rushingTouchdowns", "touchdowns",
+        "redZoneTargets", "redZoneRushes", "redZoneOpportunities",
+        "targetShare", "rushShare", "airYardShare", "redZoneShare",
+        "airYards", "snapShare", "opportunities", "longPlayShare"
+      ];
+      return {
+        played: metrics.some(metric => metric.played),
+        label: metrics.find(metric => metric.label && metric.label !== "—")?.label || "—",
+        week: metrics.find(metric => Number.isFinite(metric.week))?.week ?? null,
+        season: metrics.find(metric => Number.isFinite(metric.season))?.season ?? null,
+        historicalTeam: metrics.find(metric => metric.historicalTeam)?.historicalTeam || "",
+        historicalOpponent: metrics.find(metric => metric.historicalOpponent)?.historicalOpponent || "",
+        sameTeam: metrics.every(metric => metric.sameTeam !== false),
+        contextFactor: average(metrics.map(metric => metric.contextFactor)),
+        ...Object.fromEntries(keys.map(key => [key, average(metrics.map(metric => metric[key]))]))
+      };
+    }
+
+    function recentMetrics(candidate) {
+      return [candidate.previousMetrics, candidate.twoAgoMetrics, candidate.threeAgoMetrics];
+    }
+
+    function weightedRecentValue(candidate, selector, weights = RECENT_GAME_WEIGHTS) {
+      const entries = recentMetrics(candidate)
+        .map((metrics, index) => ({ metrics, weight: weights[index] * (metrics.contextFactor || 1) }))
+        .filter(entry => entry.metrics.played);
+      const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0);
+      if (!totalWeight) return 0;
+      return entries.reduce((sum, entry) => sum + selector(entry.metrics) * entry.weight, 0) / totalWeight;
+    }
+
+    function percentile(value, positiveValues) {
+      if (!(value > 0) || !positiveValues.length) return 0;
+      if (positiveValues.length === 1) return 100;
+      let below = 0;
+      let equal = 0;
+      for (const item of positiveValues) {
+        if (item < value) below += 1;
+        else if (item === value) equal += 1;
+      }
+      const midpointRank = below + Math.max(0, equal - 1) / 2;
+      return 100 * midpointRank / (positiveValues.length - 1);
+    }
+
+    function benchmarkScore(value, floor, ceiling) {
+      if (!(ceiling > floor)) return 0;
+      return clamp((Number(value || 0) - floor) / (ceiling - floor)) * 100;
+    }
+
+    function weightedComponentScore(components) {
+      const available = components.filter(component => component.available !== false && Number.isFinite(component.score));
+      const totalWeight = available.reduce((sum, component) => sum + component.weight, 0);
+      if (!totalWeight) return 0;
+      return available.reduce((sum, component) => sum + component.score * component.weight, 0) / totalWeight;
+    }
+
+    function projectionBenchmark(candidate) {
+      const ranges = {
+        QB: [8, 28], RB: [2, 20], WR: [2, 20], TE: [1, 15], K: [4, 12], DEF: [4, 12]
+      };
+      const [floor, ceiling] = ranges[candidate.position] || [2, 20];
+      return benchmarkScore(candidate.projectionPoints, floor, ceiling);
+    }
+
+    function gameOpportunityScore(candidate, metrics) {
+      if (!metrics?.played) return 0;
+      if (candidate.position === "RB") {
+        return weightedComponentScore([
+          { score: benchmarkScore(metrics.rushShare > 0 ? metrics.rushShare : metrics.rushAttempts, 0, metrics.rushShare > 0 ? 0.65 : 20), weight: 0.45 },
+          { score: benchmarkScore(metrics.targetShare > 0 ? metrics.targetShare : metrics.targets, 0, metrics.targetShare > 0 ? 0.22 : 7), weight: 0.35 },
+          { score: benchmarkScore(metrics.redZoneShare > 0 ? metrics.redZoneShare : metrics.redZoneOpportunities, 0, metrics.redZoneShare > 0 ? 0.60 : 6), weight: 0.20 }
+        ]);
+      }
+      if (candidate.position === "WR" || candidate.position === "TE") {
+        const targetCeiling = candidate.position === "TE" ? 0.25 : 0.30;
+        const rawTargetCeiling = candidate.position === "TE" ? 9 : 11;
+        const airCeiling = candidate.position === "TE" ? 0.25 : 0.40;
+        const rawAirCeiling = candidate.position === "TE" ? 90 : 140;
+        return weightedComponentScore([
+          { score: benchmarkScore(metrics.targetShare > 0 ? metrics.targetShare : metrics.targets, 0, metrics.targetShare > 0 ? targetCeiling : rawTargetCeiling), weight: 0.50 },
+          { score: benchmarkScore(metrics.airYardShare > 0 ? metrics.airYardShare : metrics.airYards, 0, metrics.airYardShare > 0 ? airCeiling : rawAirCeiling), weight: 0.30 },
+          { score: benchmarkScore(metrics.snapShare, 0.25, 0.85), weight: 0.20, available: metrics.snapShare > 0 }
+        ]);
+      }
+      return benchmarkScore(metrics.totalPoints, 0, candidate.position === "QB" ? 30 : 15);
+    }
+
+    function decisionOpportunityGames(candidate) {
+      const played = recentMetrics(candidate).filter(metrics => metrics.played);
+      const nonWeek18 = played.filter(metrics => metrics.week !== 18);
+      return nonWeek18.length >= 2 ? nonWeek18 : played;
+    }
+
+    function applyDecisionScores(candidate) {
+      candidate.projectionScore = projectionBenchmark(candidate);
+      const decisionGames = decisionOpportunityGames(candidate);
+      const opportunityGames = decisionGames.map(metrics => gameOpportunityScore(candidate, metrics));
+      const rawOpportunityScore = weightedRecentValue(candidate, metrics => gameOpportunityScore(candidate, metrics));
+      candidate.opportunityScore = rawOpportunityScore * (1 - candidate.oldTeamShare * 0.45);
+
+      const sampleScore = ({ 0: 0, 1: 35, 2: 70, 3: 100 })[Math.min(3, decisionGames.length)] || 0;
+      const opportunityMean = average(opportunityGames);
+      const opportunityDeviation = opportunityGames.length > 1
+        ? Math.sqrt(average(opportunityGames.map(value => (value - opportunityMean) ** 2)))
+        : opportunityMean;
+      const consistencyScore = opportunityGames.length > 1
+        ? clamp(1 - opportunityDeviation / Math.max(25, opportunityMean), 0, 1) * 100
+        : 25;
+      let depthScore = 60;
+      if (candidate.position === "QB") {
+        depthScore = candidate.starterUnavailable ? 95 : candidate.depthChartOrder === 1 ? 100 : candidate.depthChartOrder > 1 ? 0 : 55;
+      } else if (candidate.isSkillPosition) {
+        depthScore = candidate.starterUnavailable
+          ? 95
+          : candidate.depthChartOrder === 1
+            ? 100
+            : candidate.depthChartOrder === 2
+              ? 72
+              : candidate.depthChartOrder >= 3
+                ? 38
+                : 60;
+      }
+      const teamContinuityScore = (1 - candidate.oldTeamShare) * 100;
+      const recencyScore = clamp(1 - candidate.recentMissedWeeks * 0.25, 0, 1) * 100;
+      candidate.roleConfidence = clamp(
+        consistencyScore * 0.30 + depthScore * 0.25 + sampleScore * 0.20 +
+        teamContinuityScore * 0.15 + recencyScore * 0.10,
+        0,
+        100
+      );
+
+      const newestOpportunity = opportunityGames[0] || 0;
+      const priorOpportunity = opportunityGames[1] ?? newestOpportunity;
+      candidate.trendScore = clamp(50 + (newestOpportunity - priorOpportunity) * 1.25, 0, 100);
+      candidate.environmentScore = clamp(candidate.teamEnvironmentScore || 0, 0, 100);
+      candidate.nonTdScore = benchmarkScore(
+        candidate.weightedNonTdPoints,
+        0,
+        candidate.position === "TE" ? 12 : candidate.position === "QB" ? 24 : 15
+      ) * (1 - candidate.oldTeamShare * 0.35);
+      candidate.upsideScore = clamp(
+        candidate.projectionScore * 0.35 + newestOpportunity * 0.30 +
+        candidate.trendScore * 0.20 + candidate.environmentScore * 0.15,
+        0,
+        100
+      );
+
+      if (candidate.isSkillPosition) {
+        candidate.addPriority = candidate.projectionScore * 0.30 +
+          candidate.opportunityScore * 0.30 + candidate.roleConfidence * 0.20 +
+          candidate.nonTdScore * 0.10 + candidate.environmentScore * 0.10 -
+          Math.min(16, candidate.penaltyTotal || 0);
+      } else if (candidate.position === "QB") {
+        const recentPointScore = benchmarkScore(weightedRecentValue(candidate, metrics => metrics.totalPoints), 0, 30);
+        candidate.addPriority = candidate.projectionScore * 0.40 + recentPointScore * 0.20 +
+          candidate.roleConfidence * 0.20 + candidate.upsideScore * 0.10 +
+          candidate.environmentScore * 0.10;
+      } else {
+        const recentPointScore = benchmarkScore(weightedRecentValue(candidate, metrics => metrics.totalPoints), 0, 15);
+        candidate.addPriority = candidate.projectionScore * 0.50 + recentPointScore * 0.30 +
+          candidate.environmentScore * 0.20;
+        candidate.roleConfidence = candidate.projectionPoints > 0 ? 80 : 0;
+        candidate.upsideScore = candidate.projectionScore;
+      }
+
+      if (candidate.nonStartingQuarterback) candidate.addPriority = Math.min(candidate.addPriority, 20);
+      candidate.score = clamp(candidate.addPriority, 0, 100);
+      candidate.projectionPercentile = candidate.projectionScore;
+      candidate.opportunityPercentile = candidate.opportunityScore;
+      candidate.consistencyPercentile = candidate.roleConfidence;
+      candidate.trendPercentile = candidate.trendScore;
+      candidate.nonTdPercentile = candidate.nonTdScore;
+      candidate.consistencyGameCount = decisionGames.length;
+      candidate.strongOpportunityGames = opportunityGames.filter(score => score >= 60).length;
+
+      const legacyOpportunityFlags = new Set(["High usage", "Established role", "Two-game breakout", "Rising opportunity"]);
+      candidate.flags = candidate.flags.filter(flag => !legacyOpportunityFlags.has(flag.label));
+      if (candidate.opportunityScore >= 80) candidate.flags.push({ label: "High usage", tone: "good" });
+      if (candidate.roleConfidence >= 75 && decisionGames.length >= 3) candidate.flags.push({ label: "Established role", tone: "good" });
+      if (candidate.trendScore >= 72 && decisionGames.length >= 2) candidate.flags.push({ label: "Role trending up", tone: "context" });
+    }
+
+    function scoreCandidates(candidates) {
+      const metricKeys = [
+        "totalPoints", "nonTdPoints", "targets", "rushAttempts", "passAttempts",
+        "redZoneTargets", "redZoneOpportunities", "airYards", "snapShare"
+      ];
+      const distributions = {};
+      for (const position of POSITION_ORDER) {
+        const peers = candidates.filter(candidate => candidate.position === position);
+        distributions[position] = {
+          projectionPoints: peers.map(candidate => candidate.projectionPoints).filter(value => value > 0).sort((a, b) => a - b),
+          previous: Object.fromEntries(metricKeys.map(key => [
+            key,
+            peers.map(candidate => candidate.previousMetrics[key]).filter(value => value > 0).sort((a, b) => a - b)
+          ])),
+          twoAgo: Object.fromEntries(metricKeys.map(key => [
+            key,
+            peers.map(candidate => candidate.twoAgoMetrics[key]).filter(value => value > 0).sort((a, b) => a - b)
+          ])),
+          threeAgo: Object.fromEntries(metricKeys.map(key => [
+            key,
+            peers.map(candidate => candidate.threeAgoMetrics[key]).filter(value => value > 0).sort((a, b) => a - b)
+          ]))
+        };
+      }
+
+      function opportunityPercentile(candidate, period) {
+        const metrics = period === "previous"
+          ? candidate.previousMetrics
+          : period === "twoAgo"
+            ? candidate.twoAgoMetrics
+            : candidate.threeAgoMetrics;
+        const positionDistributions = distributions[candidate.position][period];
+        const rank = key => percentile(metrics[key], positionDistributions[key]);
+        if (candidate.position === "RB") {
+          return rank("rushAttempts") * 0.40 + rank("targets") * 0.40 +
+            rank("redZoneOpportunities") * 0.20;
+        }
+        return rank("targets") * 0.45 + rank("snapShare") * 0.25 +
+          rank("airYards") * 0.20 + rank("redZoneTargets") * 0.10;
+      }
+
+      for (const candidate of candidates) {
+        const positionDistributions = distributions[candidate.position];
+        candidate.projectionPercentile = percentile(candidate.projectionPoints, positionDistributions.projectionPoints);
+        candidate.previousPercentile = percentile(candidate.previousMetrics.totalPoints, positionDistributions.previous.totalPoints);
+        candidate.twoAgoPercentile = percentile(candidate.twoAgoMetrics.totalPoints, positionDistributions.twoAgo.totalPoints);
+        candidate.threeAgoPercentile = percentile(candidate.threeAgoMetrics.totalPoints, positionDistributions.threeAgo.totalPoints);
+        candidate.isSkillPosition = FLEX_POSITIONS.has(candidate.position);
+        candidate.flags = [];
+        candidate.historicalGameCount = recentMetrics(candidate).filter(metrics => metrics.played).length;
+        candidate.oldTeamShare = weightedRecentValue(candidate, metrics => metrics.sameTeam ? 0 : 1);
+        candidate.hasWeek18Sample = recentMetrics(candidate).some(metrics => metrics.played && metrics.week === 18);
+
+        if (!candidate.isSkillPosition) {
+          const historicalPercentile = weightedRecentValue(
+            candidate,
+            metrics => metrics === candidate.previousMetrics
+              ? candidate.previousPercentile
+              : metrics === candidate.twoAgoMetrics
+                ? candidate.twoAgoPercentile
+                : candidate.threeAgoPercentile,
+            [0.30, 0.20, 0.10]
+          );
+          const projectionWeight = 0.40 + candidate.oldTeamShare * 0.30;
+          const historicalWeight = 0.60 - candidate.oldTeamShare * 0.40;
+          if (candidate.projectionPoints > 0 && candidate.historicalGameCount > 0) {
+            candidate.score = candidate.projectionPercentile * projectionWeight +
+              historicalPercentile * historicalWeight;
+          } else {
+            const availableWeight = (candidate.projectionPoints > 0 ? projectionWeight : 0) +
+              (candidate.historicalGameCount > 0 ? historicalWeight : 0);
+            candidate.score = availableWeight > 0
+              ? (candidate.projectionPercentile * (candidate.projectionPoints > 0 ? projectionWeight : 0) +
+                historicalPercentile * (candidate.historicalGameCount > 0 ? historicalWeight : 0)) / availableWeight
+              : 0;
+          }
+          candidate.nonStartingQuarterback = candidate.position === "QB" &&
+            candidate.depthChartOrder > 1 && !candidate.starterUnavailable;
+          if (candidate.nonStartingQuarterback) {
+            candidate.score = Math.min(candidate.score, 35);
+            candidate.flags.push({ label: "Backup QB", tone: "risk" });
+          } else if (candidate.position === "QB" && candidate.depthChartOrder > 1 && candidate.starterUnavailable) {
+            candidate.flags.push({ label: "Starter out · QB role", tone: "context" });
+          }
+          if (candidate.oldTeamShare > 0) candidate.flags.push({ label: "New team · old role discounted", tone: "context" });
+          if (candidate.recentMissedWeeks > 0 && candidate.historicalGameCount > 0) candidate.flags.push({ label: "DNP/bye excluded", tone: "context" });
+          applyDecisionScores(candidate);
+          continue;
+        }
+
+        candidate.previousOpportunityPercentile = opportunityPercentile(candidate, "previous");
+        candidate.twoAgoOpportunityPercentile = opportunityPercentile(candidate, "twoAgo");
+        candidate.threeAgoOpportunityPercentile = opportunityPercentile(candidate, "threeAgo");
+        const preWeek18Opportunity = [
+          candidate.twoAgoMetrics.played ? candidate.twoAgoOpportunityPercentile : null,
+          candidate.threeAgoMetrics.played ? candidate.threeAgoOpportunityPercentile : null
+        ].filter(Number.isFinite);
+        candidate.week18RoleVolatility = candidate.previousMetrics.week === 18 && preWeek18Opportunity.length > 0 &&
+          Math.abs(candidate.previousOpportunityPercentile - average(preWeek18Opportunity)) >= 25;
+        const opportunityEntries = [
+          candidate.previousOpportunityPercentile,
+          candidate.twoAgoOpportunityPercentile,
+          candidate.threeAgoOpportunityPercentile
+        ].map((value, index) => ({ value, metrics: recentMetrics(candidate)[index] }))
+          .filter(entry => entry.metrics.played);
+        const nonWeek18Entries = opportunityEntries.filter(entry => entry.metrics.week !== 18);
+        const decisionEntries = nonWeek18Entries.length >= 2 ? nonWeek18Entries : opportunityEntries;
+        const opportunityByGame = decisionEntries.map(entry => entry.value);
+        candidate.decisionOpportunityPercentiles = opportunityByGame;
+        candidate.consistencyGameCount = opportunityByGame.length;
+        candidate.decisionMetrics = decisionEntries.map(entry => entry.metrics);
+        candidate.opportunityPercentile = weightedRecentValue(candidate, metrics =>
+          metrics === candidate.previousMetrics
+            ? candidate.previousOpportunityPercentile
+            : metrics === candidate.twoAgoMetrics
+              ? candidate.twoAgoOpportunityPercentile
+              : candidate.threeAgoOpportunityPercentile
+        );
+        if (opportunityByGame.length >= 3) {
+          const twoGameFloor = Math.min(opportunityByGame[0], opportunityByGame[1]);
+          const threeGameFloor = Math.min(...opportunityByGame.slice(0, 3));
+          candidate.consistencyRaw = twoGameFloor * 0.60 + threeGameFloor * 0.40;
+          candidate.trendRaw = Math.max(0,
+            (opportunityByGame[0] - opportunityByGame[1]) * 0.60 +
+            (opportunityByGame[1] - opportunityByGame[2]) * 0.40
+          );
+        } else if (opportunityByGame.length === 2) {
+          candidate.consistencyRaw = Math.min(...opportunityByGame) * 0.75;
+          candidate.trendRaw = Math.max(0, opportunityByGame[0] - opportunityByGame[1]) * 0.75;
+        } else {
+          candidate.consistencyRaw = 0;
+          candidate.trendRaw = 0;
+        }
+        const previousNonTdPercentile = percentile(
+          candidate.previousMetrics.nonTdPoints,
+          positionDistributions.previous.nonTdPoints
+        );
+        const twoAgoNonTdPercentile = percentile(
+          candidate.twoAgoMetrics.nonTdPoints,
+          positionDistributions.twoAgo.nonTdPoints
+        );
+        const threeAgoNonTdPercentile = percentile(
+          candidate.threeAgoMetrics.nonTdPoints,
+          positionDistributions.threeAgo.nonTdPoints
+        );
+        candidate.nonTdPercentile = weightedRecentValue(candidate, metrics =>
+          metrics === candidate.previousMetrics
+            ? previousNonTdPercentile
+            : metrics === candidate.twoAgoMetrics
+              ? twoAgoNonTdPercentile
+              : threeAgoNonTdPercentile
+        );
+        candidate.weightedOpportunities = weightedRecentValue(candidate, metrics => metrics.opportunities);
+        candidate.weightedTargets = weightedRecentValue(candidate, metrics => metrics.targets);
+        candidate.weightedNonTdPoints = weightedRecentValue(candidate, metrics => metrics.nonTdPoints);
+        candidate.weightedSnapShare = weightedRecentValue(candidate, metrics => metrics.snapShare);
+        candidate.weightedLongPlayShare = weightedRecentValue(candidate, metrics => metrics.longPlayShare);
+        const weightedTotalPoints = weightedRecentValue(candidate, metrics => metrics.totalPoints);
+        const weightedTouchdownPoints = weightedRecentValue(candidate, metrics => metrics.touchdownPoints);
+        candidate.touchdownDependency = weightedTouchdownPoints / Math.max(1, weightedTotalPoints);
+        candidate.strongOpportunityGames = opportunityByGame.filter(value => value >= 60).length;
+      }
+
+      const consistencyDistributions = {};
+      const trendDistributions = {};
+      for (const position of POSITION_ORDER) {
+        const skillPeers = candidates.filter(candidate => candidate.position === position && candidate.isSkillPosition);
+        consistencyDistributions[position] = skillPeers
+          .map(candidate => candidate.consistencyRaw).filter(value => value > 0).sort((a, b) => a - b);
+        trendDistributions[position] = skillPeers
+          .map(candidate => candidate.trendRaw).filter(value => value > 0).sort((a, b) => a - b);
+      }
+
+      for (const candidate of candidates) {
+        if (!candidate.isSkillPosition) continue;
+        const opportunityByGame = candidate.decisionOpportunityPercentiles || [];
+        candidate.consistencyPercentile = percentile(candidate.consistencyRaw, consistencyDistributions[candidate.position]);
+        candidate.trendPercentile = percentile(candidate.trendRaw, trendDistributions[candidate.position]);
+        const teamContext = candidate.oldTeamShare;
+        candidate.baseScore = candidate.projectionPercentile * (0.25 + teamContext * 0.20) +
+          candidate.opportunityPercentile * (0.30 - teamContext * 0.10) +
+          candidate.consistencyPercentile * (0.20 - teamContext * 0.10) +
+          candidate.trendPercentile * (0.10 - teamContext * 0.05) +
+          candidate.nonTdPercentile * (0.15 - teamContext * 0.05);
+
+        const lowVolumeFactor = clamp((8 - candidate.weightedOpportunities) / 8);
+        candidate.touchdownPenalty = Math.min(12,
+          clamp((candidate.touchdownDependency - 0.25) * 22, 0, 8) * (0.5 + lowVolumeFactor * 0.5) +
+          (candidate.weightedOpportunities <= 3 && candidate.touchdownDependency > 0.3 ? 2 : 0)
+        );
+        candidate.bigPlayPenalty = clamp((candidate.weightedLongPlayShare - 0.5) * 16, 0, 8) *
+          (0.35 + lowVolumeFactor * 0.65);
+        const priorOpportunityGames = [
+          candidate.twoAgoMetrics.played ? candidate.twoAgoOpportunityPercentile : null,
+          candidate.threeAgoMetrics.played ? candidate.threeAgoOpportunityPercentile : null
+        ].filter(Number.isFinite);
+        candidate.roleSpike = priorOpportunityGames.length > 0 &&
+          candidate.previousOpportunityPercentile - Math.max(...priorOpportunityGames) >= 35;
+        candidate.temporaryRolePenalty = candidate.roleSpike && candidate.depthChartOrder > 1 && !candidate.starterUnavailable ? 8 : 0;
+        candidate.penaltyTotal = candidate.touchdownPenalty + candidate.bigPlayPenalty + candidate.temporaryRolePenalty;
+        candidate.score = clamp(candidate.baseScore - candidate.penaltyTotal, 0, 100);
+
+        if (candidate.opportunityPercentile >= 80) candidate.flags.push({ label: "High usage", tone: "good" });
+        if (candidate.consistencyGameCount >= 3 && candidate.strongOpportunityGames === 3) candidate.flags.push({ label: "Established role", tone: "good" });
+        if (candidate.strongOpportunityGames === 2 &&
+            (candidate.consistencyGameCount === 2 || candidate.threeAgoOpportunityPercentile < 45)) {
+          candidate.flags.push({ label: "Two-game breakout", tone: "context" });
+        }
+        if (opportunityByGame.length >= 3 &&
+            opportunityByGame[0] > opportunityByGame[1] &&
+            opportunityByGame[1] > opportunityByGame[2] &&
+            candidate.trendPercentile >= 60) {
+          candidate.flags.push({ label: "Rising opportunity", tone: "good" });
+        }
+        if (candidate.oldTeamShare > 0) candidate.flags.push({ label: "New team · old role discounted", tone: "context" });
+        if (candidate.week18RoleVolatility) candidate.flags.push({ label: "Week 18 role volatility", tone: "context" });
+        if (candidate.recentMissedWeeks > 0 && candidate.historicalGameCount > 0) candidate.flags.push({ label: "DNP/bye excluded", tone: "context" });
+        if (candidate.historicalGameCount < 3) {
+          candidate.flags.push({ label: `${candidate.historicalGameCount}-game sample`, tone: candidate.historicalGameCount < 2 ? "risk" : "context" });
+        }
+        if (candidate.touchdownPenalty >= 3) candidate.flags.push({ label: "TD dependent", tone: "risk" });
+        if (candidate.bigPlayPenalty >= 3) candidate.flags.push({ label: "Big-play dependent", tone: "risk" });
+        if (candidate.temporaryRolePenalty > 0) candidate.flags.push({ label: "Temporary role risk", tone: "risk" });
+        if (candidate.roleSpike && candidate.starterUnavailable) candidate.flags.push({ label: "Starter out · role up", tone: "context" });
+        if (candidate.position === "RB" && candidate.weightedSnapShare < 0.4 && candidate.weightedTargets >= 4) {
+          candidate.flags.push({ label: "Receiving specialist", tone: "context" });
+        }
+        if (candidate.position === "WR" && candidate.depthChartOrder === 2 && candidate.decisionMetrics.length >= 3 &&
+            candidate.decisionMetrics[0].targets >= candidate.decisionMetrics[1].targets &&
+            candidate.decisionMetrics[1].targets >= candidate.decisionMetrics[2].targets &&
+            candidate.decisionMetrics[0].targets >= 5) {
+          candidate.flags.push({ label: "Rising WR2", tone: "context" });
+        }
+        applyDecisionScores(candidate);
+      }
+
+      candidates.sort((a, b) =>
+        b.score - a.score ||
+        b.projectionPoints - a.projectionPoints ||
+        b.previousMetrics.totalPoints - a.previousMetrics.totalPoints ||
+        b.twoAgoMetrics.totalPoints - a.twoAgoMetrics.totalPoints ||
+        b.threeAgoMetrics.totalPoints - a.threeAgoMetrics.totalPoints ||
+        a.name.localeCompare(b.name)
+      );
+    }
+
+    function playerName(player, fallbackId) {
+      return player?.full_name || [player?.first_name, player?.last_name].filter(Boolean).join(" ") || fallbackId;
+    }
+
+    function playerExperience(player) {
+      const yearsExp = player.yearsExp === null || player.yearsExp === undefined || player.yearsExp === ""
+        ? Number.NaN
+        : Number(player.yearsExp);
+      const rookieYear = player.rookieYear === null || player.rookieYear === undefined || player.rookieYear === ""
+        ? Number.NaN
+        : Number(player.rookieYear);
+      if (Number.isFinite(yearsExp) && yearsExp >= 0) return yearsExp;
+      if (Number.isFinite(rookieYear) && Number.isFinite(state.loadedSeason)) {
+        return Math.max(0, state.loadedSeason - rookieYear);
+      }
+      return Number.NaN;
+    }
+
+    function taxiEligibility(player, league) {
+      if (!league.isDynasty || league.taxiSlots < 1) return { eligible: false, reason: "No taxi squad" };
+      if (league.taxiDeadline > 0 && state.projectionWeek > league.taxiDeadline) {
+        return { eligible: false, reason: `Taxi locked after Week ${league.taxiDeadline}` };
+      }
+      const experience = playerExperience(player);
+      const isRookie = experience === 0 || Number(player.rookieYear) === state.loadedSeason;
+      if (!league.taxiAllowVets) {
+        return { eligible: isRookie, reason: isRookie ? "Rookie eligible" : "Rookies only" };
+      }
+      if (!Number.isFinite(experience)) return { eligible: false, reason: "Experience unavailable" };
+      if (league.taxiYears > 0 && experience > league.taxiYears) {
+        return { eligible: false, reason: `Maximum ${league.taxiYears} years experience` };
+      }
+      return { eligible: true, reason: league.taxiYears > 0 ? `Eligible through ${league.taxiYears} years experience` : "No experience limit" };
+    }
+
+    function taxiRuleLabel(league) {
+      if (!league.isDynasty || league.taxiSlots < 1) return "";
+      const experienceRule = league.taxiAllowVets
+        ? (league.taxiYears > 0 ? `≤${league.taxiYears} yrs exp` : "No experience max")
+        : "Rookies only";
+      const deadlineRule = league.taxiDeadline > 0 ? `Locks W${league.taxiDeadline}` : "No deadline";
+      return `Taxi ${league.taxiSlots} · ${experienceRule} · ${deadlineRule}`;
+    }
+
+    function availabilityRowMarkup(player, league) {
+      const taxi = taxiEligibility(player, league);
+      return `
+        <div class="availability-row">
+          <div class="availability-league">${escapeHtml(league.name)}</div>
+          <div class="availability-meta">
+            <span class="availability-pill">${Number.isFinite(league.waiverPosition) && league.waiverPosition > 0 ? `Waiver #${league.waiverPosition}` : "Waiver order —"}</span>
+            ${Number.isFinite(league.faabRemaining) ? `<span class="availability-pill">FAAB $${league.faabRemaining}</span>` : ""}
+            ${player.position === "QB" ? `<span class="availability-pill">Pass TD ${scoringValue(league, "pass_td", 4)} pts</span>` : ""}
+          </div>
+          ${taxi.eligible ? `<span class="taxi-badge" title="${escapeHtml(taxi.reason)}">Taxi eligible</span>` : ""}
+        </div>
+      `;
+    }
+
+    function renderLeagueFilter() {
+      const selected = els.leagueFilter.value;
+      els.leagueFilter.innerHTML = `
+        <option value="all">All leagues</option>
+        ${state.leagues.map(league => `<option value="${escapeHtml(league.leagueId)}">${escapeHtml(league.name)}</option>`).join("")}
+      `;
+      const stillExists = selected === "all" || state.leagues.some(league => league.leagueId === selected);
+      els.leagueFilter.value = stillExists ? selected : "all";
+      els.leagueFilter.disabled = false;
+    }
+
+    function rankedCandidatesForLeagueFilter() {
+      const selectedLeagueId = els.leagueFilter.value;
+      const candidates = state.candidates.flatMap(candidate => {
+        const availableLeagues = selectedLeagueId === "all"
+          ? candidate.availableLeagues
+          : candidate.availableLeagues.filter(league => league.leagueId === selectedLeagueId);
+        if (!availableLeagues.length) return [];
+
+        const signals = availableLeagues
+          .map(league => candidate.signalsByLeague[league.leagueId])
+          .filter(Boolean);
+        const projectionPoints = average(signals.map(signal => signal.projectionPoints));
+        if (!(projectionPoints > 0)) return [];
+        return [{
+          ...candidate,
+          availableLeagues,
+          projectionPoints,
+          previousMetrics: averageGameMetrics(signals.map(signal => signal.previousMetrics)),
+          twoAgoMetrics: averageGameMetrics(signals.map(signal => signal.twoAgoMetrics)),
+          threeAgoMetrics: averageGameMetrics(signals.map(signal => signal.threeAgoMetrics))
+        }];
+      });
+      scoreCandidates(candidates);
+      return candidates;
+    }
+
+    function priorGameSample(season, upcomingWeek, gamesBack) {
+      let sampleSeason = season;
+      let sampleWeek = upcomingWeek - gamesBack;
+      while (sampleWeek < 1) {
+        sampleSeason -= 1;
+        sampleWeek += 18;
+      }
+      return {
+        season: sampleSeason,
+        week: sampleWeek,
+        label: `W${sampleWeek} ${sampleSeason}`
+      };
+    }
+
+    function renderLeagues() {
+      els.leaguePanel.classList.toggle("show", state.leagues.length > 0);
+      els.leagueGrid.innerHTML = state.leagues.map(league => `
+        <div class="league-card">
+          <div class="league-name">${escapeHtml(league.name)}</div>
+          <div class="league-meta">
+            <span class="league-tag">${Number.isFinite(league.waiverPosition) && league.waiverPosition > 0 ? `Waiver #${league.waiverPosition}` : "Waiver order unavailable"}</span>
+            ${Number.isFinite(league.faabRemaining) ? `<span class="league-tag">FAAB $${league.faabRemaining}</span>` : ""}
+            <span class="league-tag">${escapeHtml(league.scoringLabel)}</span>
+            <span class="league-tag">QB pass TD ${scoringValue(league, "pass_td", 4)} pts</span>
+            ${league.isDynasty ? `<span class="league-tag">Dynasty</span>` : ""}
+            ${league.isDynasty && league.taxiSlots > 0 ? `<span class="league-tag">${escapeHtml(taxiRuleLabel(league))}</span>` : ""}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function playerAvatar(player) {
+      return `
+        <div class="player-avatar" aria-hidden="true">
+          <img src="https://sleepercdn.com/content/nfl/players/thumb/${encodeURIComponent(player.playerId)}.jpg" alt="" loading="lazy" decoding="async" onerror="this.remove()" />
+        </div>
+      `;
+    }
+
+    function ordinalPercentile(value) {
+      const rounded = Math.max(0, Math.min(100, Math.round(value || 0)));
+      const mod100 = rounded % 100;
+      const suffix = mod100 >= 11 && mod100 <= 13
+        ? "th"
+        : ({ 1: "st", 2: "nd", 3: "rd" }[rounded % 10] || "th");
+      return `${rounded}${suffix} percentile`;
+    }
+
+    function componentMarkup(label, raw, percentileValue, tone = "blue", note = "") {
+      return `
+        <div class="component ${tone}">
+          <div class="component-head"><span>${escapeHtml(label)}</span><strong>${escapeHtml(raw)}</strong></div>
+          <div class="component-note">${escapeHtml(note)}</div>
+          <div class="bar"><span style="width:${Math.max(0, Math.min(100, percentileValue)).toFixed(1)}%"></span></div>
+          <div class="component-footer">${Math.round(Math.max(0, Math.min(100, percentileValue || 0)))} / 100 component score</div>
+        </div>
+      `;
+    }
+
+    function recentGameMarkup(player, metrics) {
+      const context = [
+        metrics.historicalTeam ? `${metrics.historicalTeam}${metrics.historicalOpponent ? ` vs ${metrics.historicalOpponent}` : ""}` : "",
+        metrics.sameTeam ? "" : "Old team sample",
+        metrics.week === 18 ? "Week 18 discounted" : ""
+      ].filter(Boolean).join(" · ");
+      let stats = [];
+      if (player.position === "QB") {
+        stats = [
+          `${metrics.passCompletions.toFixed(0)}/${metrics.passAttempts.toFixed(0)} cmp/att`,
+          `${metrics.passingYards.toFixed(0)} pass yd`,
+          `${metrics.passingTouchdowns.toFixed(0)} TD · ${metrics.interceptions.toFixed(0)} INT`,
+          `${metrics.rushAttempts.toFixed(0)} car · ${metrics.rushingYards.toFixed(0)} yd`
+        ];
+      } else if (player.position === "RB") {
+        stats = [
+          `${metrics.rushAttempts.toFixed(0)} car · ${metrics.rushingYards.toFixed(0)} yd`,
+          `${metrics.receptions.toFixed(0)}/${metrics.targets.toFixed(0)} rec/tgt`,
+          `${metrics.receivingYards.toFixed(0)} rec yd`,
+          `${metrics.touchdowns.toFixed(0)} TD`,
+          `${(metrics.snapShare * 100).toFixed(0)}% snaps`
+        ];
+      } else {
+        stats = [
+          `${metrics.receptions.toFixed(0)}/${metrics.targets.toFixed(0)} rec/tgt`,
+          `${metrics.receivingYards.toFixed(0)} rec yd`,
+          `${metrics.touchdowns.toFixed(0)} TD`,
+          `${(metrics.snapShare * 100).toFixed(0)}% snaps`
+        ];
+      }
+      return `
+        <div class="recent-game ${metrics.week === 18 || !metrics.sameTeam ? "noisy" : ""}">
+          <div class="recent-game-head"><span>${escapeHtml(metrics.label)}</span><strong>${metrics.totalPoints.toFixed(1)} pts</strong></div>
+          <div class="recent-game-context">${escapeHtml(context || "Current-team sample")}</div>
+          <div class="recent-stat-row">
+            ${stats.map((stat, index) => `<span class="recent-stat ${index % 2 ? "green" : ""}">${escapeHtml(stat)}</span>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function playerCardMarkup(player, rank) {
+      const playedGamesOldestFirst = player.isSkillPosition && player.decisionMetrics?.length
+        ? [...player.decisionMetrics].reverse()
+        : [player.threeAgoMetrics, player.twoAgoMetrics, player.previousMetrics].filter(metrics => metrics.played);
+      const trendLabel = !player.isSkillPosition
+        ? ""
+        : playedGamesOldestFirst.length
+          ? `${playedGamesOldestFirst.map(metrics =>
+              (player.position === "RB" ? metrics.opportunities : metrics.targets).toFixed(0)
+            ).join("→")} ${player.position === "RB" ? "opp" : "tgt"}`
+          : "No recent sample";
+      const components = player.isSkillPosition
+        ? `
+            ${componentMarkup(`Projection · 30%`, `${player.projectionPoints.toFixed(1)} pts`, player.projectionScore, "blue", "League-adjusted next game")}
+            ${componentMarkup("Opportunity · 30%", player.position === "RB" ? `${player.weightedOpportunities.toFixed(1)} opp/game` : `${player.weightedTargets.toFixed(1)} targets/game`, player.opportunityScore, "green", player.position === "RB" ? `${player.weightedTargets.toFixed(1)} targets/game · team shares used` : "Target, air-yard and snap shares")}
+            ${componentMarkup("Role confidence · 20%", `${player.roleConfidence.toFixed(0)} / 100`, player.roleConfidence, "blue", `${player.consistencyGameCount} relevant-game sample`)}
+            ${componentMarkup("Non-TD · 10%", `${player.weightedNonTdPoints.toFixed(1)} pts/game`, player.nonTdScore, "green", "Touchdown points removed")}
+            ${componentMarkup("Team environment · 10%", `${player.environmentScore.toFixed(0)} / 100`, player.environmentScore, "blue", "Projected offense strength")}
+          `
+        : `
+            ${componentMarkup(`Projected W${state.projectionWeek}`, `${player.projectionPoints.toFixed(1)} pts`, player.projectionPercentile, "blue", player.position === "QB" ? "Uses this league's passing-TD rules" : "League-adjusted projection")}
+            ${[
+              [player.previousMetrics, player.previousPercentile],
+              [player.twoAgoMetrics, player.twoAgoPercentile],
+              [player.threeAgoMetrics, player.threeAgoPercentile]
+            ].filter(([metrics]) => metrics.played).map(([metrics, percentileValue], index) =>
+              componentMarkup(metrics.label, `${metrics.totalPoints.toFixed(1)} pts`, percentileValue, index % 2 === 0 ? "green" : "blue", metrics.week === 18 ? "Reduced Week 18 model weight" : "Recent game points")
+            ).join("")}
+          `;
+      const recentGameCards = [player.previousMetrics, player.twoAgoMetrics, player.threeAgoMetrics]
+        .filter(metrics => metrics.played);
+      const recentGames = ["QB", "RB", "WR", "TE"].includes(player.position) && recentGameCards.length
+        ? `
+            <div class="recent-games">
+              <div class="recent-games-head"><span>Recent appearances</span><span class="recent-games-note">Newest first · context shown</span></div>
+              <div class="recent-games-grid">${recentGameCards.map(metrics => recentGameMarkup(player, metrics)).join("")}</div>
+            </div>
+          `
+        : "";
+      const flags = player.flags?.length
+        ? `<div class="player-flags">${player.flags.map(flag => `<span class="player-flag ${flag.tone}">${escapeHtml(flag.label)}</span>`).join("")}</div>`
+        : "";
+      return `
+        <article class="player-card">
+          <div class="rank">#${rank}</div>
+          ${playerAvatar(player)}
+          <div class="player-copy">
+            <div class="player-name">${escapeHtml(player.name)}</div>
+            <div class="player-meta">
+              ${escapeHtml(player.position)} · ${escapeHtml(player.team || "FA")}
+              ${player.opponent ? ` · vs ${escapeHtml(player.opponent)}` : ""}
+              ${player.injuryStatus ? ` · <span class="injury">${escapeHtml(player.injuryStatus)}</span>` : ""}
+            </div>
+            ${flags}
+          </div>
+          <div class="components">${components}</div>
+          <div class="score">
+            <div class="score-value">${player.score.toFixed(1)}</div>
+            <div class="score-label">Add priority</div>
+            <div class="score-secondary">
+              <span>Role<strong>${player.roleConfidence.toFixed(0)}</strong></span>
+              <span>Upside<strong>${player.upsideScore.toFixed(0)}</strong></span>
+            </div>
+            ${player.isSkillPosition && player.penaltyTotal >= 0.5 ? `<div class="score-adjustment">−${player.penaltyTotal.toFixed(1)} reliability</div>` : ""}
+            ${player.nonStartingQuarterback ? `<div class="score-adjustment">Backup score capped</div>` : ""}
+          </div>
+          ${recentGames}
+          <details class="availability" ${player.availableLeagues.length <= 3 ? "open" : ""}>
+            <summary>
+              <span>Available in ${player.availableLeagues.length} league${player.availableLeagues.length === 1 ? "" : "s"}</span>
+              <span class="availability-toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="availability-list">
+              ${player.availableLeagues.map(league => availabilityRowMarkup(player, league)).join("")}
+            </div>
+          </details>
+        </article>
+      `;
+    }
+
+    function renderResults() {
+      const selectedPosition = els.positionFilter.value;
+      const query = els.playerSearch.value.trim().toLowerCase();
+      const limit = Number(els.resultLimit.value) || 10;
+      const ranked = rankedCandidatesForLeagueFilter();
+      const sortMode = els.sortFilter.value;
+      ranked.sort((a, b) => {
+        if (sortMode === "previous") {
+          return b.previousMetrics.totalPoints - a.previousMetrics.totalPoints ||
+            b.score - a.score || a.name.localeCompare(b.name);
+        }
+        if (sortMode === "projection") {
+          return b.projectionPoints - a.projectionPoints ||
+            b.score - a.score || a.name.localeCompare(b.name);
+        }
+        return b.score - a.score ||
+          b.projectionPoints - a.projectionPoints || a.name.localeCompare(b.name);
+      });
+      const selectedLeague = state.leagues.find(league => league.leagueId === els.leagueFilter.value);
+      const scopeLabel = selectedLeague ? selectedLeague.name : "all leagues";
+      const sortLabel = sortMode === "previous"
+        ? "previous-game points"
+        : sortMode === "projection"
+          ? "projected points"
+          : "model score";
+      els.playerMetric.textContent = String(ranked.length);
+
+      const filtered = ranked.filter(candidate => {
+        const positionMatches = selectedPosition === "all" ||
+          candidate.position === selectedPosition ||
+          (selectedPosition === "FLEX" && FLEX_POSITIONS.has(candidate.position));
+        const searchMatches = !query || `${candidate.name} ${candidate.team}`.toLowerCase().includes(query);
+        return positionMatches && searchMatches;
+      });
+
+      if (selectedPosition === "all") {
+        const groups = POSITION_ORDER.map(position => {
+          const players = filtered.filter(candidate => candidate.position === position).slice(0, limit);
+          if (!players.length) return "";
+          return `
+            <section class="position-group" aria-label="${position} recommendations">
+              <div class="position-group-head">
+                <div class="position-group-title">${position}</div>
+                <div class="position-group-count">Top ${players.length}</div>
+              </div>
+              <div class="position-list">${players.map((player, index) => playerCardMarkup(player, index + 1)).join("")}</div>
+            </section>
+          `;
+        }).filter(Boolean);
+        const shown = groups.length
+          ? POSITION_ORDER.reduce((sum, position) => sum + Math.min(limit, filtered.filter(candidate => candidate.position === position).length), 0)
+          : 0;
+        els.resultsNote.textContent = `Showing ${shown} players—the top ${limit} at each position for ${scopeLabel}, ranked by ${sortLabel}.`;
+        els.results.innerHTML = groups.length
+          ? groups.join("")
+          : `<div class="empty">No available players match these filters.</div>`;
+        return;
+      }
+
+      const visible = filtered.slice(0, limit);
+      els.resultsNote.textContent = `${filtered.length} matching ${selectedPosition} player${filtered.length === 1 ? "" : "s"} in ${scopeLabel}; showing ${visible.length} ranked by ${sortLabel}.`;
+      els.results.innerHTML = visible.length
+        ? visible.map((player, index) => playerCardMarkup(player, index + 1)).join("")
+        : `<div class="empty">No available players match these filters.</div>`;
+    }
+
+    async function analyzeWaivers() {
+      const username = els.username.value.trim();
+      const season = Number(els.season.value);
+      const projectionWeek = Number(els.week.value);
+      if (!username) return showError(new Error("Enter a Sleeper username."));
+      if (!Number.isInteger(season) || season < 2018) return showError(new Error("Enter a valid season."));
+
+      clearError();
+      setLoading(true, "Finding leagues…");
+      els.leagueFilter.disabled = true;
+      const warnings = [];
+
+      try {
+        const user = await fetchJson(`${SLEEPER_API}/user/${encodeURIComponent(username)}`, "Sleeper user lookup");
+        if (!user?.user_id) throw new Error(`Sleeper user “${username}” was not found.`);
+
+        const leagues = await fetchJson(`${SLEEPER_API}/user/${user.user_id}/leagues/nfl/${season}`, "Sleeper leagues");
+        if (!Array.isArray(leagues) || !leagues.length) throw new Error(`No Sleeper leagues were found for ${season}.`);
+
+        setLoading(true, `Checking ${leagues.length} leagues…`);
+        const leagueResults = await Promise.all(leagues.map(async league => {
+          const rosters = await fetchJson(`${SLEEPER_API}/league/${league.league_id}/rosters`, `${league.name} rosters`);
+          const ownedRoster = findOwnedRoster(rosters, user.user_id);
+          if (!ownedRoster) return null;
+          const rosteredPlayers = new Set((rosters || []).flatMap(roster => roster.players || []).map(String));
+          const budget = Number(league.settings?.waiver_budget);
+          const budgetUsed = Number(ownedRoster.settings?.waiver_budget_used || 0);
+          const key = scoringKey(league);
+          const leagueType = Number(league.settings?.type);
+          return {
+            leagueId: String(league.league_id),
+            name: league.name || `League ${league.league_id}`,
+            rosteredPlayers,
+            waiverPosition: Number(ownedRoster.settings?.waiver_position),
+            faabRemaining: Number.isFinite(budget) && budget > 0 ? Math.max(0, budget - budgetUsed) : null,
+            scoringKey: key,
+            scoringSettings: league.scoring_settings || {},
+            scoringLabel: key === "pts_ppr" ? "PPR" : key === "pts_half_ppr" ? "Half PPR" : "Standard",
+            isDynasty: leagueType === 2,
+            taxiSlots: Number(league.settings?.taxi_slots || 0),
+            taxiYears: Number(league.settings?.taxi_years || 0),
+            taxiAllowVets: Number(league.settings?.taxi_allow_vets || 0) === 1,
+            taxiDeadline: Number(league.settings?.taxi_deadline || 0)
+          };
+        }));
+        state.leagues = leagueResults.filter(Boolean);
+        if (!state.leagues.length) throw new Error("Your account was found, but no owned rosters were found.");
+
+        state.historySamples = Array.from({ length: 6 }, (_, index) =>
+          priorGameSample(season, projectionWeek, index + 1)
+        );
+        state.projectionWeek = projectionWeek;
+        state.loadedSeason = season;
+
+        setLoading(true, "Scoring available players…");
+        const [players, projections, ...historyStats] = await Promise.all([
+          fetchJson(`${SLEEPER_API}/players/nfl?active=true`, "Active player directory"),
+          optionalArray(`${SLEEPER_DATA_API}/projections/nfl/${season}/${projectionWeek}?season_type=regular`, "Upcoming projections", warnings),
+          ...state.historySamples.map(sample =>
+            optionalArray(
+              `${SLEEPER_DATA_API}/stats/nfl/${sample.season}/${sample.week}?season_type=regular`,
+              `${sample.label} stats`,
+              warnings
+            )
+          )
+        ]);
+
+        const projectionMap = new Map(projections.map(row => [String(row.player_id), row]));
+        const historyMaps = historyStats.map(rows => new Map(rows.map(row => [String(row.player_id), row])));
+        const playerMap = new Map(Object.entries(players || {}).map(([id, player]) => [String(id), player]));
+
+        for (const row of [...projections, ...historyStats.flat()]) {
+          const id = String(row.player_id || "");
+          if (id && !playerMap.has(id) && row.player) playerMap.set(id, row.player);
+        }
+
+        const teamProjectionTotals = new Map();
+        for (const row of projections) {
+          const projectedPlayer = playerMap.get(String(row.player_id));
+          const projectedPosition = String(projectedPlayer?.position || row.player?.position || "").toUpperCase();
+          const projectedTeam = String(row.team || projectedPlayer?.team || "").toUpperCase();
+          if (!FLEX_POSITIONS.has(projectedPosition) && projectedPosition !== "QB") continue;
+          if (!projectedTeam) continue;
+          const projectedPoints = Number(row.stats?.pts_ppr ?? row.stats?.pts_half_ppr ?? row.stats?.pts_std ?? 0);
+          if (!(projectedPoints > 0)) continue;
+          teamProjectionTotals.set(projectedTeam, (teamProjectionTotals.get(projectedTeam) || 0) + projectedPoints);
+        }
+        const teamProjectionDistribution = [...teamProjectionTotals.values()].sort((a, b) => a - b);
+        const teamEnvironmentScores = new Map([...teamProjectionTotals].map(([team, total]) => [
+          team,
+          percentile(total, teamProjectionDistribution)
+        ]));
+
+        const acceptedPositions = new Set(["QB", "RB", "WR", "TE", "K", "DEF"]);
+        const unavailableStatuses = new Set(["OUT", "IR", "PUP", "NFI", "SUSPENDED", "DOUBTFUL"]);
+        const depthGroups = new Map();
+        for (const player of playerMap.values()) {
+          const team = String(player.team || "");
+          const depthPosition = String(player.depth_chart_position || player.position || "").toUpperCase();
+          if (!team || !depthPosition) continue;
+          const key = `${team}:${depthPosition}`;
+          if (!depthGroups.has(key)) depthGroups.set(key, []);
+          depthGroups.get(key).push(player);
+        }
+        const candidates = [];
+        for (const [playerId, player] of playerMap) {
+          const position = String(player.position || player.fantasy_positions?.[0] || "").toUpperCase();
+          if (!acceptedPositions.has(position)) continue;
+          const availableLeagues = state.leagues.filter(league => !league.rosteredPlayers.has(playerId));
+          if (!availableLeagues.length) continue;
+          const projection = projectionMap.get(playerId);
+          const recentAppearances = state.historySamples.map((sample, index) => ({
+            sample,
+            record: historyMaps[index].get(playerId),
+            teamRecord: null,
+            lookbackIndex: index
+          })).filter(game => playerAppeared(game.record)).map(game => ({
+            ...game,
+            teamRecord: historyMaps[game.lookbackIndex].get(`TEAM_${game.record?.team || ""}`)
+          })).slice(0, 3);
+          const [previousGame, twoAgoGame, threeAgoGame] = recentAppearances;
+          const recentMissedWeeks = previousGame ? previousGame.lookbackIndex : state.historySamples.length;
+          const currentTeam = player.team || projection?.team || previousGame?.record?.team || "";
+          const depthChartOrder = Number(player.depth_chart_order);
+          const depthPosition = String(player.depth_chart_position || position).toUpperCase();
+          const depthGroup = depthGroups.get(`${player.team || ""}:${depthPosition}`) || [];
+          const starterUnavailable = Number.isFinite(depthChartOrder) && depthChartOrder > 1 && depthGroup.some(teammate => {
+            const teammateOrder = Number(teammate.depth_chart_order);
+            const status = String(teammate.injury_status || "").toUpperCase();
+            return Number.isFinite(teammateOrder) && teammateOrder < depthChartOrder && unavailableStatuses.has(status);
+          });
+          const signalsByLeague = Object.fromEntries(availableLeagues.map(league => [
+            league.leagueId,
+            {
+              projectionPoints: pointsForLeagues(projection, [league], position),
+              previousMetrics: gameMetrics(previousGame?.record, league, previousGame?.sample, currentTeam, position, previousGame?.teamRecord),
+              twoAgoMetrics: gameMetrics(twoAgoGame?.record, league, twoAgoGame?.sample, currentTeam, position, twoAgoGame?.teamRecord),
+              threeAgoMetrics: gameMetrics(threeAgoGame?.record, league, threeAgoGame?.sample, currentTeam, position, threeAgoGame?.teamRecord)
+            }
+          ]));
+          const signals = Object.values(signalsByLeague);
+          if (!signals.some(signal => signal.projectionPoints > 0)) continue;
+          const blockedBackupQuarterback = position === "QB" &&
+            Number.isFinite(depthChartOrder) && depthChartOrder > 1 && !starterUnavailable;
+          if (blockedBackupQuarterback) continue;
+
+          candidates.push({
+            playerId,
+            name: playerName(player, playerId),
+            position,
+            team: currentTeam,
+            opponent: projection?.opponent || "",
+            injuryStatus: player.injury_status || projection?.player?.injury_status || "",
+            depthChartOrder: Number.isFinite(depthChartOrder) ? depthChartOrder : null,
+            starterUnavailable,
+            yearsExp: player.years_exp,
+            rookieYear: player.rookie_year,
+            recentMissedWeeks,
+            teamEnvironmentScore: teamEnvironmentScores.get(String(currentTeam).toUpperCase()) || 0,
+            availableLeagues,
+            signalsByLeague
+          });
+        }
+
+        state.candidates = candidates;
+        els.leagueMetric.textContent = String(state.leagues.length);
+        els.playerMetric.textContent = String(candidates.length);
+        els.weekMetric.textContent = `W${projectionWeek}`;
+        els.previousMetric.textContent = "3";
+        els.previousMetric.title = `Last three appearances found within ${state.historySamples.at(-1).label} through ${state.historySamples[0].label}`;
+        els.loadNote.textContent = warnings.length
+          ? `Analysis complete. ${warnings.join("; ")}; unavailable game inputs were omitted from player samples.`
+          : `Analysis complete for ${user.display_name || user.username}.`;
+        renderLeagueFilter();
+        renderLeagues();
+        renderResults();
+        setLoading(false);
+      } catch (error) {
+        state.candidates = [];
+        setLoading(false);
+        showError(error);
+      }
+    }
+
+    async function initialize() {
+      const params = new URLSearchParams(location.search);
+      if (params.get("username")) els.username.value = params.get("username");
+      if (params.get("season")) els.season.value = params.get("season");
+      els.week.value = "1";
+      try {
+        const nflState = await fetchJson(`${SLEEPER_API}/state/nfl`, "NFL state");
+        if (!params.get("season") && nflState?.season) els.season.value = nflState.season;
+        const currentWeek = Number(nflState?.display_week || nflState?.week || 1);
+        if (currentWeek >= 1 && currentWeek <= 18) els.week.value = String(currentWeek);
+      } catch (error) {
+        // Week 1 remains a safe default when league state is unavailable.
+      }
+    }
+
+    els.analyzeBtn.addEventListener("click", analyzeWaivers);
+    els.leagueFilter.addEventListener("change", renderResults);
+    els.positionFilter.addEventListener("change", renderResults);
+    els.sortFilter.addEventListener("change", renderResults);
+    els.playerSearch.addEventListener("input", renderResults);
+    els.resultLimit.addEventListener("change", renderResults);
+    els.username.addEventListener("keydown", event => {
+      if (event.key === "Enter") analyzeWaivers();
+    });
+    initialize();
+  </script>
+
+  <script>
+    (() => {
+      const button = document.getElementById("themeToggle");
+      const label = document.getElementById("themeToggleLabel");
+      if (!button || !label) return;
+      const icon = button.querySelector(".theme-icon");
+      const applyTheme = theme => {
+        const next = theme === "dark" ? "dark" : "light";
+        document.documentElement.dataset.theme = next;
+        const dark = next === "dark";
+        button.setAttribute("aria-pressed", String(dark));
+        label.textContent = dark ? "Light background" : "Dark background";
+        if (icon) icon.textContent = dark ? "☀" : "☾";
+        try { localStorage.setItem("fantasyUiTheme", next); } catch (_) {}
+      };
+      applyTheme(document.documentElement.dataset.theme || "light");
+      button.addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+    })();
+  </script>
+</body>
+</html>
