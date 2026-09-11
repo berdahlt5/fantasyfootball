@@ -313,6 +313,7 @@
       </div>
       <div class="header-actions">
         <a class="nav-button" id="scheduleLink" href="./schedule-tool.html">Schedule Tool</a>
+        <a class="nav-button secondary" id="crunchtimeLink" href="./crunchtime.html">Crunchtime</a>
         <a class="nav-button gold" id="rankingsLink" href="./team-rankings.html">Team Rankings</a>
         <a class="nav-button secondary" id="waiverLink" href="./waiver-wire-agent.html">Waiver Wire Agent Beta</a>
         <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☾</span><span id="themeToggleLabel">Dark background</span></button>
@@ -1159,6 +1160,7 @@
 
         const params=new URLSearchParams({username,season:String(season)});
         els.scheduleLink.href=`./schedule-tool.html?${params}`;
+        els.crunchtimeLink.href=`./crunchtime.html?${new URLSearchParams({username,season:String(season),week:String(state.week||1)})}`;
         els.rankingsLink.href=`./team-rankings.html?${params}`;
         els.waiverLink.href=`./waiver-wire-agent.html?${params}`;
         els.loadNote.textContent=`Loaded ${state.leagues.length} teams for ${user.display_name||user.username}. Projections match the Team Rankings approach: K/D-ST excluded, future best legal lineups, and waiver replacement only for zero/empty starter slots.`;

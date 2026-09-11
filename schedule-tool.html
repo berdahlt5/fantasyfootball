@@ -353,7 +353,7 @@
     .game-card{
       border:1px solid rgba(127,208,143,.26);background:var(--card-90);border-radius:15px;overflow:hidden
     }
-    .game-card.past-game{filter:grayscale(.4);opacity:.76}
+    .game-card.past-game{filter:grayscale(.78);opacity:.58}
     .game-main{
       display:grid;grid-template-columns:minmax(180px,1fr) 100px minmax(180px,1fr) 120px;
       gap:13px;align-items:center;padding:15px;
@@ -417,7 +417,9 @@
     }
     .pos{background:var(--ivory-90);color:var(--taupe)}
     .bucket{background:var(--sky-90);color:var(--ivory);border:1px solid rgba(132,186,215,.3)}
-    .player-leagues{color:var(--muted);font-size:.77rem;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.35}
+    .player-leagues{color:var(--muted);font-size:.77rem;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.35;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+    .exposure-copy{margin-right:2px;color:var(--muted)}
+    .league-exposure-label{display:inline-flex;align-items:center;max-width:100%;padding:3px 7px;border:1px solid transparent;border-radius:999px;font-size:.68rem;font-weight:1000;line-height:1.2;overflow-wrap:anywhere}
     .sidebar-list{display:grid;gap:8px}
     .sidebar-row{
       display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;
@@ -560,6 +562,7 @@
       </div>
       <div class="header-actions">
         <a class="header-nav" href="./index.html">Owner Dashboard</a>
+        <a class="header-nav" id="crunchtimeLink" href="./crunchtime.html">Crunchtime</a>
         <a class="header-nav gold" id="rankingsLink" href="./team-rankings.html">Team Rankings</a>
         <a class="header-nav" id="waiverAgentLink" href="./waiver-wire-agent.html">Waiver Wire Agent Beta</a>
         <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☾</span><span id="themeToggleLabel">Dark background</span></button>
@@ -1468,6 +1471,8 @@
             name: event.name || "",
             date: event.date || competition.date || "",
             status: event.status?.type?.shortDetail || "",
+            completed: Boolean(event.status?.type?.completed),
+            statusState: event.status?.type?.state || "",
             away: {
               abbreviation: normalizeTeam(away.team?.abbreviation),
               name: away.team?.displayName || away.team?.shortDisplayName || away.team?.abbreviation || "Away",
@@ -1589,9 +1594,28 @@
       return { exposures, gameRows, noGame, kickoffMode, kickoffColorMap };
     }
 
+    const LEAGUE_COLORS = [
+      { bg: "rgba(132,186,215,.92)", border: "rgba(132,186,215,.98)", text: "#2E2823" },
+      { bg: "rgba(219,255,214,.92)", border: "rgba(169,230,165,.98)", text: "#2E2823" },
+      { bg: "rgba(216,169,74,.92)", border: "rgba(216,169,74,.98)", text: "#2E2823" },
+      { bg: "rgba(231,128,128,.88)", border: "rgba(231,128,128,.96)", text: "#2E2823" },
+      { bg: "rgba(191,229,183,.92)", border: "rgba(191,229,183,.98)", text: "#2E2823" },
+      { bg: "rgba(180,164,220,.9)", border: "rgba(180,164,220,.98)", text: "#2E2823" },
+      { bg: "rgba(239,190,137,.9)", border: "rgba(239,190,137,.98)", text: "#2E2823" },
+      { bg: "rgba(150,214,204,.9)", border: "rgba(150,214,204,.98)", text: "#2E2823" }
+    ];
+
+    function leagueColorStyle(label) {
+      const key = String(label || "League").split(":")[0].trim();
+      let hash = 0;
+      for (let i = 0; i < key.length; i += 1) hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
+      const color = LEAGUE_COLORS[Math.abs(hash) % LEAGUE_COLORS.length];
+      return `background:${color.bg};border-color:${color.border};color:${color.text}`;
+    }
+
     function renderLeagueFilters() {
       els.leagueChips.innerHTML = state.leagues.map(league => `
-        <label class="league-chip">
+        <label class="league-chip" style="${leagueColorStyle(league.name)}">
           <input
             type="checkbox"
             data-league-id="${escapeHtml(league.league_id)}"
@@ -1668,8 +1692,8 @@
               <span class="pos">${escapeHtml(player.position)}</span>
               <span class="bucket">${escapeHtml([...player.buckets].map(bucketLabel).join(" / "))}</span>
               <div class="player-leagues">
-                ${player.count} exposure${player.count === 1 ? "" : "s"}:
-                ${escapeHtml([...player.leagues].join(", "))}
+                <span class="exposure-copy">${player.count} exposure${player.count === 1 ? "" : "s"}:</span>
+                ${[...player.leagues].map(league => `<span class="league-exposure-label" style="${leagueColorStyle(league)}">${escapeHtml(league)}</span>`).join("")}
               </div>
             </div>
           `).join("")
@@ -1687,8 +1711,7 @@
       const homeLogo = game.home.logo
         ? `<img class="team-logo" src="${escapeHtml(game.home.logo)}" alt="" />`
         : "";
-      const gameStartTime = new Date(game.date).getTime();
-      const isPast = Number.isFinite(gameStartTime) && gameStartTime < Date.now();
+      const isPast = Boolean(game.completed) || String(game.statusState || "").toLowerCase() === "post";
 
       return `
         <article class="game-card ${isPast ? "past-game" : ""}">
@@ -1872,9 +1895,14 @@
     }
 
     els.loadBtn.addEventListener("click", loadSleeperData);
-    window.addEventListener("DOMContentLoaded", () => {
-      if (els.username.value.trim()) loadSleeperData();
-    }, { once: true });
+    const autoLoadSleeperData = () => {
+      if (els.username.value.trim() && !state.loading && !state.user) loadSleeperData();
+    };
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", autoLoadSleeperData, { once: true });
+    } else {
+      autoLoadSleeperData();
+    }
     els.week.addEventListener("change", loadWeek);
     els.scope.addEventListener("change", renderAll);
     els.sort.addEventListener("change", renderAll);
@@ -1895,6 +1923,15 @@
       state.selectedLeagueIds = new Set(state.leagues.map(league => league.league_id));
       renderLeagueFilters();
       renderAll();
+    });
+
+    if (els.crunchtimeLink) els.crunchtimeLink.addEventListener("click", () => {
+      const params = new URLSearchParams({
+        username: els.username.value.trim(),
+        season: els.season.value,
+        week: els.week.value
+      });
+      els.crunchtimeLink.href = `./crunchtime.html?${params}`;
     });
 
     if (els.rankingsLink) els.rankingsLink.addEventListener("click", () => {
