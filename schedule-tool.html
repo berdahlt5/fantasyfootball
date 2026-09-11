@@ -353,6 +353,7 @@
     .game-card{
       border:1px solid rgba(127,208,143,.26);background:var(--card-90);border-radius:15px;overflow:hidden
     }
+    .game-card.past-game{filter:grayscale(.4);opacity:.76}
     .game-main{
       display:grid;grid-template-columns:minmax(180px,1fr) 100px minmax(180px,1fr) 120px;
       gap:13px;align-items:center;padding:15px;
@@ -416,7 +417,7 @@
     }
     .pos{background:var(--ivory-90);color:var(--taupe)}
     .bucket{background:var(--sky-90);color:var(--ivory);border:1px solid rgba(132,186,215,.3)}
-    .player-leagues{color:var(--muted);font-size:.77rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-leagues{color:var(--muted);font-size:.77rem;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.35}
     .sidebar-list{display:grid;gap:8px}
     .sidebar-row{
       display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;
@@ -1686,9 +1687,11 @@
       const homeLogo = game.home.logo
         ? `<img class="team-logo" src="${escapeHtml(game.home.logo)}" alt="" />`
         : "";
+      const gameStartTime = new Date(game.date).getTime();
+      const isPast = Number.isFinite(gameStartTime) && gameStartTime < Date.now();
 
       return `
-        <article class="game-card">
+        <article class="game-card ${isPast ? "past-game" : ""}">
           <div class="game-main">
             <div class="team">
               ${awayLogo}
@@ -1869,6 +1872,9 @@
     }
 
     els.loadBtn.addEventListener("click", loadSleeperData);
+    window.addEventListener("DOMContentLoaded", () => {
+      if (els.username.value.trim()) loadSleeperData();
+    }, { once: true });
     els.week.addEventListener("change", loadWeek);
     els.scope.addEventListener("change", renderAll);
     els.sort.addEventListener("change", renderAll);
