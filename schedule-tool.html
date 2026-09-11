@@ -540,7 +540,12 @@
     .theme-icon{font-size:.9rem}
     details > summary::after{color:var(--gold)}
 
-  </style>
+  
+    .matchup-player-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:12px 0 2px}
+    .matchup-player-columns section{min-width:0}
+    .player-section-title{margin:0 0 8px;color:var(--sky);font-size:.72rem;font-weight:1000;text-transform:uppercase;letter-spacing:.08em}
+    @media(max-width:760px){.matchup-player-columns{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
   <main class="shell">
@@ -999,6 +1004,7 @@
             status: item.league.status,
             total_rosters: item.league.total_rosters,
             myRosterId: item.roster.roster_id,
+            isBestBall: Boolean(Number(item.league.settings?.best_ball || 0)),
             scoringSettings: item.league.scoring_settings || {},
             rosterMeta
           };
@@ -1028,7 +1034,8 @@
               name: playerName(player),
               position: player.position || "—",
               team: normalizeTeam(player.team),
-              bucket
+              bucket,
+              isBestBall: Boolean(Number(league.settings?.best_ball || 0))
             });
           }
         }
@@ -1250,6 +1257,10 @@
               opponentScore: scoreValue(opponent),
               myProjection: hasProjections ? myProjection.total : null,
               opponentProjection: hasProjections ? opponentProjection.total : null,
+              opponentPlayerIds: opponent
+                ? (league.isBestBall ? (opponent.players || []) : (opponent.starters || []))
+                : [],
+              opponentStarterIds: opponent?.starters || [],
               error: opponent ? "" : "No opponent is assigned to this matchup."
             };
           })
@@ -1265,8 +1276,33 @@
           };
         });
 
+        state.opponentExposures = [];
+        for (const live of state.liveScores) {
+          const league = state.leagues.find(item => String(item.league_id) === String(live.leagueId));
+          if (!league || !live.opponentRosterId) continue;
+
+          const opponentMeta = league.rosterMeta?.[String(live.opponentRosterId)] || {};
+          const starterIds = new Set((live.opponentStarterIds || []).map(String));
+          for (const rawPlayerId of live.opponentPlayerIds || []) {
+            const playerId = String(rawPlayerId || "");
+            if (!playerId || playerId === "0") continue;
+            const player = getPlayer(playerId);
+            state.opponentExposures.push({
+              leagueId: league.league_id,
+              leagueName: `${league.name}: ${opponentMeta.name || "Opponent"}`,
+              opponentName: opponentMeta.name || "Opponent",
+              playerId,
+              name: playerName(player),
+              position: player.position || "—",
+              team: normalizeTeam(player.team),
+              bucket: starterIds.has(playerId) ? "starter" : "bench",
+              isBestBall: league.isBestBall
+            });
+          }
+        }
+
         state.liveScoresUpdatedAt = new Date();
-        renderLiveScores();
+        renderAll();
       } finally {
         state.liveScoreLoading = false;
         els.refreshScoresBtn.disabled = false;
@@ -1467,13 +1503,18 @@
       const scope = els.scope.value;
       return state.rosterExposures.filter(exposure => {
         const leagueSelected = state.selectedLeagueIds.has(exposure.leagueId);
-        const scopeSelected = scope === "all" || exposure.bucket === scope;
+        const scopeSelected = scope === "all"
+          || exposure.bucket === scope
+          || (scope === "starter" && exposure.isBestBall);
         return leagueSelected && scopeSelected;
       });
     }
 
     function aggregateData() {
       const exposures = selectedExposures();
+      const opponentExposures = (state.opponentExposures || []).filter(
+        exposure => state.selectedLeagueIds.has(exposure.leagueId)
+      );
       const teamToGame = new Map();
 
       for (const game of state.games) {
@@ -1484,6 +1525,7 @@
       const gameRows = state.games.map(game => ({
         ...game,
         exposures: [],
+        opponentExposures: [],
         awayExposures: [],
         homeExposures: []
       }));
@@ -1505,8 +1547,15 @@
         if (exposure.team === game.home.abbreviation) game.homeExposures.push(exposure);
       }
 
+      for (const exposure of opponentExposures) {
+        const gameId = teamToGame.get(exposure.team);
+        const game = gameLookup.get(gameId);
+        if (game) game.opponentExposures.push(exposure);
+      }
+
       for (const game of gameRows) {
         game.uniqueCount = new Set(game.exposures.map(item => item.playerId)).size;
+        game.opponentUniqueCount = new Set(game.opponentExposures.map(item => item.playerId)).size;
         game.exposureCount = game.exposures.length;
       }
 
@@ -1601,14 +1650,15 @@
 
     function renderGame(game, kickoffMode = false, kickoffColorMap = new Map()) {
       const groupedPlayers = groupPlayerExposures(game.exposures);
+      const groupedOpponents = groupPlayerExposures(game.opponentExposures || []);
       const kickoff = formatKickoffLabel(game.date, game.status || "TBD");
       const kickoffColor = kickoffColorMap.get(kickoff);
       const kickoffMarkup = kickoffMode && kickoffColor
         ? `<div class="kickoff-wrap"><span class="kickoff-badge" style="background:${kickoffColor.bg};border-color:${kickoffColor.border};color:${kickoffColor.text}">${escapeHtml(kickoff)}</span></div>`
         : `<div class="kickoff">${escapeHtml(kickoff)}</div>`;
 
-      const details = groupedPlayers.length
-        ? groupedPlayers.map(player => `
+      const playerRows = (players, emptyText) => players.length
+        ? players.map(player => `
             <div class="player-row">
               <div class="player-identity">
                 ${playerAvatarMarkup(player)}
@@ -1622,7 +1672,13 @@
               </div>
             </div>
           `).join("")
-        : `<div class="empty">No selected roster players in this game.</div>`;
+        : `<div class="empty">${escapeHtml(emptyText)}</div>`;
+
+      const details = playerRows(groupedPlayers, "No selected roster players in this game.");
+      const opponentDetails = playerRows(
+        groupedOpponents,
+        state.liveScoresUpdatedAt ? "No opponent players in this game." : "Opponent matchup data is loading."
+      );
 
       const awayLogo = game.away.logo
         ? `<img class="team-logo" src="${escapeHtml(game.away.logo)}" alt="" />`
@@ -1667,9 +1723,19 @@
           </div>
           <details>
             <summary>
-              ${game.uniqueCount} unique player${game.uniqueCount === 1 ? "" : "s"}
+              ${game.uniqueCount} your player${game.uniqueCount === 1 ? "" : "s"}
+              • ${game.opponentUniqueCount || 0} opponent player${game.opponentUniqueCount === 1 ? "" : "s"}
             </summary>
-            <div class="player-list">${details}</div>
+            <div class="matchup-player-columns">
+              <section>
+                <div class="player-section-title">Your players</div>
+                <div class="player-list">${details}</div>
+              </section>
+              <section>
+                <div class="player-section-title">Opponent players</div>
+                <div class="player-list">${opponentDetails}</div>
+              </section>
+            </div>
           </details>
         </article>
       `;
