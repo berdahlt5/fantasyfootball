@@ -1,0 +1,41 @@
+name: Apply watch windows
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-watch-windows.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Patch watch windows
+        run: python tmp/apply-watch-windows.py
+      - name: Validate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('schedule-tool.html').read_text()
+          for n in ['watch-windows-v1','watchWindowInfo','renderWatchWindows','Top pick this window','grouped by kickoff window']:
+              assert n in s,n
+          PY
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const html=fs.readFileSync('schedule-tool.html','utf8');
+          for (const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) new vm.Script(m[1]);
+          console.log('JS validated');
+          NODE
+      - name: Commit changes
+        run: |
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add schedule-tool.html
+          git commit -m "Group watch priorities by kickoff window"
+          git push
+          git rm .github/workflows/apply-watch-windows.yml tmp/apply-watch-windows.py
+          git commit -m "Remove one-time watch-window patch files"
+          git push
