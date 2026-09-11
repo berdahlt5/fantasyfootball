@@ -1,0 +1,31 @@
+name: Apply validated schedule patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/run-schedule-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply stored patch
+        run: >-
+          python -c "import re,base64,pathlib; t=pathlib.Path('.github/workflows/patch-schedule.yml').read_text(); s=re.search(r\"b64decode\('([^']+)'\)\",t).group(1); exec(base64.b64decode(s))"
+      - name: Validate JavaScript and features
+        run: >-
+          node -e "const fs=require('fs'),vm=require('vm');const html=fs.readFileSync('schedule-tool.html','utf8');const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]);scripts.forEach((code,i)=>new vm.Script(code,{filename:'inline-'+(i+1)+'.js'}));console.log('Validated '+scripts.length+' inline scripts.');" &&
+          grep -q 'isBestBall' schedule-tool.html &&
+          grep -q 'Opponent players' schedule-tool.html &&
+          grep -q 'opponentExposures' schedule-tool.html
+      - name: Commit schedule changes
+        run: >-
+          git config user.name 'berdahlt5' &&
+          git config user.email 'berdahlt5@gmail.com' &&
+          git add schedule-tool.html &&
+          git commit -m 'Add opponent players and best ball rosters to schedule tool' &&
+          git push origin main
