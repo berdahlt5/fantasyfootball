@@ -1,0 +1,143 @@
+name: Apply schedule priority and lineup assistant navigation
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-schedule-priority-lineup.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch schedule and navigation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('schedule-tool.html')
+          s = p.read_text()
+
+          # Make completed games more clearly secondary.
+          s = s.replace('.game-card.past-game{filter:grayscale(.4);opacity:.76}', '.game-card.past-game{filter:grayscale(.72);opacity:.52}.game-card.past-game:hover{opacity:.66}')
+
+          # Replace colorful league chips with neutral controls + persistent priority stars.
+          old_css = '''    .league-chips{display:flex;gap:8px;flex-wrap:wrap}\n    .league-chip{\n      display:flex;align-items:center;gap:7px;\n      border:1px solid rgba(132,186,215,.3);background:var(--chip);\n      border-radius:999px;padding:7px 10px;color:var(--taupe);font-size:.83rem\n    }\n    .league-chip input{width:auto;margin:0;accent-color:var(--sky)}'''
+          new_css = '''    .league-chips{display:flex;gap:8px;flex-wrap:wrap}\n    .league-control{display:flex;align-items:stretch;border:1px solid rgba(132,186,215,.3);background:rgba(255,255,237,.92);border-radius:999px;overflow:hidden}\n    .league-control.priority{border-color:rgba(216,169,74,.7);box-shadow:inset 3px 0 0 rgba(216,169,74,.92)}\n    .league-chip{display:flex;align-items:center;gap:7px;padding:7px 9px;color:var(--taupe);font-size:.83rem;background:transparent;border:0;border-radius:0}\n    .league-chip input{width:auto;margin:0;accent-color:var(--sky)}\n    .priority-star{width:32px;border:0;border-left:1px solid rgba(46,40,35,.14);background:transparent;color:rgba(46,40,35,.38);font-size:1rem;font-weight:1000}\n    .priority-star[aria-pressed="true"]{color:#9A6D13;background:rgba(216,169,74,.18)}'''
+          if old_css not in s:
+              raise SystemExit('league chip CSS anchor not found')
+          s = s.replace(old_css, new_css, 1)
+
+          # Replace old matchup columns with league-first readability styles.
+          old_matchup_css = '''    .matchup-player-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:12px 0 2px}\n    .matchup-player-columns section{min-width:0}\n    .player-section-title{margin:0 0 8px;color:var(--sky);font-size:.72rem;font-weight:1000;text-transform:uppercase;letter-spacing:.08em}\n    @media(max-width:760px){.matchup-player-columns{grid-template-columns:1fr}}'''
+          new_matchup_css = '''    .game-card.priority-game{border-color:rgba(216,169,74,.66);box-shadow:inset 5px 0 0 rgba(216,169,74,.9)}\n    .game-league-groups{display:grid;gap:10px;padding:12px 0 2px}\n    .game-league-block{border:1px solid rgba(132,186,215,.2);border-radius:11px;background:rgba(57,50,43,.52);overflow:hidden}\n    .game-league-block.priority{border-color:rgba(216,169,74,.48);background:rgba(216,169,74,.065)}\n    .game-league-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-bottom:1px solid rgba(132,186,215,.14)}\n    .game-league-name{color:var(--mint);font-size:.8rem;font-weight:1000}\n    .priority-label{display:inline-flex;padding:2px 6px;border-radius:999px;background:rgba(216,169,74,.15);border:1px solid rgba(216,169,74,.35);color:#F0CA78;font-size:.55rem;font-weight:1000;text-transform:uppercase;letter-spacing:.05em}\n    .game-league-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0}\n    .game-league-column{padding:9px 10px;min-width:0}\n    .game-league-column + .game-league-column{border-left:1px solid rgba(132,186,215,.14)}\n    .game-column-title{margin-bottom:6px;color:var(--sky);font-size:.61rem;font-weight:1000;text-transform:uppercase;letter-spacing:.06em}\n    .league-player-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(132,186,215,.09)}\n    .league-player-row:first-of-type{border-top:0}\n    .league-player-name{font-size:.76rem;font-weight:1000;color:var(--mint)}\n    .league-player-meta{margin-top:2px;color:var(--muted);font-size:.6rem}\n    .priority-game-note{display:inline-flex;margin-top:6px;padding:3px 7px;border-radius:999px;background:rgba(216,169,74,.14);border:1px solid rgba(216,169,74,.32);color:#F0CA78;font-size:.58rem;font-weight:1000}\n    @media(max-width:760px){.game-league-columns{grid-template-columns:1fr}.game-league-column + .game-league-column{border-left:0;border-top:1px solid rgba(132,186,215,.14)}}'''
+          if old_matchup_css not in s:
+              raise SystemExit('matchup CSS anchor not found')
+          s = s.replace(old_matchup_css, new_matchup_css, 1)
+
+          # Add priority state.
+          s = s.replace('      selectedLeagueIds: new Set(),\n      loadedSeason: null,', '      selectedLeagueIds: new Set(),\n      priorityLeagueNames: new Set(),\n      loadedSeason: null,', 1)
+
+          # Replace the old league color helper with priority helpers; leave palette unused if present.
+          pattern = re.compile(r'    function leagueColorStyle\(label\) \{.*?\n    \}', re.S)
+          replacement = '''    function loadPriorityLeagueNames() {\n      const defaults = new Set(["girdiron gurus", "gridiron gurus", "tnt fantasy"]);\n      try {\n        const saved = JSON.parse(localStorage.getItem("fantasyPriorityLeagues") || "[]");\n        if (Array.isArray(saved) && saved.length) return new Set(saved.map(name => String(name).trim().toLowerCase()));\n      } catch (_) {}\n      return defaults;\n    }\n\n    function isPriorityLeagueName(name) {\n      return state.priorityLeagueNames.has(String(name || "").split(":")[0].trim().toLowerCase());\n    }\n\n    function savePriorityLeagueNames() {\n      try { localStorage.setItem("fantasyPriorityLeagues", JSON.stringify([...state.priorityLeagueNames])); } catch (_) {}\n    }'''
+          s, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit('leagueColorStyle helper not replaced')
+
+          # Initialize priorities whenever leagues load.
+          anchor = '        state.selectedLeagueIds = new Set(state.leagues.map(league => league.league_id));\n        state.rosterExposures = [];'
+          repl = '        state.selectedLeagueIds = new Set(state.leagues.map(league => league.league_id));\n        state.priorityLeagueNames = loadPriorityLeagueNames();\n        state.rosterExposures = [];'
+          if anchor not in s:
+              raise SystemExit('league load priority anchor not found')
+          s = s.replace(anchor, repl, 1)
+
+          # Neutral league selector + star priority toggle.
+          pattern = re.compile(r'    function renderLeagueFilters\(\) \{.*?\n    \}\n\n    function groupPlayerExposures', re.S)
+          replacement = '''    function renderLeagueFilters() {\n      const leagues = [...state.leagues].sort((a, b) =>\n        Number(isPriorityLeagueName(b.name)) - Number(isPriorityLeagueName(a.name)) || a.name.localeCompare(b.name)\n      );\n      els.leagueChips.innerHTML = leagues.map(league => {\n        const priority = isPriorityLeagueName(league.name);\n        return `\n          <div class="league-control ${priority ? "priority" : ""}">\n            <label class="league-chip">\n              <input type="checkbox" data-league-id="${escapeHtml(league.league_id)}" ${state.selectedLeagueIds.has(league.league_id) ? "checked" : ""} />\n              <span>${escapeHtml(league.name)}</span>\n            </label>\n            <button class="priority-star" type="button" data-priority-name="${escapeHtml(league.name)}" aria-pressed="${priority}" title="${priority ? "Remove priority" : "Mark as priority"}">★</button>\n          </div>`;\n      }).join("");\n\n      els.leagueFilter.classList.toggle("show", state.leagues.length > 0);\n      els.leagueChips.querySelectorAll("input[data-league-id]").forEach(input => {\n        input.addEventListener("change", () => {\n          const leagueId = input.dataset.leagueId;\n          if (input.checked) state.selectedLeagueIds.add(leagueId);\n          else state.selectedLeagueIds.delete(leagueId);\n          renderAll();\n        });\n      });\n      els.leagueChips.querySelectorAll("button[data-priority-name]").forEach(button => {\n        button.addEventListener("click", () => {\n          const key = String(button.dataset.priorityName || "").trim().toLowerCase();\n          if (state.priorityLeagueNames.has(key)) state.priorityLeagueNames.delete(key);\n          else state.priorityLeagueNames.add(key);\n          savePriorityLeagueNames();\n          renderLeagueFilters();\n          renderAll();\n        });\n      });\n    }\n\n    function groupPlayerExposures'''
+          s, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit('renderLeagueFilters not replaced')
+
+          # Replace renderGame with league-first grouping.
+          pattern = re.compile(r'    function renderGame\(game, kickoffMode = false, kickoffColorMap = new Map\(\)\) \{.*?\n    \}\n\n    function renderSidebar', re.S)
+          replacement = '''    function renderGame(game, kickoffMode = false, kickoffColorMap = new Map()) {\n      const groupedPlayers = groupPlayerExposures(game.exposures);\n      const groupedOpponents = groupPlayerExposures(game.opponentExposures || []);\n      const kickoff = formatKickoffLabel(game.date, game.status || "TBD");\n      const kickoffColor = kickoffColorMap.get(kickoff);\n      const kickoffMarkup = kickoffMode && kickoffColor\n        ? `<div class="kickoff-wrap"><span class="kickoff-badge" style="background:${kickoffColor.bg};border-color:${kickoffColor.border};color:${kickoffColor.text}">${escapeHtml(kickoff)}</span></div>`\n        : `<div class="kickoff">${escapeHtml(kickoff)}</div>`;\n      const isPast = Boolean(game.completed) || String(game.statusState || "").toLowerCase() === "post";\n      const awayLogo = game.away.logo ? `<img class="team-logo" src="${escapeHtml(game.away.logo)}" alt="" />` : "";\n      const homeLogo = game.home.logo ? `<img class="team-logo" src="${escapeHtml(game.home.logo)}" alt="" />` : "";\n\n      const leagueIds = new Set([...(game.exposures || []), ...(game.opponentExposures || [])].map(item => String(item.leagueId)));\n      const leagueGroups = [...leagueIds].map(leagueId => {\n        const league = state.leagues.find(item => String(item.league_id) === leagueId);\n        const mineRaw = (game.exposures || []).filter(item => String(item.leagueId) === leagueId);\n        const oppRaw = (game.opponentExposures || []).filter(item => String(item.leagueId) === leagueId);\n        const fallback = mineRaw[0]?.leagueName || oppRaw[0]?.leagueName || "League";\n        const name = league?.name || String(fallback).split(":")[0].trim();\n        return { leagueId, name, priority: isPriorityLeagueName(name), mine: groupPlayerExposures(mineRaw), opp: groupPlayerExposures(oppRaw), opponentName: oppRaw[0]?.opponentName || "Opponent" };\n      }).sort((a, b) => Number(b.priority) - Number(a.priority) || a.name.localeCompare(b.name));\n      const hasPriority = leagueGroups.some(group => group.priority);\n\n      const playerRows = players => players.length ? players.map(player => `\n        <div class="league-player-row">\n          ${playerAvatarMarkup(player)}\n          <div><div class="league-player-name">${escapeHtml(player.name)}</div><div class="league-player-meta">${escapeHtml(player.position)} · ${escapeHtml([...player.buckets].map(bucketLabel).join(" / "))}</div></div>\n        </div>`).join("") : `<div class="empty">None in this game.</div>`;\n\n      const leagueDetails = leagueGroups.length ? leagueGroups.map(group => `\n        <section class="game-league-block ${group.priority ? "priority" : ""}">\n          <div class="game-league-head"><div class="game-league-name">${escapeHtml(group.name)}</div>${group.priority ? '<span class="priority-label">Priority league</span>' : ''}</div>\n          <div class="game-league-columns">\n            <div class="game-league-column"><div class="game-column-title">Your players</div>${playerRows(group.mine)}</div>\n            <div class="game-league-column"><div class="game-column-title">${escapeHtml(group.opponentName)}</div>${playerRows(group.opp)}</div>\n          </div>\n        </section>`).join("") : `<div class="empty">No selected league players in this game.</div>`;\n\n      return `\n        <article class="game-card ${isPast ? "past-game" : ""} ${hasPriority ? "priority-game" : ""}">\n          <div class="game-main">\n            <div class="team">${awayLogo}<div><div class="team-abbr">${escapeHtml(game.away.abbreviation)}</div><div class="team-name">${escapeHtml(game.away.name)}</div></div></div>\n            <div class="score-box"><div class="at">@</div>${kickoffMarkup}</div>\n            <div class="team right"><div><div class="team-abbr">${escapeHtml(game.home.abbreviation)}</div><div class="team-name">${escapeHtml(game.home.name)}</div></div>${homeLogo}</div>\n            <div class="count-box"><div class="count">${game.exposureCount}</div><div class="count-caption">your roster exposures</div><div class="side-count">${game.away.abbreviation} ${game.awayExposures.length}&nbsp;•&nbsp;${game.home.abbreviation} ${game.homeExposures.length}</div>${hasPriority ? '<div class="priority-game-note">★ Priority league involved</div>' : ''}</div>\n          </div>\n          <details>\n            <summary>${game.uniqueCount} your player${game.uniqueCount === 1 ? "" : "s"} • ${game.opponentUniqueCount || 0} opponent player${game.opponentUniqueCount === 1 ? "" : "s"} • ${leagueGroups.length} league${leagueGroups.length === 1 ? "" : "s"}</summary>\n            <div class="game-league-groups">${leagueDetails}</div>\n          </details>\n        </article>`;\n    }\n\n    function renderSidebar'''
+          s, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit('renderGame not replaced')
+
+          # Priority sort option.
+          s = s.replace('<option value="exposures">Most roster exposures</option>', '<option value="priority">Priority leagues first</option>\n            <option value="exposures">Most roster exposures</option>', 1)
+          sort_anchor = '''        if (sort === "unique") {\n          return b.uniqueCount - a.uniqueCount || b.exposureCount - a.exposureCount;\n        }'''
+          sort_repl = '''        if (sort === "priority") {\n          const aPriority = new Set(a.exposures.filter(item => isPriorityLeagueName(item.leagueName)).map(item => item.leagueId)).size;\n          const bPriority = new Set(b.exposures.filter(item => isPriorityLeagueName(item.leagueName)).map(item => item.leagueId)).size;\n          return bPriority - aPriority || new Date(a.date).getTime() - new Date(b.date).getTime() || b.exposureCount - a.exposureCount;\n        }\n        if (sort === "unique") {\n          return b.uniqueCount - a.uniqueCount || b.exposureCount - a.exposureCount;\n        }'''
+          if sort_anchor not in s:
+              raise SystemExit('sort anchor not found')
+          s = s.replace(sort_anchor, sort_repl, 1)
+
+          # Add Lineup Assistant navigation and preserve context.
+          nav_anchor = '<a class="header-nav" id="crunchtimeLink" href="./crunchtime.html">Crunchtime</a>'
+          s = s.replace(nav_anchor, nav_anchor + '\n        <a class="header-nav" id="lineupAssistantLink" href="./lineup-assistant.html">Lineup Assistant</a>', 1)
+          click_anchor = '    if (els.rankingsLink) els.rankingsLink.addEventListener("click", () => {'
+          click_code = '''    if (els.lineupAssistantLink) els.lineupAssistantLink.addEventListener("click", () => {\n      const params = new URLSearchParams({ username: els.username.value.trim(), season: els.season.value, week: els.week.value });\n      els.lineupAssistantLink.href = `./lineup-assistant.html?${params}`;\n    });\n\n'''
+          if click_anchor not in s:
+              raise SystemExit('schedule nav listener anchor not found')
+          s = s.replace(click_anchor, click_code + click_anchor, 1)
+
+          # Initialize season/week from Sleeper before autoloading.
+          pattern = re.compile(r'    els\.loadBtn\.addEventListener\("click", loadSleeperData\);\n    const autoLoadSleeperData = \(\) => \{.*?\n    \} else \{\n      autoLoadSleeperData\(\);\n    \}', re.S)
+          replacement = '''    els.loadBtn.addEventListener("click", loadSleeperData);\n    const initializeScheduleTool = async () => {\n      const params = new URLSearchParams(location.search);\n      if (params.get("username")) els.username.value = params.get("username");\n      if (params.get("season")) els.season.value = params.get("season");\n      if (params.get("week")) els.week.value = params.get("week");\n      if (!params.get("season") || !params.get("week")) {\n        try {\n          const nfl = await fetchJson(`${SLEEPER_API}/state/nfl`, "NFL state");\n          if (!params.get("season") && nfl?.season) els.season.value = nfl.season;\n          const currentWeek = Number(nfl?.display_week || nfl?.week || 1);\n          if (!params.get("week") && currentWeek >= 1 && currentWeek <= 18) els.week.value = String(currentWeek);\n        } catch (_) {}\n      }\n      if (els.username.value.trim() && !state.loading && !state.user) loadSleeperData();\n    };\n    if (document.readyState === "loading") window.addEventListener("DOMContentLoaded", initializeScheduleTool, { once: true });\n    else initializeScheduleTool();'''
+          s, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit('schedule initialization not replaced')
+
+          p.write_text(s)
+
+          # Owner Dashboard nav + propagated params.
+          for fname in ['home.html', 'index.html']:
+              q = Path(fname); t = q.read_text()
+              nav = '<a class="nav-button secondary" id="crunchtimeLink" href="./crunchtime.html">Crunchtime</a>'
+              if 'id="lineupLink"' not in t:
+                  t = t.replace(nav, nav + '\n        <a class="nav-button secondary" id="lineupLink" href="./lineup-assistant.html">Lineup Assistant</a>', 1)
+              href_anchor = '        els.scheduleLink.href=`./schedule-tool.html?${params}`;'
+              if 'els.lineupLink.href' not in t:
+                  t = t.replace(href_anchor, href_anchor + '\n        if(els.lineupLink)els.lineupLink.href=`./lineup-assistant.html?${params}`;', 1)
+              q.write_text(t)
+
+          # Crunchtime nav.
+          q = Path('crunchtime.html'); t = q.read_text()
+          if 'lineup-assistant.html' not in t:
+              t = t.replace('<a class="nav-button" href="./schedule-tool.html">Schedule Tool</a>', '<a class="nav-button" href="./schedule-tool.html">Schedule Tool</a><a class="nav-button" href="./lineup-assistant.html">Lineup Assistant</a>', 1)
+          q.write_text(t)
+          PY
+      - name: Validate changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('schedule-tool.html').read_text()
+          assert 'game-league-block' in s
+          assert 'priorityLeagueNames' in s
+          assert 'lineup-assistant.html' in s
+          assert 'initializeScheduleTool' in s
+          assert 'leagueColorStyle(league.name)' not in s
+          for f in ['home.html','index.html','crunchtime.html','lineup-assistant.html']:
+            assert 'lineup-assistant.html' in Path(f).read_text() or f=='lineup-assistant.html'
+          PY
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          for(const file of ['schedule-tool.html','lineup-assistant.html','crunchtime.html','home.html','index.html']){
+            const html=fs.readFileSync(file,'utf8');
+            const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(Boolean);
+            for(const src of scripts)new vm.Script(src,{filename:file});
+          }
+          NODE
+      - name: Commit changes
+        run: |
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add schedule-tool.html home.html index.html crunchtime.html
+          git commit -m "Simplify schedule leagues and add priority controls"
+          git push
+          git rm .github/workflows/apply-schedule-priority-lineup.yml
+          git commit -m "Remove one-time schedule priority workflow"
+          git push
