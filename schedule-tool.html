@@ -151,12 +151,12 @@
     .filter-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:11px}
     .filter-title{font-weight:900}
     .league-chips{display:flex;gap:8px;flex-wrap:wrap}
-    .league-chip{
-      display:flex;align-items:center;gap:7px;
-      border:1px solid rgba(132,186,215,.3);background:var(--chip);
-      border-radius:999px;padding:7px 10px;color:var(--taupe);font-size:.83rem
-    }
+    .league-control{display:flex;align-items:stretch;border:1px solid rgba(132,186,215,.3);background:rgba(255,255,237,.92);border-radius:999px;overflow:hidden}
+    .league-control.priority{border-color:rgba(216,169,74,.7);box-shadow:inset 3px 0 0 rgba(216,169,74,.92)}
+    .league-chip{display:flex;align-items:center;gap:7px;padding:7px 9px;color:var(--taupe);font-size:.83rem;background:transparent;border:0;border-radius:0}
     .league-chip input{width:auto;margin:0;accent-color:var(--sky)}
+    .priority-star{width:32px;border:0;border-left:1px solid rgba(46,40,35,.14);background:transparent;color:rgba(46,40,35,.38);font-size:1rem;font-weight:1000}
+    .priority-star[aria-pressed="true"]{color:#9A6D13;background:rgba(216,169,74,.18)}
 
     .live-scores-panel{
       display:none;
@@ -544,10 +544,23 @@
     details > summary::after{color:var(--gold)}
 
   
-    .matchup-player-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:12px 0 2px}
-    .matchup-player-columns section{min-width:0}
-    .player-section-title{margin:0 0 8px;color:var(--sky);font-size:.72rem;font-weight:1000;text-transform:uppercase;letter-spacing:.08em}
-    @media(max-width:760px){.matchup-player-columns{grid-template-columns:1fr}}
+    .game-card.priority-game{border-color:rgba(216,169,74,.66);box-shadow:inset 5px 0 0 rgba(216,169,74,.9)}
+    .game-league-groups{display:grid;gap:10px;padding:12px 0 2px}
+    .game-league-block{border:1px solid rgba(132,186,215,.2);border-radius:11px;background:rgba(57,50,43,.52);overflow:hidden}
+    .game-league-block.priority{border-color:rgba(216,169,74,.48);background:rgba(216,169,74,.065)}
+    .game-league-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-bottom:1px solid rgba(132,186,215,.14)}
+    .game-league-name{color:var(--mint);font-size:.8rem;font-weight:1000}
+    .priority-label{display:inline-flex;padding:2px 6px;border-radius:999px;background:rgba(216,169,74,.15);border:1px solid rgba(216,169,74,.35);color:#F0CA78;font-size:.55rem;font-weight:1000;text-transform:uppercase;letter-spacing:.05em}
+    .game-league-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0}
+    .game-league-column{padding:9px 10px;min-width:0}
+    .game-league-column + .game-league-column{border-left:1px solid rgba(132,186,215,.14)}
+    .game-column-title{margin-bottom:6px;color:var(--sky);font-size:.61rem;font-weight:1000;text-transform:uppercase;letter-spacing:.06em}
+    .league-player-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(132,186,215,.09)}
+    .league-player-row:first-of-type{border-top:0}
+    .league-player-name{font-size:.76rem;font-weight:1000;color:var(--mint)}
+    .league-player-meta{margin-top:2px;color:var(--muted);font-size:.6rem}
+    .priority-game-note{display:inline-flex;margin-top:6px;padding:3px 7px;border-radius:999px;background:rgba(216,169,74,.14);border:1px solid rgba(216,169,74,.32);color:#F0CA78;font-size:.58rem;font-weight:1000}
+    @media(max-width:760px){.game-league-columns{grid-template-columns:1fr}.game-league-column + .game-league-column{border-left:0;border-top:1px solid rgba(132,186,215,.14)}}
 </style>
 </head>
 <body>
@@ -563,6 +576,7 @@
       <div class="header-actions">
         <a class="header-nav" href="./index.html">Owner Dashboard</a>
         <a class="header-nav" id="crunchtimeLink" href="./crunchtime.html">Crunchtime</a>
+        <a class="header-nav" id="lineupAssistantLink" href="./lineup-assistant.html">Lineup Assistant</a>
         <a class="header-nav gold" id="rankingsLink" href="./team-rankings.html">Team Rankings</a>
         <a class="header-nav" id="waiverAgentLink" href="./waiver-wire-agent.html">Waiver Wire Agent Beta</a>
         <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☾</span><span id="themeToggleLabel">Dark background</span></button>
@@ -597,6 +611,7 @@
         <label>
           Sort games by
           <select id="sort">
+            <option value="priority">Priority leagues first</option>
             <option value="exposures">Most roster exposures</option>
             <option value="unique">Most unique players</option>
             <option value="kickoff" selected>Kickoff time</option>
@@ -745,6 +760,7 @@
       projectionWeek: null,
       projectionLoadedAt: 0,
       selectedLeagueIds: new Set(),
+      priorityLeagueNames: new Set(),
       loadedSeason: null,
       loading: false
     };
@@ -1015,6 +1031,7 @@
         });
 
         state.selectedLeagueIds = new Set(state.leagues.map(league => league.league_id));
+        state.priorityLeagueNames = loadPriorityLeagueNames();
         state.rosterExposures = [];
 
         for (const { league, roster } of owned) {
@@ -1567,6 +1584,11 @@
 
       const sort = els.sort.value;
       gameRows.sort((a, b) => {
+        if (sort === "priority") {
+          const aPriority = new Set(a.exposures.filter(item => isPriorityLeagueName(item.leagueName)).map(item => item.leagueId)).size;
+          const bPriority = new Set(b.exposures.filter(item => isPriorityLeagueName(item.leagueName)).map(item => item.leagueId)).size;
+          return bPriority - aPriority || new Date(a.date).getTime() - new Date(b.date).getTime() || b.exposureCount - a.exposureCount;
+        }
         if (sort === "unique") {
           return b.uniqueCount - a.uniqueCount || b.exposureCount - a.exposureCount;
         }
@@ -1605,33 +1627,55 @@
       { bg: "rgba(150,214,204,.9)", border: "rgba(150,214,204,.98)", text: "#2E2823" }
     ];
 
-    function leagueColorStyle(label) {
-      const key = String(label || "League").split(":")[0].trim();
-      let hash = 0;
-      for (let i = 0; i < key.length; i += 1) hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
-      const color = LEAGUE_COLORS[Math.abs(hash) % LEAGUE_COLORS.length];
-      return `background:${color.bg};border-color:${color.border};color:${color.text}`;
+    function loadPriorityLeagueNames() {
+      const defaults = new Set(["girdiron gurus", "gridiron gurus", "tnt fantasy"]);
+      try {
+        const saved = JSON.parse(localStorage.getItem("fantasyPriorityLeagues") || "[]");
+        if (Array.isArray(saved) && saved.length) return new Set(saved.map(name => String(name).trim().toLowerCase()));
+      } catch (_) {}
+      return defaults;
+    }
+
+    function isPriorityLeagueName(name) {
+      return state.priorityLeagueNames.has(String(name || "").split(":")[0].trim().toLowerCase());
+    }
+
+    function savePriorityLeagueNames() {
+      try { localStorage.setItem("fantasyPriorityLeagues", JSON.stringify([...state.priorityLeagueNames])); } catch (_) {}
     }
 
     function renderLeagueFilters() {
-      els.leagueChips.innerHTML = state.leagues.map(league => `
-        <label class="league-chip" style="${leagueColorStyle(league.name)}">
-          <input
-            type="checkbox"
-            data-league-id="${escapeHtml(league.league_id)}"
-            ${state.selectedLeagueIds.has(league.league_id) ? "checked" : ""}
-          />
-          <span>${escapeHtml(league.name)}</span>
-        </label>
-      `).join("");
+      const leagues = [...state.leagues].sort((a, b) =>
+        Number(isPriorityLeagueName(b.name)) - Number(isPriorityLeagueName(a.name)) || a.name.localeCompare(b.name)
+      );
+      els.leagueChips.innerHTML = leagues.map(league => {
+        const priority = isPriorityLeagueName(league.name);
+        return `
+          <div class="league-control ${priority ? "priority" : ""}">
+            <label class="league-chip">
+              <input type="checkbox" data-league-id="${escapeHtml(league.league_id)}" ${state.selectedLeagueIds.has(league.league_id) ? "checked" : ""} />
+              <span>${escapeHtml(league.name)}</span>
+            </label>
+            <button class="priority-star" type="button" data-priority-name="${escapeHtml(league.name)}" aria-pressed="${priority}" title="${priority ? "Remove priority" : "Mark as priority"}">★</button>
+          </div>`;
+      }).join("");
 
       els.leagueFilter.classList.toggle("show", state.leagues.length > 0);
-
       els.leagueChips.querySelectorAll("input[data-league-id]").forEach(input => {
         input.addEventListener("change", () => {
           const leagueId = input.dataset.leagueId;
           if (input.checked) state.selectedLeagueIds.add(leagueId);
           else state.selectedLeagueIds.delete(leagueId);
+          renderAll();
+        });
+      });
+      els.leagueChips.querySelectorAll("button[data-priority-name]").forEach(button => {
+        button.addEventListener("click", () => {
+          const key = String(button.dataset.priorityName || "").trim().toLowerCase();
+          if (state.priorityLeagueNames.has(key)) state.priorityLeagueNames.delete(key);
+          else state.priorityLeagueNames.add(key);
+          savePriorityLeagueNames();
+          renderLeagueFilters();
           renderAll();
         });
       });
@@ -1681,90 +1725,49 @@
       const kickoffMarkup = kickoffMode && kickoffColor
         ? `<div class="kickoff-wrap"><span class="kickoff-badge" style="background:${kickoffColor.bg};border-color:${kickoffColor.border};color:${kickoffColor.text}">${escapeHtml(kickoff)}</span></div>`
         : `<div class="kickoff">${escapeHtml(kickoff)}</div>`;
-
-      const playerRows = (players, emptyText) => players.length
-        ? players.map(player => `
-            <div class="player-row">
-              <div class="player-identity">
-                ${playerAvatarMarkup(player)}
-                <div class="player-name">${escapeHtml(player.name)}</div>
-              </div>
-              <span class="pos">${escapeHtml(player.position)}</span>
-              <span class="bucket">${escapeHtml([...player.buckets].map(bucketLabel).join(" / "))}</span>
-              <div class="player-leagues">
-                <span class="exposure-copy">${player.count} exposure${player.count === 1 ? "" : "s"}:</span>
-                ${[...player.leagues].map(league => `<span class="league-exposure-label" style="${leagueColorStyle(league)}">${escapeHtml(league)}</span>`).join("")}
-              </div>
-            </div>
-          `).join("")
-        : `<div class="empty">${escapeHtml(emptyText)}</div>`;
-
-      const details = playerRows(groupedPlayers, "No selected roster players in this game.");
-      const opponentDetails = playerRows(
-        groupedOpponents,
-        state.liveScoresUpdatedAt ? "No opponent players in this game." : "Opponent matchup data is loading."
-      );
-
-      const awayLogo = game.away.logo
-        ? `<img class="team-logo" src="${escapeHtml(game.away.logo)}" alt="" />`
-        : "";
-      const homeLogo = game.home.logo
-        ? `<img class="team-logo" src="${escapeHtml(game.home.logo)}" alt="" />`
-        : "";
       const isPast = Boolean(game.completed) || String(game.statusState || "").toLowerCase() === "post";
+      const awayLogo = game.away.logo ? `<img class="team-logo" src="${escapeHtml(game.away.logo)}" alt="" />` : "";
+      const homeLogo = game.home.logo ? `<img class="team-logo" src="${escapeHtml(game.home.logo)}" alt="" />` : "";
+
+      const leagueIds = new Set([...(game.exposures || []), ...(game.opponentExposures || [])].map(item => String(item.leagueId)));
+      const leagueGroups = [...leagueIds].map(leagueId => {
+        const league = state.leagues.find(item => String(item.league_id) === leagueId);
+        const mineRaw = (game.exposures || []).filter(item => String(item.leagueId) === leagueId);
+        const oppRaw = (game.opponentExposures || []).filter(item => String(item.leagueId) === leagueId);
+        const fallback = mineRaw[0]?.leagueName || oppRaw[0]?.leagueName || "League";
+        const name = league?.name || String(fallback).split(":")[0].trim();
+        return { leagueId, name, priority: isPriorityLeagueName(name), mine: groupPlayerExposures(mineRaw), opp: groupPlayerExposures(oppRaw), opponentName: oppRaw[0]?.opponentName || "Opponent" };
+      }).sort((a, b) => Number(b.priority) - Number(a.priority) || a.name.localeCompare(b.name));
+      const hasPriority = leagueGroups.some(group => group.priority);
+
+      const playerRows = players => players.length ? players.map(player => `
+        <div class="league-player-row">
+          ${playerAvatarMarkup(player)}
+          <div><div class="league-player-name">${escapeHtml(player.name)}</div><div class="league-player-meta">${escapeHtml(player.position)} · ${escapeHtml([...player.buckets].map(bucketLabel).join(" / "))}</div></div>
+        </div>`).join("") : `<div class="empty">None in this game.</div>`;
+
+      const leagueDetails = leagueGroups.length ? leagueGroups.map(group => `
+        <section class="game-league-block ${group.priority ? "priority" : ""}">
+          <div class="game-league-head"><div class="game-league-name">${escapeHtml(group.name)}</div>${group.priority ? '<span class="priority-label">Priority league</span>' : ''}</div>
+          <div class="game-league-columns">
+            <div class="game-league-column"><div class="game-column-title">Your players</div>${playerRows(group.mine)}</div>
+            <div class="game-league-column"><div class="game-column-title">${escapeHtml(group.opponentName)}</div>${playerRows(group.opp)}</div>
+          </div>
+        </section>`).join("") : `<div class="empty">No selected league players in this game.</div>`;
 
       return `
-        <article class="game-card ${isPast ? "past-game" : ""}">
+        <article class="game-card ${isPast ? "past-game" : ""} ${hasPriority ? "priority-game" : ""}">
           <div class="game-main">
-            <div class="team">
-              ${awayLogo}
-              <div>
-                <div class="team-abbr">${escapeHtml(game.away.abbreviation)}</div>
-                <div class="team-name">${escapeHtml(game.away.name)}</div>
-              </div>
-            </div>
-
-            <div class="score-box">
-              <div class="at">@</div>
-              ${kickoffMarkup}
-            </div>
-
-            <div class="team right">
-              <div>
-                <div class="team-abbr">${escapeHtml(game.home.abbreviation)}</div>
-                <div class="team-name">${escapeHtml(game.home.name)}</div>
-              </div>
-              ${homeLogo}
-            </div>
-
-            <div class="count-box">
-              <div class="count">${game.exposureCount}</div>
-              <div class="count-caption">roster exposures</div>
-              <div class="side-count">
-                ${game.away.abbreviation} ${game.awayExposures.length}
-                &nbsp;•&nbsp;
-                ${game.home.abbreviation} ${game.homeExposures.length}
-              </div>
-            </div>
+            <div class="team">${awayLogo}<div><div class="team-abbr">${escapeHtml(game.away.abbreviation)}</div><div class="team-name">${escapeHtml(game.away.name)}</div></div></div>
+            <div class="score-box"><div class="at">@</div>${kickoffMarkup}</div>
+            <div class="team right"><div><div class="team-abbr">${escapeHtml(game.home.abbreviation)}</div><div class="team-name">${escapeHtml(game.home.name)}</div></div>${homeLogo}</div>
+            <div class="count-box"><div class="count">${game.exposureCount}</div><div class="count-caption">your roster exposures</div><div class="side-count">${game.away.abbreviation} ${game.awayExposures.length}&nbsp;•&nbsp;${game.home.abbreviation} ${game.homeExposures.length}</div>${hasPriority ? '<div class="priority-game-note">★ Priority league involved</div>' : ''}</div>
           </div>
           <details>
-            <summary>
-              ${game.uniqueCount} your player${game.uniqueCount === 1 ? "" : "s"}
-              • ${game.opponentUniqueCount || 0} opponent player${game.opponentUniqueCount === 1 ? "" : "s"}
-            </summary>
-            <div class="matchup-player-columns">
-              <section>
-                <div class="player-section-title">Your players</div>
-                <div class="player-list">${details}</div>
-              </section>
-              <section>
-                <div class="player-section-title">Opponent players</div>
-                <div class="player-list">${opponentDetails}</div>
-              </section>
-            </div>
+            <summary>${game.uniqueCount} your player${game.uniqueCount === 1 ? "" : "s"} • ${game.opponentUniqueCount || 0} opponent player${game.opponentUniqueCount === 1 ? "" : "s"} • ${leagueGroups.length} league${leagueGroups.length === 1 ? "" : "s"}</summary>
+            <div class="game-league-groups">${leagueDetails}</div>
           </details>
-        </article>
-      `;
+        </article>`;
     }
 
     function renderSidebar(exposures, noGame) {
@@ -1895,14 +1898,23 @@
     }
 
     els.loadBtn.addEventListener("click", loadSleeperData);
-    const autoLoadSleeperData = () => {
+    const initializeScheduleTool = async () => {
+      const params = new URLSearchParams(location.search);
+      if (params.get("username")) els.username.value = params.get("username");
+      if (params.get("season")) els.season.value = params.get("season");
+      if (params.get("week")) els.week.value = params.get("week");
+      if (!params.get("season") || !params.get("week")) {
+        try {
+          const nfl = await fetchJson(`${SLEEPER_API}/state/nfl`, "NFL state");
+          if (!params.get("season") && nfl?.season) els.season.value = nfl.season;
+          const currentWeek = Number(nfl?.display_week || nfl?.week || 1);
+          if (!params.get("week") && currentWeek >= 1 && currentWeek <= 18) els.week.value = String(currentWeek);
+        } catch (_) {}
+      }
       if (els.username.value.trim() && !state.loading && !state.user) loadSleeperData();
     };
-    if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", autoLoadSleeperData, { once: true });
-    } else {
-      autoLoadSleeperData();
-    }
+    if (document.readyState === "loading") window.addEventListener("DOMContentLoaded", initializeScheduleTool, { once: true });
+    else initializeScheduleTool();
     els.week.addEventListener("change", loadWeek);
     els.scope.addEventListener("change", renderAll);
     els.sort.addEventListener("change", renderAll);
@@ -1932,6 +1944,11 @@
         week: els.week.value
       });
       els.crunchtimeLink.href = `./crunchtime.html?${params}`;
+    });
+
+    if (els.lineupAssistantLink) els.lineupAssistantLink.addEventListener("click", () => {
+      const params = new URLSearchParams({ username: els.username.value.trim(), season: els.season.value, week: els.week.value });
+      els.lineupAssistantLink.href = `./lineup-assistant.html?${params}`;
     });
 
     if (els.rankingsLink) els.rankingsLink.addEventListener("click", () => {
