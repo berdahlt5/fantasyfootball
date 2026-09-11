@@ -658,6 +658,13 @@
     html[data-theme="dark"] .window-top-pick>.top-pick-label{color:#F0CA78}
     @media(max-width:860px){.watch-window-games{grid-template-columns:1fr}}
 
+
+    /* watch-windows-v2 */
+    .games.watch-window-mode{display:block!important;grid-template-columns:1fr!important}
+    .games.watch-window-mode .watch-window{display:block;width:100%;margin-bottom:18px}
+    .games.watch-window-mode .watch-window-games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    @media(max-width:980px){.games.watch-window-mode .watch-window-games{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -1771,6 +1778,8 @@
       const completed = Boolean(game.completed) || String(game.statusState || "").toLowerCase() === "post";
       const mySkill = groupPlayerExposures((game.exposures || []).filter(item => WATCH_SKILL_POSITIONS.has(String(item.position || "").toUpperCase())));
       const oppSkill = groupPlayerExposures((game.opponentExposures || []).filter(item => WATCH_SKILL_POSITIONS.has(String(item.position || "").toUpperCase())));
+      const mySpecial = groupPlayerExposures((game.exposures || []).filter(item => ["K","DEF","DST"].includes(String(item.position || "").toUpperCase())));
+      const oppSpecial = groupPlayerExposures((game.opponentExposures || []).filter(item => ["K","DEF","DST"].includes(String(item.position || "").toUpperCase())));
       const starredMine = mySkill.filter(player => [...player.leagues].some(name => isPriorityLeagueName(name)));
       const starredOpp = oppSkill.filter(player => [...player.leagues].some(name => isPriorityLeagueName(name)));
       const priorityLeagueIds = new Set([...(game.exposures || []), ...(game.opponentExposures || [])]
@@ -1779,6 +1788,7 @@
       const crunch = completed ? [] : crunchSignalsForGame(game);
 
       let score = mySkill.length * 3 + oppSkill.length * 2 + starredMine.length * 5 + starredOpp.length * 3 + priorityLeagueIds.size * 2;
+      if (!mySkill.length && !oppSkill.length) score += mySpecial.length * 0.35 + oppSpecial.length * 0.15;
       if (mySkill.length >= 2) score += 2;
       if (crunch.length) score += Math.max(...crunch.map(item => item.weight || 0));
       if (completed) score = -100;
@@ -2115,9 +2125,11 @@
       if (dayPeriod === "PM" && hour !== 12) hour += 12;
       if (dayPeriod === "AM" && hour === 12) hour = 0;
 
+      if (weekday === "Fri") return { key: "fri", label: "Friday", order: 7 };
+      if (weekday === "Sat") return { key: "sat", label: "Saturday", order: 8 };
       if (weekday === "Sun" && hour < 12) return { key: "sun-morning", label: "Sunday morning", order: 10 };
-      if (weekday === "Sun" && hour >= 12 && hour < 15) return { key: "sun-early", label: "1:00 PM window", order: 20 };
-      if (weekday === "Sun" && hour >= 15 && hour < 19) return { key: "sun-late", label: "4:00 PM window", order: 30 };
+      if (weekday === "Sun" && hour >= 12 && hour < 15) return { key: "sun-early", label: "Sunday · 1:00 PM window", order: 20 };
+      if (weekday === "Sun" && hour >= 15 && hour < 19) return { key: "sun-late", label: "Sunday · 4:00 PM window", order: 30 };
       if (weekday === "Sun" && hour >= 19) return { key: "snf", label: "Sunday Night Football", order: 40 };
       if (weekday === "Mon" && hour >= 17) return { key: "mnf", label: "Monday Night Football", order: 50 };
       if (weekday === "Thu" && hour >= 17) return { key: "tnf", label: "Thursday Night Football", order: 5 };
@@ -2155,19 +2167,18 @@
       const gamesWithExposure = gameRows.filter(game => game.exposureCount > 0).length;
 
       const watchMode = els.sort.value === "watch";
-      const displayRows = watchMode
-        ? gameRows.filter(game => !game.completed && String(game.statusState || "").toLowerCase() !== "post" && watchAnalysis(game).score > 0)
-        : gameRows;
+      const displayRows = gameRows;
+      els.games.classList.toggle("watch-window-mode", watchMode);
 
       els.gamesNote.textContent = watchMode
-        ? `${displayRows.length} games worth tracking, grouped by kickoff window and ranked within each window. Unrelated and K/DEF-only games are hidden unless they become a Crunchtime decider.`
+        ? `Full NFL slate grouped chronologically by kickoff window. Games are ranked within each window; no-exposure and K/DEF-only games remain visible at lower priority unless Crunchtime elevates them.`
         : (kickoffMode
           ? `${gamesWithExposure} of ${gameRows.length} games contain at least one selected roster exposure. Matching kickoff windows are color-coded.`
           : `${gamesWithExposure} of ${gameRows.length} games contain at least one selected roster exposure.`);
 
       els.games.innerHTML = displayRows.length
         ? (watchMode ? renderWatchWindows(displayRows, kickoffMode, kickoffColorMap) : displayRows.map(game => renderGame(game, kickoffMode, kickoffColorMap)).join(""))
-        : `<div class="empty">No games currently rate as worth tracking. Change the sort to Kickoff time to see the full NFL slate.</div>`;
+        : `<div class="empty">No NFL games were returned for this week.</div>`;
 
       renderMetrics(exposures, gameRows, noGame);
       renderSidebar(exposures, noGame);
