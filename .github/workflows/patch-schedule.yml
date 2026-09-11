@@ -1,0 +1,285 @@
+name: Patch schedule opponent players
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-schedule.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch schedule tool
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('schedule-tool.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly 1 match, found {count}')
+              text = text.replace(old, new, 1)
+              print(f'patched: {label}')
+
+          replace_once(
+          '''            myRosterId: item.roster.roster_id,
+            scoringSettings: item.league.scoring_settings || {},
+            rosterMeta''',
+          '''            myRosterId: item.roster.roster_id,
+            isBestBall: Boolean(Number(item.league.settings?.best_ball || 0)),
+            scoringSettings: item.league.scoring_settings || {},
+            rosterMeta''',
+          'best ball league flag')
+
+          replace_once(
+          '''              team: normalizeTeam(player.team),
+              bucket
+            });''',
+          '''              team: normalizeTeam(player.team),
+              bucket,
+              isBestBall: Boolean(Number(league.settings?.best_ball || 0))
+            });''',
+          'best ball exposure flag')
+
+          replace_once(
+          '''    function selectedExposures() {
+      const scope = els.scope.value;
+      return state.rosterExposures.filter(exposure => {
+        const leagueSelected = state.selectedLeagueIds.has(exposure.leagueId);
+        const scopeSelected = scope === "all" || exposure.bucket === scope;
+        return leagueSelected && scopeSelected;
+      });
+    }''',
+          '''    function selectedExposures() {
+      const scope = els.scope.value;
+      return state.rosterExposures.filter(exposure => {
+        const leagueSelected = state.selectedLeagueIds.has(exposure.leagueId);
+        const scopeSelected = scope === "all"
+          || exposure.bucket === scope
+          || (scope === "starter" && exposure.isBestBall);
+        return leagueSelected && scopeSelected;
+      });
+    }''',
+          'best ball starter scope')
+
+          replace_once(
+          '''              opponentProjection: hasProjections ? opponentProjection.total : null,
+              error: opponent ? "" : "No opponent is assigned to this matchup."''',
+          '''              opponentProjection: hasProjections ? opponentProjection.total : null,
+              opponentPlayerIds: opponent
+                ? (league.isBestBall ? (opponent.players || []) : (opponent.starters || []))
+                : [],
+              opponentStarterIds: opponent?.starters || [],
+              error: opponent ? "" : "No opponent is assigned to this matchup."''',
+          'opponent player ids from matchup')
+
+          replace_once(
+          '''        state.liveScores = results.map((result, index) => {
+          const league = state.leagues[index];
+          if (result.status === "fulfilled") return result.value;
+          return {
+            leagueId: league.league_id,
+            week,
+            error: result.reason?.message || "Score could not be loaded."
+          };
+        });
+
+        state.liveScoresUpdatedAt = new Date();
+        renderLiveScores();''',
+          '''        state.liveScores = results.map((result, index) => {
+          const league = state.leagues[index];
+          if (result.status === "fulfilled") return result.value;
+          return {
+            leagueId: league.league_id,
+            week,
+            error: result.reason?.message || "Score could not be loaded."
+          };
+        });
+
+        state.opponentExposures = [];
+        for (const live of state.liveScores) {
+          const league = state.leagues.find(item => String(item.league_id) === String(live.leagueId));
+          if (!league || !live.opponentRosterId) continue;
+
+          const opponentMeta = league.rosterMeta?.[String(live.opponentRosterId)] || {};
+          const starterIds = new Set((live.opponentStarterIds || []).map(String));
+          for (const rawPlayerId of live.opponentPlayerIds || []) {
+            const playerId = String(rawPlayerId || "");
+            if (!playerId || playerId === "0") continue;
+            const player = getPlayer(playerId);
+            state.opponentExposures.push({
+              leagueId: league.league_id,
+              leagueName: `${league.name}: ${opponentMeta.name || "Opponent"}`,
+              opponentName: opponentMeta.name || "Opponent",
+              playerId,
+              name: playerName(player),
+              position: player.position || "—",
+              team: normalizeTeam(player.team),
+              bucket: starterIds.has(playerId) ? "starter" : "bench",
+              isBestBall: league.isBestBall
+            });
+          }
+        }
+
+        state.liveScoresUpdatedAt = new Date();
+        renderAll();''',
+          'build opponent exposures')
+
+          replace_once(
+          '''    function aggregateData() {
+      const exposures = selectedExposures();
+      const teamToGame = new Map();''',
+          '''    function aggregateData() {
+      const exposures = selectedExposures();
+      const opponentExposures = (state.opponentExposures || []).filter(
+        exposure => state.selectedLeagueIds.has(exposure.leagueId)
+      );
+      const teamToGame = new Map();''',
+          'aggregate opponent exposures')
+
+          replace_once(
+          '''        exposures: [],
+        awayExposures: [],
+        homeExposures: []
+      }));''',
+          '''        exposures: [],
+        opponentExposures: [],
+        awayExposures: [],
+        homeExposures: []
+      }));''',
+          'game opponent exposure collection')
+
+          replace_once(
+          '''      for (const game of gameRows) {
+        game.uniqueCount = new Set(game.exposures.map(item => item.playerId)).size;
+        game.exposureCount = game.exposures.length;
+      }''',
+          '''      for (const exposure of opponentExposures) {
+        const gameId = teamToGame.get(exposure.team);
+        const game = gameLookup.get(gameId);
+        if (game) game.opponentExposures.push(exposure);
+      }
+
+      for (const game of gameRows) {
+        game.uniqueCount = new Set(game.exposures.map(item => item.playerId)).size;
+        game.opponentUniqueCount = new Set(game.opponentExposures.map(item => item.playerId)).size;
+        game.exposureCount = game.exposures.length;
+      }''',
+          'map opponents into NFL games')
+
+          replace_once(
+          '''    function renderGame(game, kickoffMode = false, kickoffColorMap = new Map()) {
+      const groupedPlayers = groupPlayerExposures(game.exposures);
+      const kickoff = formatKickoffLabel(game.date, game.status || "TBD");''',
+          '''    function renderGame(game, kickoffMode = false, kickoffColorMap = new Map()) {
+      const groupedPlayers = groupPlayerExposures(game.exposures);
+      const groupedOpponents = groupPlayerExposures(game.opponentExposures || []);
+      const kickoff = formatKickoffLabel(game.date, game.status || "TBD");''',
+          'group opponent players')
+
+          old_details = '''      const details = groupedPlayers.length
+        ? groupedPlayers.map(player => `
+            <div class="player-row">
+              <div class="player-identity">
+                ${playerAvatarMarkup(player)}
+                <div class="player-name">${escapeHtml(player.name)}</div>
+              </div>
+              <span class="pos">${escapeHtml(player.position)}</span>
+              <span class="bucket">${escapeHtml([...player.buckets].map(bucketLabel).join(" / "))}</span>
+              <div class="player-leagues">
+                ${player.count} exposure${player.count === 1 ? "" : "s"}:
+                ${escapeHtml([...player.leagues].join(", "))}
+              </div>
+            </div>
+          `).join("")
+        : `<div class="empty">No selected roster players in this game.</div>`;'''
+
+          new_details = '''      const playerRows = (players, emptyText) => players.length
+        ? players.map(player => `
+            <div class="player-row">
+              <div class="player-identity">
+                ${playerAvatarMarkup(player)}
+                <div class="player-name">${escapeHtml(player.name)}</div>
+              </div>
+              <span class="pos">${escapeHtml(player.position)}</span>
+              <span class="bucket">${escapeHtml([...player.buckets].map(bucketLabel).join(" / "))}</span>
+              <div class="player-leagues">
+                ${player.count} exposure${player.count === 1 ? "" : "s"}:
+                ${escapeHtml([...player.leagues].join(", "))}
+              </div>
+            </div>
+          `).join("")
+        : `<div class="empty">${escapeHtml(emptyText)}</div>`;
+
+      const details = playerRows(groupedPlayers, "No selected roster players in this game.");
+      const opponentDetails = playerRows(
+        groupedOpponents,
+        state.liveScoresUpdatedAt ? "No opponent players in this game." : "Opponent matchup data is loading."
+      );'''
+          replace_once(old_details, new_details, 'render opponent player rows')
+
+          replace_once(
+          '''            <summary>
+              ${game.uniqueCount} unique player${game.uniqueCount === 1 ? "" : "s"}
+            </summary>
+            <div class="player-list">${details}</div>''',
+          '''            <summary>
+              ${game.uniqueCount} your player${game.uniqueCount === 1 ? "" : "s"}
+              • ${game.opponentUniqueCount || 0} opponent player${game.opponentUniqueCount === 1 ? "" : "s"}
+            </summary>
+            <div class="matchup-player-columns">
+              <section>
+                <div class="player-section-title">Your players</div>
+                <div class="player-list">${details}</div>
+              </section>
+              <section>
+                <div class="player-section-title">Opponent players</div>
+                <div class="player-list">${opponentDetails}</div>
+              </section>
+            </div>''',
+          'two-sided game details')
+
+          css = '''
+    .matchup-player-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:12px 0 2px}
+    .matchup-player-columns section{min-width:0}
+    .player-section-title{margin:0 0 8px;color:var(--sky);font-size:.72rem;font-weight:1000;text-transform:uppercase;letter-spacing:.08em}
+    @media(max-width:760px){.matchup-player-columns{grid-template-columns:1fr}}
+'''
+          marker = '</style>'
+          if text.count(marker) < 1:
+              raise SystemExit('style close tag not found')
+          text = text.replace(marker, css + marker, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Validate patched HTML scripts
+        shell: bash
+        run: |
+          git diff --check
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const html = fs.readFileSync('schedule-tool.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
+          scripts.forEach((code, i) => new vm.Script(code, { filename: `inline-${i + 1}.js` }));
+          console.log(`Validated ${scripts.length} inline scripts.`);
+          NODE
+          grep -q 'isBestBall' schedule-tool.html
+          grep -q 'Opponent players' schedule-tool.html
+          grep -q 'opponentExposures' schedule-tool.html
+      - name: Commit schedule changes
+        shell: bash
+        run: |
+          git config user.name 'berdahlt5'
+          git config user.email 'berdahlt5@gmail.com'
+          git add schedule-tool.html
+          git commit -m 'Add opponent players and best ball rosters to schedule tool'
+          git push origin main
