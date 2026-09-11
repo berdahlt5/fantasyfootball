@@ -39,3 +39,4 @@ jobs:
           git rm .github/workflows/apply-watch-windows.yml tmp/apply-watch-windows.py
           git commit -m "Remove one-time watch-window patch files"
           git push
+# retry after patch formatting fix
