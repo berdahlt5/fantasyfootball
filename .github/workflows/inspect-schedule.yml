@@ -21,30 +21,29 @@ jobs:
           text = Path('schedule-tool.html').read_text(encoding='utf-8')
           lines = text.splitlines()
 
-          def around(label, pattern, before=15, after=90, flags=0):
+          def around(label, pattern, before=20, after=140, flags=0):
               print(f'\n===== {label} =====')
               m = re.search(pattern, text, flags)
               if not m:
                   print('NOT FOUND')
                   return
               line = text[:m.start()].count('\n')
-              start = max(0, line-before)
-              end = min(len(lines), line+after)
-              for i in range(start, end):
+              for i in range(max(0, line-before), min(len(lines), line+after)):
                   print(f'{i+1:05d}: {lines[i]}')
 
-          around('renderPlayersForGame', r'function\s+renderPlayersForGame\b', 10, 130)
-          around('groupPlayerExposures', r'function\s+groupPlayerExposures\b', 10, 130)
-          around('playerCardMarkup', r'function\s+playerCardMarkup\b', 10, 150)
-          around('starterGroups first assignment', r'starterGroups\s*[:=]', 25, 160)
-          around('selected roster first occurrence', r'selectedRoster', 25, 160, re.I)
-          around('Sleeper matchup endpoint', r'/matchups/', 25, 160)
-          around('matchup_id first occurrence', r'matchup_id', 25, 160)
-          around('roster_positions first occurrence', r'roster_positions', 25, 160)
-          around('best ball first occurrence', r'best[ _-]?ball', 25, 160, re.I)
+          around('myRosterId first occurrence', r'myRosterId', 30, 220)
+          around('exposures push first occurrence', r'exposures\.push', 40, 240)
+          around('bucket starter first occurrence', r'bucket:\s*["\']starter', 40, 240)
+          around('players roster reference', r'\.players\b', 40, 220)
+          around('starters roster reference', r'\.starters\b', 40, 220)
+          around('load leagues function', r'async function\s+load[^\n]*(?:League|league)', 20, 260)
+          around('render all', r'function\s+renderAll\b', 30, 220)
+          around('build games', r'function\s+build[^\n]*(?:Game|game)', 30, 260)
+          around('league users', r'/users', 40, 220)
+          around('league rosters', r'/rosters', 40, 240)
 
           print('\n===== MATCHING LINES =====')
-          needles = ['starterGroups', 'rosterData', 'selectedRoster', 'matchup_id', 'matchups', 'roster_positions', 'best_ball', 'best ball', 'Best Ball']
+          needles = ['myRosterId', 'exposures.push', '.players', '.starters', 'bucket:', 'rosterMeta', '/rosters', '/users', 'state.exposures']
           for i, line in enumerate(lines, 1):
               low = line.lower()
               if any(n.lower() in low for n in needles):
