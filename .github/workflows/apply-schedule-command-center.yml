@@ -1,0 +1,56 @@
+name: Apply schedule command center
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-schedule-command-center.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Patch schedule command center
+        run: python tmp/apply-schedule-command-center.py
+      - name: Validate schedule tool
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('schedule-tool.html').read_text()
+          checks=[
+            'schedule-command-center-v1',
+            'id="lineupPulse"',
+            'renderLineupPulse',
+            'SCHEDULE_FAVORITE_TEAM',
+            'Eagles · Always Watch',
+            'Players &amp; cross-league impact',
+            'Ranked for your screens',
+            'rosterPositions:',
+            'myStarters:'
+          ]
+          for check in checks:
+              assert check in s, check
+          assert 'const displayRows = gameRows;' in s
+          assert 'function watchAnalysisLegacy' not in s
+          PY
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const html=fs.readFileSync('schedule-tool.html','utf8');
+          let scripts=0;
+          for (const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) { new vm.Script(m[1]); scripts++; }
+          if (!scripts) throw new Error('No scripts found');
+          console.log(`Validated ${scripts} script blocks`);
+          NODE
+      - name: Commit command center
+        run: |
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add schedule-tool.html
+          git commit -m "Refocus schedule tool on lineups and watch decisions"
+          git push
+          git rm .github/workflows/apply-schedule-command-center.yml tmp/apply-schedule-command-center.py
+          git commit -m "Remove one-time schedule command center files"
+          git push
