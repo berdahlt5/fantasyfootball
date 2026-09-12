@@ -29,7 +29,7 @@ new = '''  function readPriorityLeagues() {
 assert old in s, 'priority settings block not found'
 p.write_text(s.replace(old, new))
 
-# 2) Make Schedule Tool settings live-update starred leagues and favorite-team copy.
+# 2) Make Schedule Tool immediately re-read starred leagues after Settings changes.
 p = Path('schedule-tool.html')
 s = p.read_text()
 old = 'window.addEventListener("fantasy-settings-changed", () => renderAll());'
@@ -39,12 +39,7 @@ new = '''window.addEventListener("fantasy-settings-changed", () => {
       renderAll();
     });'''
 assert old in s, 'schedule settings listener not found'
-s = s.replace(old, new)
-old_badge = '${analysis.favorite ? `<div class="favorite-watch">🦅 Eagles game</div>` : ""}'
-new_badge = '${analysis.favorite ? `<div class="favorite-watch">★ Favorite team · ${escapeHtml(scheduleFavoriteTeam())}</div>` : ""}'
-assert old_badge in s, 'favorite badge not found'
-s = s.replace(old_badge, new_badge)
-p.write_text(s)
+p.write_text(s.replace(old, new))
 
 # 3) Make Lineup Assistant immediately re-read starred leagues after Settings changes.
 p = Path('lineup-assistant.html')
