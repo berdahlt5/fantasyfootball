@@ -4,9 +4,11 @@
   const KEYS = {
     theme: "fantasyUiTheme",
     favoriteTeam: "fantasyFavoriteTeam",
-    watchCount: "fantasyWatchGameCount"
+    watchCount: "fantasyWatchGameCount",
+    priorityLeagues: "fantasyPriorityLeagues"
   };
 
+  const DEFAULT_PRIORITY_LEAGUES = ["gridiron gurus", "tnt fantasy"];
   const NFL_TEAMS = [
     ["", "No favorite team"],["ARI","Arizona Cardinals"],["ATL","Atlanta Falcons"],["BAL","Baltimore Ravens"],["BUF","Buffalo Bills"],
     ["CAR","Carolina Panthers"],["CHI","Chicago Bears"],["CIN","Cincinnati Bengals"],["CLE","Cleveland Browns"],["DAL","Dallas Cowboys"],
@@ -23,6 +25,29 @@
   }
   function safeSet(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
 
+  function normalizePriorityLeagues(values) {
+    const seen = new Set();
+    const result = [];
+    for (const raw of values || []) {
+      const value = String(raw || "").trim();
+      const key = value.toLowerCase();
+      if (!value || seen.has(key)) continue;
+      seen.add(key);
+      result.push(value);
+    }
+    return result;
+  }
+
+  function readPriorityLeagues() {
+    try {
+      const parsed = JSON.parse(safeGet(KEYS.priorityLeagues, "[]"));
+      if (Array.isArray(parsed) && parsed.length) return normalizePriorityLeagues(parsed);
+    } catch (_) {}
+    const defaults = [...DEFAULT_PRIORITY_LEAGUES];
+    safeSet(KEYS.priorityLeagues, JSON.stringify(defaults));
+    return defaults;
+  }
+
   function readSettings() {
     const savedTheme = safeGet(KEYS.theme, "light");
     let favoriteTeam = safeGet(KEYS.favoriteTeam, "").toUpperCase();
@@ -32,7 +57,12 @@
     }
     let watchCount = Number(safeGet(KEYS.watchCount, "4"));
     if (!Number.isFinite(watchCount) || watchCount < 1 || watchCount > 6) watchCount = 4;
-    return { theme: savedTheme === "dark" ? "dark" : "light", favoriteTeam, watchCount };
+    return {
+      theme: savedTheme === "dark" ? "dark" : "light",
+      favoriteTeam,
+      watchCount,
+      priorityLeagues: readPriorityLeagues()
+    };
   }
 
   function applyTheme(theme) {
@@ -89,8 +119,9 @@
         </div>
         <div class="app-settings-body">
           <div class="app-settings-field"><label for="appThemeSetting">Appearance</label><select id="appThemeSetting"><option value="light">Light</option><option value="dark">Dark</option></select></div>
-          <div class="app-settings-field"><label for="appFavoriteTeamSetting">Favorite NFL team</label><select id="appFavoriteTeamSetting">${NFL_TEAMS.map(([v,n])=>`<option value="${v}">${n}</option>`).join("")}</select><div class="app-settings-help">That team's game is automatically treated as Must Watch in the Watch tool.</div></div>
-          <div class="app-settings-field"><label for="appWatchCountSetting">Games you can watch at once</label><select id="appWatchCountSetting">${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n} game${n===1?"":"s"}</option>`).join("")}</select><div class="app-settings-help">Used to choose the recommended games inside crowded Sunday windows.</div></div>
+          <div class="app-settings-field"><label for="appFavoriteTeamSetting">Favorite NFL team</label><select id="appFavoriteTeamSetting">${NFL_TEAMS.map(([v,n])=>`<option value="${v}">${n}</option>`).join("")}</select><div class="app-settings-help">That team's game is always promoted to Must Watch.</div></div>
+          <div class="app-settings-field"><label for="appWatchCountSetting">Games you can watch at once</label><select id="appWatchCountSetting">${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n} game${n===1?"":"s"}</option>`).join("")}</select><div class="app-settings-help">Controls how many games are recommended in crowded Sunday windows.</div></div>
+          <div class="app-settings-field app-settings-wide"><label for="appPriorityLeaguesSetting">Starred leagues</label><textarea id="appPriorityLeaguesSetting" rows="4" spellcheck="false" placeholder="Gridiron Gurus\nTnT Fantasy"></textarea><div class="app-settings-help">One league name per line. Starred leagues get extra weight in Watch and are highlighted across the app.</div></div>
         </div>
         <div class="app-settings-actions"><button class="app-settings-cancel" type="button">Cancel</button><button class="app-settings-save" type="button">Save settings</button></div>
       </div>`;
@@ -105,9 +136,13 @@
       const theme = document.getElementById("appThemeSetting").value;
       const favoriteTeam = document.getElementById("appFavoriteTeamSetting").value;
       const watchCount = document.getElementById("appWatchCountSetting").value;
+      const priorityLeagues = normalizePriorityLeagues(
+        document.getElementById("appPriorityLeaguesSetting").value.split(/[\n,]+/)
+      );
       safeSet(KEYS.theme, theme);
       safeSet(KEYS.favoriteTeam, favoriteTeam);
       safeSet(KEYS.watchCount, watchCount);
+      safeSet(KEYS.priorityLeagues, JSON.stringify(priorityLeagues));
       applyTheme(theme);
       close();
       window.dispatchEvent(new CustomEvent("fantasy-settings-changed", { detail: readSettings() }));
@@ -120,6 +155,7 @@
     document.getElementById("appThemeSetting").value = settings.theme;
     document.getElementById("appFavoriteTeamSetting").value = settings.favoriteTeam;
     document.getElementById("appWatchCountSetting").value = String(settings.watchCount);
+    document.getElementById("appPriorityLeaguesSetting").value = settings.priorityLeagues.join("\n");
     document.getElementById("appSettingsBackdrop").classList.add("show");
   }
 
