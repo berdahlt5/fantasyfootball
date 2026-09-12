@@ -39,10 +39,13 @@
   }
 
   function readPriorityLeagues() {
-    try {
-      const parsed = JSON.parse(safeGet(KEYS.priorityLeagues, "[]"));
-      if (Array.isArray(parsed) && parsed.length) return normalizePriorityLeagues(parsed);
-    } catch (_) {}
+    const stored = safeGet(KEYS.priorityLeagues, "");
+    if (stored !== "") {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return normalizePriorityLeagues(parsed);
+      } catch (_) {}
+    }
     const defaults = [...DEFAULT_PRIORITY_LEAGUES];
     safeSet(KEYS.priorityLeagues, JSON.stringify(defaults));
     return defaults;

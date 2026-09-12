@@ -2525,7 +2525,11 @@
     if (document.readyState === "loading") window.addEventListener("DOMContentLoaded", initializeScheduleTool, { once: true });
     else initializeScheduleTool();
     els.week.addEventListener("change", loadWeek);
-    window.addEventListener("fantasy-settings-changed", () => renderAll());
+    window.addEventListener("fantasy-settings-changed", () => {
+      state.priorityLeagueNames = loadPriorityLeagueNames();
+      renderLeagueFilters();
+      renderAll();
+    });
     els.scope.addEventListener("change", renderAll);
     els.sort.addEventListener("change", renderAll);
     els.prevWeek.addEventListener("click", () => updateWeek(-1));
