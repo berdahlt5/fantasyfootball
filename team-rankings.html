@@ -59,6 +59,7 @@
     @media(max-width:780px){.playoff-legend{justify-content:flex-start}.team-detail-top,.detail-rank-groups,.roster-grid{grid-template-columns:1fr}.shell{width:min(94vw,680px);padding-top:12px}.topbar{align-items:flex-start;flex-direction:column;padding:15px}.header-actions{justify-content:flex-start}.control-grid{grid-template-columns:1fr 1fr}.control-grid label:nth-child(3){grid-column:1/-1}.control-grid button{grid-row:auto}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.model-body{grid-template-columns:1fr}.section{padding:13px}th,td{padding:9px 8px}}
     @media(max-width:500px){.control-grid,.metric-grid{grid-template-columns:1fr}.control-grid label:nth-child(3){grid-column:auto}}
   </style>
+  <link rel="stylesheet" href="./app-shell.css" />
 </head>
 <body>
   <main class="shell">
@@ -383,5 +384,6 @@
     const initialTheme=document.documentElement.dataset.theme==="dark"?"dark":"light";applyTheme(initialTheme);els.themeToggle.addEventListener("click",()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
     els.loadLeaguesBtn.addEventListener("click",loadLeagues);els.runBtn.addEventListener("click",runRankings);els.league.addEventListener("change",()=>{const league=state.leagues.find(l=>String(l.league_id)===String(els.league.value));if(league)rebuildCompletedOptions(league);els.runBtn.disabled=!els.league.value||state.loading});els.season.addEventListener("change",()=>{els.league.disabled=true;els.completedThrough.disabled=true;els.runBtn.disabled=true;els.league.innerHTML='<option value="">Reload leagues</option>'});
   </script>
+  <script src="./app-shell.js"></script>
 </body>
 </html>

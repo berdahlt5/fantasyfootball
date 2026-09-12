@@ -23,6 +23,7 @@
     html[data-theme="dark"] body{background:#211C18;color:var(--ivory)}html[data-theme="dark"] .metric{border-color:rgba(255,255,237,.18)}
     @media(max-width:900px){.control-grid{grid-template-columns:1fr 1fr}.summary{grid-template-columns:1fr 1fr}.remaining-grid{grid-template-columns:1fr}.topbar{align-items:flex-start;flex-direction:column}}@media(max-width:520px){.control-grid,.summary{grid-template-columns:1fr}.league-head{flex-direction:column}.score small{text-align:left}}
   </style>
+  <link rel="stylesheet" href="./app-shell.css" />
 </head>
 <body>
 <main class="shell">
@@ -76,5 +77,6 @@ function fillWeeks(selected){els.week.innerHTML=Array.from({length:18},(_,i)=>`<
 async function init(){const params=new URLSearchParams(location.search);if(params.get("username"))els.username.value=params.get("username");if(params.get("season"))els.season.value=params.get("season");let selected=params.get("week")||1;try{const nfl=await json(`${API}/state/nfl`);if(!params.get("season")&&nfl?.season)els.season.value=nfl.season;selected=params.get("week")||(nfl?.display_week||nfl?.week||1)}catch(_){}fillWeeks(selected);theme(document.documentElement.dataset.theme||"light");loadCrunchtime()}
 els.loadBtn.addEventListener("click",loadCrunchtime);els.refreshBtn.addEventListener("click",()=>refreshScores(false));els.week.addEventListener("change",loadCrunchtime);els.themeToggle.addEventListener("click",()=>theme(document.documentElement.dataset.theme==="dark"?"light":"dark"));els.username.addEventListener("keydown",e=>{if(e.key==="Enter")loadCrunchtime()});init();
 </script>
+  <script src="./app-shell.js"></script>
 </body>
 </html>
