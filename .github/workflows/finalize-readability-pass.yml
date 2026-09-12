@@ -1,0 +1,50 @@
+name: Finalize readability pass
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/finalize-readability-pass.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply final readability patch
+        run: python .github/scripts/finalize_readability_pass.py
+      - name: Validate shared settings
+        run: |
+          node --check app-shell.js
+          grep -q 'Starred leagues' app-shell.js
+          grep -q 'fantasyPriorityLeagues' app-shell.js
+          grep -q 'state.priorityLeagueNames = loadPriorityLeagueNames' schedule-tool.html
+          grep -q 'Favorite team' schedule-tool.html
+          git diff --check
+      - name: Validate inline JavaScript
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          for (const file of ['schedule-tool.html','lineup-assistant.html']) {
+            const html = fs.readFileSync(file, 'utf8');
+            const re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+            let match, i = 0;
+            while ((match = re.exec(html))) {
+              i += 1;
+              new vm.Script(match[1], { filename: `${file}:inline-${i}` });
+            }
+          }
+          console.log('inline scripts parse');
+          NODE
+      - name: Commit readability pass
+        run: |
+          rm -f .github/scripts/finalize_readability_pass.py .github/workflows/finalize-readability-pass.yml
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Simplify UI colors and add starred league settings"
+          git push
