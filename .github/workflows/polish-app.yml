@@ -22,7 +22,7 @@ jobs:
           grep -q 'fantasyWatchGameCount' app-shell.js
           grep -q 'Favorite NFL team' app-shell.js
           grep -q 'scheduleWatchCount' schedule-tool.html
-          grep -q 'best-ball leagues are intentionally excluded' lineup-assistant.html
+          grep -qi 'best-ball leagues are intentionally excluded' lineup-assistant.html
       - name: Validate inline JavaScript
         run: |
           node <<'NODE'
