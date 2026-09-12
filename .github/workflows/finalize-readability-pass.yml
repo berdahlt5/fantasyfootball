@@ -1,4 +1,5 @@
 name: Finalize readability pass
+# rerun after finalize-script fix
 on:
   push:
     branches: [main]
