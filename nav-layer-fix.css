@@ -1,0 +1,17 @@
+/* Keep the shared navigation above every page panel and allow dropdowns to escape the header. */
+.topbar{
+  position:relative!important;
+  z-index:10000!important;
+  overflow:visible!important;
+}
+.header-actions,
+.app-nav,
+.app-more{
+  position:relative!important;
+  overflow:visible!important;
+}
+.app-more[open]{z-index:10001!important}
+.app-more-menu{
+  z-index:10002!important;
+  overflow:visible!important;
+}
