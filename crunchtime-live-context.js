@@ -13,7 +13,7 @@
 
     const actual = n(row.actual);
     const projectedLeft = Math.max(0,n(row.expectedRemaining));
-    const liveProjectedFinal = actual + projectedLeft;
+    const projectedFinal = actual + projectedLeft;
 
     const copy = player.querySelector(".ct-plan-player-copy");
     if (copy){
@@ -23,21 +23,14 @@
         metrics.className = "ct-plan-live-metrics";
         copy.appendChild(metrics);
       }
-      metrics.innerHTML = `<span><b>Actual</b> ${f(actual)}</span><i>·</i><span><b>${row.live?"Live proj":"Projection"}</b> ${f(liveProjectedFinal)}</span>`;
+      metrics.innerHTML = `<span><b>Actual</b> ${f(actual)}</span><i>·</i><span><b>${row.live?"Live proj":"Projection"}</b> ${f(projectedFinal)}</span>`;
     }
-
-    const valueWrap = player.querySelector(".ct-plan-value-wrap");
-    const valueLabel = valueWrap?.querySelector("small");
-    if (valueLabel) valueLabel.textContent = "Need +";
-
-    const marker = player.querySelector(".ct-plan-proj-marker b");
-    if (marker) marker.textContent = `Proj left +${f(projectedLeft)}`;
 
     const slider = player.querySelector("[data-ct-plan-slider]");
     if (slider){
-      slider.setAttribute("aria-label",`Additional points needed from ${row.name || "player"}`);
+      slider.setAttribute("aria-label",`Final point scenario for ${row.name || "player"}. Current ${f(actual)}, projected ${f(projectedFinal)}.`);
       slider.dataset.ctActual = f(actual);
-      slider.dataset.ctProjectedFinal = f(liveProjectedFinal);
+      slider.dataset.ctProjectedFinal = f(projectedFinal);
       slider.dataset.ctProjectedLeft = f(projectedLeft);
     }
   }
