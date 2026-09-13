@@ -1,0 +1,45 @@
+name: Apply mobile glass v5c
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-mobile-glass-v5c.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply mobile glass v5c
+        run: python tools/apply-mobile-glass-v5c.py
+      - name: Validate UI changes
+        run: |
+          node --check app-shell.js
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          js = Path('app-shell.js').read_text()
+          css = Path('app-shell.css').read_text()
+          schedule = Path('schedule-tool.html').read_text()
+          assert 'link("index.html","Owner Dashboard","index.html",current)' in js
+          assert 'link("schedule-tool.html","Watch Planner","schedule-tool.html",current)' in js
+          assert '<title>Fantasy Football Watch Planner</title>' in schedule
+          assert '<h1>Watch Planner</h1>' in schedule
+          assert '/* mobile-glass-v5 */' in css
+          for token in ['.projection-card', '.history-card', '.window-ranked-game.recommended .window-rank', '@media(max-width:640px)', '--app-heading:#3453b9']:
+              assert token in css, token
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', schedule, re.S)
+          for i, body in enumerate(scripts):
+              Path(f'/tmp/watch-inline-{i}.js').write_text(body)
+          print(f'validated UI markers; wrote {len(scripts)} Watch Planner inline scripts')
+          PY
+          for f in /tmp/watch-inline-*.js; do node --check "$f"; done
+      - name: Commit changes
+        run: |
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add app-shell.js app-shell.css schedule-tool.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Refine mobile glass UI and navigation"
+          git push
