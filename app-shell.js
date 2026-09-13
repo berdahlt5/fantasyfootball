@@ -215,14 +215,14 @@
     const link = document.createElement("link");
     link.id = "uiPolishStyles";
     link.rel = "stylesheet";
-    link.href = "./ui-polish.css?v=20260912a";
+    link.href = "./ui-polish.css?v=20260912b";
     document.head.appendChild(link);
   }
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "schedule-tool.html" && !document.getElementById("gameDayEnhancementsScript")) {
     const script = document.createElement("script");
     script.id = "gameDayEnhancementsScript";
-    script.src = "./game-day-enhancements.js?v=20260912a";
+    script.src = "./game-day-enhancements.js?v=20260912b";
     script.defer = true;
     document.head.appendChild(script);
   }
