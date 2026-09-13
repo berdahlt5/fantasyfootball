@@ -97,14 +97,6 @@
     <div class="warning-box" id="warningBox"></div>
 
     <div class="dashboard hidden" id="dashboard">
-      <section class="metric-grid">
-        <div class="metric"><div class="metric-label">Teams</div><div class="metric-value" id="teamMetric">—</div><div class="metric-note">league rosters</div></div>
-        <div class="metric"><div class="metric-label">Regular season</div><div class="metric-value" id="weekMetric">—</div><div class="metric-note">weeks modeled</div></div>
-        <div class="metric"><div class="metric-label">Completed</div><div class="metric-value" id="completedMetric">—</div><div class="metric-note">actual results preserved</div></div>
-        <div class="metric"><div class="metric-label">Projection coverage</div><div class="metric-value" id="coverageMetric">—</div><div class="metric-note">future weeks with projection data</div></div>
-        <div class="metric"><div class="metric-label">Modeled slots</div><div class="metric-value" id="slotMetric">—</div><div class="metric-note">K / D-ST excluded</div></div>
-      </section>
-
       <section class="panel section">
         <div class="section-head">
           <div>
@@ -360,7 +352,7 @@
       }));
     }
     function renderAnalysis(league,analysis){
-      els.dashboard.classList.remove("hidden");const {teams,overallOrder,starterBuckets,depthPositions,maxWeek,completedThrough,projectionWeeks,slots}=analysis;const starterOrder=[...teams].sort((a,b)=>a.starterStrengthRawRank-b.starterStrengthRawRank||a.name.localeCompare(b.name)),depthOrder=[...teams].sort((a,b)=>a.depthOverallRawRank-b.depthOverallRawRank||a.name.localeCompare(b.name));els.teamMetric.textContent=teams.length;els.weekMetric.textContent=maxWeek;els.completedMetric.textContent=completedThrough;els.coverageMetric.textContent=`${projectionWeeks.length}/${Math.max(0,maxWeek-completedThrough)}`;els.slotMetric.textContent=slots.length;
+      els.dashboard.classList.remove("hidden");const {teams,overallOrder,starterBuckets,depthPositions,maxWeek,completedThrough,projectionWeeks,slots}=analysis;const starterOrder=[...teams].sort((a,b)=>a.starterStrengthRawRank-b.starterStrengthRawRank||a.name.localeCompare(b.name)),depthOrder=[...teams].sort((a,b)=>a.depthOverallRawRank-b.depthOverallRawRank||a.name.localeCompare(b.name));
       els.standingsNote.textContent=`${league.name} · ${completedThrough} completed week${completedThrough===1?"":"s"} · ${projectionWeeks.length} future projection week${projectionWeeks.length===1?"":"s"} available · ordered #1 to #${teams.length}.`;
       els.standingsBody.innerHTML=overallOrder.map(team=>{const overallTier=rankTierClass(team.seasonStrengthPointsRank),finishTier=rankTierClass(team.projectedFinish),starterTier=rankTierClass(team.starterStrengthRawRank),rosterTier=rankTierClass(team.depthOverallRawRank);return `<tr class="${team.isMine?"mine":""}"><td><div class="rank-number ${overallTier}" title="${escapeHtml(rankTierLabel(team.seasonStrengthPointsRank))}">#${team.seasonStrengthPointsRank}</div></td><td>${teamMarkup(team)}</td><td><span class="value-main finish-value ${finishTier}">${ordinal(team.projectedFinish)}</span></td><td><span class="record">${team.projectedWins}-${team.projectedLosses}${team.projectedTies?`-${team.projectedTies}`:""}</span></td><td><span class="rank-chip ${starterTier}" title="${escapeHtml(rankTierLabel(team.starterStrengthRawRank))}"><strong>#${team.starterStrengthRawRank}</strong></span></td><td><span class="rank-chip ${rosterTier}" title="${escapeHtml(rankTierLabel(team.depthOverallRawRank))}"><strong>#${team.depthOverallRawRank}</strong></span></td></tr>`}).join("");
 
