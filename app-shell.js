@@ -255,10 +255,12 @@
     loadStyle("crunchTimeLiquidGlassStyles","./crunchtime-liquid-glass.css?v=20260914a");
     loadStyle("crunchTimeGlassColorTuneStyles","./crunchtime-glass-color-tune.css?v=20260914a");
     loadStyle("crunchTimeScoreboardGridFixStyles","./crunchtime-scoreboard-grid-fix.css?v=20260914b");
+    loadStyle("crunchTimeOpponentRemainingStyles","./crunchtime-opponent-remaining.css?v=20260914a");
     loadScript("crunchTimeDefenseProjectionFixScript","./crunchtime-defense-projection-fix.js?v=20260914a");
     loadScript("crunchTimeCommandCenterScript","./crunchtime-command-center.js?v=20260913a");
     loadScript("crunchTimePointsPlannerScript","./crunchtime-points-planner.js?v=20260914e");
     loadScript("crunchTimeLiveContextScript","./crunchtime-live-context.js?v=20260914d");
+    loadScript("crunchTimeOpponentRemainingScript","./crunchtime-opponent-remaining.js?v=20260914a");
     loadScript("crunchTimeCollapsedScript","./crunchtime-collapsed.js?v=20260914a");
   }
 })();
