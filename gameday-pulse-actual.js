@@ -157,10 +157,50 @@
     card.classList.add("has-actual-points");
   }
 
+  function projectedPoints(card){
+    const strong = card.querySelector(".game-day-pulse-score > strong");
+    const value = Number(strong?.textContent);
+    return Number.isFinite(value) ? value : -Infinity;
+  }
+
+  function sortPulseLists(){
+    for (const list of document.querySelectorAll("#gameDayPlayerPulse .game-day-pulse-list")){
+      const cards = [...list.querySelectorAll(":scope > .game-day-pulse-card")];
+      if (cards.length < 2) {
+        cards.forEach((card,index)=>{
+          const rank = card.querySelector(".game-day-pulse-rank");
+          if (rank && rank.textContent !== String(index+1)) rank.textContent = String(index+1);
+        });
+        continue;
+      }
+
+      const sorted = [...cards].sort((a,b)=>{
+        const diff = projectedPoints(b)-projectedPoints(a);
+        if (diff !== 0) return diff;
+        const aName = a.querySelector(".game-day-pulse-name")?.textContent || "";
+        const bName = b.querySelector(".game-day-pulse-name")?.textContent || "";
+        return aName.localeCompare(bName);
+      });
+
+      const alreadySorted = cards.every((card,index)=>card===sorted[index]);
+      if (!alreadySorted) sorted.forEach(card=>list.appendChild(card));
+
+      sorted.forEach((card,index)=>{
+        const rank = card.querySelector(".game-day-pulse-rank");
+        if (rank && rank.textContent !== String(index+1)) rank.textContent = String(index+1);
+      });
+    }
+  }
+
   async function applyActualPoints(){
     scheduled = false;
     const cards = [...document.querySelectorAll("#gameDayPlayerPulse .game-day-pulse-card")];
     if (!cards.length) return;
+
+    /* The visible ordering now follows the same projected-points number shown
+       on each card for every Player Pulse window. */
+    sortPulseLists();
+
     const directory = await getDirectory();
     for (const card of cards){
       if (!card.isConnected) continue;
