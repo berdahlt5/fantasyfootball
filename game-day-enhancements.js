@@ -253,7 +253,7 @@
   }
 
   async function enhancePlayers(){
-    const cards = [...document.querySelectorAll(".impact-player:not([data-gameday-enhanced='processing'])")];
+    const cards = [...document.querySelectorAll(".impact-player:not([data-gameday-enhanced])")];
     if (!cards.length) return;
     cards.forEach(card=>card.dataset.gamedayEnhanced = "processing");
 
@@ -495,7 +495,6 @@
     const meta = [player.position,player.team].filter(Boolean).join(" · ");
     const isVillain = type === "villain";
     const score = isVillain ? item.netAgainst : item.netFor;
-    const primary = isVillain ? item.againstRaw : item.ownedRaw;
     const offset = isVillain ? item.ownedRaw : item.againstRaw;
     const primaryEntries = isVillain ? item.against : item.owned;
     const offsetEntries = isVillain ? item.owned : item.against;
