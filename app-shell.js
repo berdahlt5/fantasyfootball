@@ -219,11 +219,20 @@
     document.head.appendChild(link);
   }
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
-  if (page === "schedule-tool.html" && !document.getElementById("gameDayEnhancementsScript")) {
-    const script = document.createElement("script");
-    script.id = "gameDayEnhancementsScript";
-    script.src = "./game-day-enhancements.js?v=20260913a";
-    script.defer = true;
-    document.head.appendChild(script);
+  if (page === "schedule-tool.html") {
+    if (!document.getElementById("weeklyPulseBootstrapScript")) {
+      const bootstrap = document.createElement("script");
+      bootstrap.id = "weeklyPulseBootstrapScript";
+      bootstrap.src = "./weekly-pulse-bootstrap.js?v=20260913a";
+      bootstrap.async = false;
+      document.head.appendChild(bootstrap);
+    }
+    if (!document.getElementById("gameDayEnhancementsScript")) {
+      const script = document.createElement("script");
+      script.id = "gameDayEnhancementsScript";
+      script.src = "./game-day-enhancements.js?v=20260913b";
+      script.async = false;
+      document.head.appendChild(script);
+    }
   }
 })();
