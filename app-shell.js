@@ -116,7 +116,7 @@
     actions.innerHTML = `
       <nav class="app-nav" aria-label="Primary">
         ${link("index.html","Owner Dashboard","index.html",current)}
-        ${link("schedule-tool.html","Watch Planner","schedule-tool.html",current)}
+        ${link("schedule-tool.html","Game Day Hub","schedule-tool.html",current)}
         ${link("team-rankings.html","Rankings","team-rankings.html",current)}
         ${link("waiver-wire-agent.html","Waivers","waiver-wire-agent.html",current)}
         <details class="app-more">
