@@ -1,0 +1,294 @@
+/* Shared late-loading overrides for Fantasy Assistant. */
+
+/* -------------------------------------------------------------------------
+   Product loading gradient — shared across every page through app-shell.js.
+   Cyan → blue → lavender → soft pastel green, matching the Game Day Hub.
+   ------------------------------------------------------------------------- */
+:root{
+  --fa-loading-gradient:linear-gradient(90deg,#59d3ef 0%,#6faef7 36%,#9d94f4 70%,#a6e1c7 100%);
+}
+
+.loading-line,
+.loading-bar,
+.progress-loading,
+[class*="loading-line"],
+[class*="loading-bar"]{
+  background:var(--fa-loading-gradient)!important;
+  border-color:rgba(137,174,230,.28)!important;
+  box-shadow:0 0 0 1px rgba(148,177,231,.12),0 5px 16px rgba(111,160,232,.11),0 2px 10px rgba(151,214,191,.12)!important;
+}
+
+.loading-line{
+  min-height:6px;
+  border-radius:999px!important;
+}
+
+.primary:disabled,
+.primary[aria-busy="true"],
+button.loading,
+button[aria-busy="true"]{
+  background:var(--fa-loading-gradient)!important;
+  border-color:rgba(145,175,233,.34)!important;
+  color:#fff!important;
+  box-shadow:0 8px 22px rgba(117,164,235,.12),inset 0 1px 0 rgba(255,255,255,.34)!important;
+}
+
+html[data-theme="dark"] .loading-line,
+html[data-theme="dark"] .loading-bar,
+html[data-theme="dark"] .progress-loading,
+html[data-theme="dark"] [class*="loading-line"],
+html[data-theme="dark"] [class*="loading-bar"]{
+  filter:saturate(1.05) brightness(.94);
+  box-shadow:0 0 0 1px rgba(152,183,238,.18),0 6px 18px rgba(70,120,225,.16),0 2px 12px rgba(134,218,183,.11)!important;
+}
+
+/* -------------------------------------------------------------------------
+   Game Day Hub — expose only the two roster-count metrics requested.
+   The underlying schedule code already updates both values live.
+   ------------------------------------------------------------------------- */
+body:has(#exposureMetric):has(#uniqueMetric) .metric-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  margin:0 0 12px!important;
+}
+
+body:has(#exposureMetric):has(#uniqueMetric) .metric-grid > .metric{
+  display:none!important;
+}
+
+body:has(#exposureMetric):has(#uniqueMetric) .metric-grid > .metric:has(#uniqueMetric),
+body:has(#exposureMetric):has(#uniqueMetric) .metric-grid > .metric:has(#exposureMetric){
+  display:block!important;
+  min-width:0;
+}
+
+body:has(#exposureMetric):has(#uniqueMetric) .metric-grid > .metric:has(#uniqueMetric){order:1}
+body:has(#exposureMetric):has(#uniqueMetric) .metric-grid > .metric:has(#exposureMetric){order:2}
+
+body:has(#exposureMetric):has(#uniqueMetric) .metric:has(#exposureMetric) .metric-label{
+  font-size:0!important;
+}
+body:has(#exposureMetric):has(#uniqueMetric) .metric:has(#exposureMetric) .metric-label::after{
+  content:"Total player instances";
+  font-size:.76rem;
+  line-height:1.2;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:900;
+}
+body:has(#exposureMetric):has(#uniqueMetric) .metric:has(#exposureMetric) .metric-note{
+  font-size:0!important;
+}
+body:has(#exposureMetric):has(#uniqueMetric) .metric:has(#exposureMetric) .metric-note::after{
+  content:"repeat players across leagues included";
+  font-size:.68rem;
+}
+
+@media(max-width:560px){
+  body:has(#exposureMetric):has(#uniqueMetric) .metric-grid{grid-template-columns:1fr!important}
+}
+
+/* The older pulse mount could be inserted into a game card and then erased on
+   rerender. Keep it out of the UI; gameday-player-pulse.js owns the stable hub. */
+#weeklyPlayerPulse{display:none!important}
+
+/* -------------------------------------------------------------------------
+   Stable Game Day Hub player pulse.
+   ------------------------------------------------------------------------- */
+#gameDayPlayerPulse{
+  margin:0 0 12px;
+  padding:15px;
+  border:1px solid rgba(132,186,215,.28);
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,255,255,.78),rgba(239,247,255,.80) 58%,rgba(229,249,239,.78));
+  box-shadow:0 12px 32px rgba(61,96,137,.08),inset 0 1px 0 rgba(255,255,255,.88);
+  backdrop-filter:blur(16px) saturate(125%);
+  -webkit-backdrop-filter:blur(16px) saturate(125%);
+  color:var(--taupe,#2E2823);
+}
+
+.game-day-pulse-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:12px;
+}
+.game-day-pulse-eyebrow{
+  color:#6688b8;
+  font-size:.62rem;
+  font-weight:1000;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+.game-day-pulse-title{
+  margin-top:3px;
+  font-size:1.02rem;
+  line-height:1.15;
+  font-weight:1000;
+  color:#2d374d;
+}
+.game-day-pulse-sub{
+  margin-top:4px;
+  color:#6e7890;
+  font-size:.68rem;
+  line-height:1.4;
+}
+.game-day-pulse-badge{
+  flex:0 0 auto;
+  padding:5px 9px;
+  border:1px solid rgba(115,157,222,.25);
+  border-radius:999px;
+  background:linear-gradient(110deg,rgba(104,199,235,.15),rgba(157,148,244,.13),rgba(166,225,199,.17));
+  color:#617aa5;
+  font-size:.61rem;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+.game-day-pulse-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.game-day-pulse-column{
+  min-width:0;
+  padding:10px;
+  border:1px solid rgba(112,156,218,.18);
+  border-radius:13px;
+  background:rgba(255,255,255,.52);
+}
+.game-day-pulse-column.villains{
+  background:linear-gradient(135deg,rgba(255,255,255,.52),rgba(255,242,244,.46));
+}
+.game-day-pulse-column-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:7px;
+  color:#465775;
+  font-size:.67rem;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+.game-day-pulse-column-head small{
+  color:#8490a6;
+  font-size:.55rem;
+  letter-spacing:.04em;
+}
+.game-day-pulse-list{display:grid;gap:6px}
+.game-day-pulse-card{
+  display:grid;
+  grid-template-columns:24px 38px minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  min-width:0;
+  padding:8px;
+  border:1px solid rgba(117,156,210,.16);
+  border-radius:10px;
+  background:rgba(255,255,255,.64);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.90);
+}
+.game-day-pulse-card.villain{border-color:rgba(211,91,109,.17)}
+.game-day-pulse-rank{
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(106,178,239,.16),rgba(165,225,198,.20));
+  color:#637ca2;
+  font-size:.62rem;
+  font-weight:1000;
+}
+.game-day-pulse-card.villain .game-day-pulse-rank{
+  background:linear-gradient(135deg,rgba(229,120,137,.13),rgba(255,210,219,.20));
+  color:#a85b6a;
+}
+.game-day-pulse-photo{
+  position:relative;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border-radius:50%;
+  border:1px solid rgba(119,157,209,.23);
+  background:linear-gradient(135deg,#e8f1ff,#e6f7ef);
+  color:#6e7f9b;
+  font-size:.58rem;
+  font-weight:1000;
+}
+.game-day-pulse-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}
+.game-day-pulse-photo span{position:relative;z-index:1}
+.game-day-pulse-copy{min-width:0}
+.game-day-pulse-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#334158;
+  font-size:.73rem;
+  font-weight:1000;
+}
+.game-day-pulse-meta{margin-top:1px;color:#7d8799;font-size:.57rem;font-weight:800}
+.game-day-pulse-leagues{
+  margin-top:2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#7183a0;
+  font-size:.55rem;
+}
+.game-day-pulse-score{text-align:right;white-space:nowrap}
+.game-day-pulse-score strong{display:block;color:#527aa8;font-size:.83rem;line-height:1;font-weight:1000}
+.game-day-pulse-card.villain .game-day-pulse-score strong{color:#b45a6b}
+.game-day-pulse-score span{display:block;margin-top:2px;color:#8792a5;font-size:.49rem;font-weight:1000;text-transform:uppercase;letter-spacing:.045em}
+.game-day-pulse-score small{display:block;margin-top:2px;color:#929bab;font-size:.49rem}
+.game-day-pulse-empty{
+  padding:11px;
+  border:1px dashed rgba(117,156,210,.22);
+  border-radius:9px;
+  color:#7f8999;
+  font-size:.65rem;
+  line-height:1.35;
+}
+
+html[data-theme="dark"] #gameDayPlayerPulse{
+  background:linear-gradient(135deg,rgba(25,38,75,.90),rgba(20,30,59,.95) 60%,rgba(23,51,59,.88));
+  border-color:rgba(106,148,229,.28);
+  box-shadow:0 15px 36px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.07);
+  color:#dfe8ff;
+}
+html[data-theme="dark"] .game-day-pulse-title{color:#e0e8fb}
+html[data-theme="dark"] .game-day-pulse-sub{color:#aebbd5}
+html[data-theme="dark"] .game-day-pulse-eyebrow{color:#8fb8f2}
+html[data-theme="dark"] .game-day-pulse-badge{color:#a8c6ef;border-color:rgba(118,164,239,.30);background:linear-gradient(110deg,rgba(69,145,216,.16),rgba(146,125,233,.13),rgba(100,201,166,.14))}
+html[data-theme="dark"] .game-day-pulse-column{background:rgba(16,27,54,.52);border-color:rgba(104,146,218,.18)}
+html[data-theme="dark"] .game-day-pulse-column.villains{background:linear-gradient(135deg,rgba(16,27,54,.52),rgba(64,27,46,.32))}
+html[data-theme="dark"] .game-day-pulse-column-head{color:#b9c8e3}
+html[data-theme="dark"] .game-day-pulse-column-head small{color:#8492ad}
+html[data-theme="dark"] .game-day-pulse-card{background:rgba(24,37,71,.67);border-color:rgba(101,145,218,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+html[data-theme="dark"] .game-day-pulse-card.villain{border-color:rgba(221,105,126,.20)}
+html[data-theme="dark"] .game-day-pulse-name{color:#dce5f7}
+html[data-theme="dark"] .game-day-pulse-meta{color:#99a8c1}
+html[data-theme="dark"] .game-day-pulse-leagues{color:#93a8ca}
+html[data-theme="dark"] .game-day-pulse-score strong{color:#8fb8ef}
+html[data-theme="dark"] .game-day-pulse-card.villain .game-day-pulse-score strong{color:#ec91a2}
+html[data-theme="dark"] .game-day-pulse-score span,
+html[data-theme="dark"] .game-day-pulse-score small{color:#8f9db6}
+html[data-theme="dark"] .game-day-pulse-empty{color:#9eabc0;border-color:rgba(111,151,218,.24)}
+
+@media(max-width:760px){
+  .game-day-pulse-grid{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+  #gameDayPlayerPulse{padding:12px}
+  .game-day-pulse-head{flex-direction:column}
+  .game-day-pulse-card{grid-template-columns:24px 34px minmax(0,1fr)}
+  .game-day-pulse-photo{width:34px;height:34px}
+  .game-day-pulse-score{grid-column:3;text-align:left;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+  .game-day-pulse-score strong,.game-day-pulse-score span,.game-day-pulse-score small{display:inline}
+}
