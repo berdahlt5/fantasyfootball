@@ -1,0 +1,153 @@
+/* Desktop-only Player Pulse layout guardrails.
+   Prevent raw Sleeper headshots from influencing card sizing and keep every
+   Top Player / Villain row on the same compact grid. */
+@media(min-width:701px){
+  #gameDayPlayerPulse .game-day-pulse-grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:14px!important;
+    align-items:start!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-column{
+    min-width:0!important;
+    padding:12px!important;
+    border-radius:14px!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-list{
+    display:grid!important;
+    gap:8px!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-card{
+    display:grid!important;
+    grid-template-columns:28px 46px minmax(0,1fr) minmax(82px,96px)!important;
+    column-gap:10px!important;
+    row-gap:2px!important;
+    align-items:center!important;
+    min-width:0!important;
+    min-height:72px!important;
+    padding:9px 11px!important;
+    border-radius:11px!important;
+    overflow:visible!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-rank{
+    width:28px!important;
+    min-width:28px!important;
+    text-align:center!important;
+    align-self:center!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-photo{
+    position:relative!important;
+    display:grid!important;
+    place-items:center!important;
+    width:46px!important;
+    height:46px!important;
+    min-width:46px!important;
+    min-height:46px!important;
+    max-width:46px!important;
+    max-height:46px!important;
+    aspect-ratio:1/1!important;
+    overflow:hidden!important;
+    border-radius:12px!important;
+    justify-self:start!important;
+    align-self:center!important;
+    background:linear-gradient(135deg,rgba(98,215,166,.13),rgba(85,205,232,.13) 42%,rgba(103,153,238,.12) 72%,rgba(155,130,231,.10))!important;
+    border:1px solid rgba(111,155,216,.18)!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-photo img{
+    position:absolute!important;
+    inset:0!important;
+    display:block!important;
+    width:46px!important;
+    height:46px!important;
+    min-width:46px!important;
+    min-height:46px!important;
+    max-width:46px!important;
+    max-height:46px!important;
+    object-fit:cover!important;
+    object-position:center top!important;
+    border-radius:inherit!important;
+    z-index:1!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-photo span{
+    position:relative!important;
+    z-index:0!important;
+    font-size:.55rem!important;
+    font-weight:1000!important;
+    line-height:1!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-copy{
+    min-width:0!important;
+    align-self:center!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-name{
+    min-width:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:.78rem!important;
+    line-height:1.14!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-meta{
+    margin-top:2px!important;
+    font-size:.56rem!important;
+    line-height:1.2!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-leagues{
+    min-width:0!important;
+    margin-top:3px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:.52rem!important;
+    line-height:1.18!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-score{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    min-width:82px!important;
+    width:auto!important;
+    text-align:right!important;
+    align-self:stretch!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-score strong{
+    line-height:1!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-score small{
+    max-width:96px!important;
+    text-align:right!important;
+    line-height:1.15!important;
+    white-space:normal!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-actual{
+    width:100%!important;
+    justify-content:flex-end!important;
+  }
+
+  #gameDayPlayerPulse .game-day-pulse-league-details{
+    grid-column:3 / 5!important;
+    min-width:0!important;
+  }
+}
+
+@media(min-width:701px) and (max-width:980px){
+  #gameDayPlayerPulse .game-day-pulse-grid{
+    grid-template-columns:1fr!important;
+  }
+}
