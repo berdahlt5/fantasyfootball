@@ -222,7 +222,7 @@
   if (page === "schedule-tool.html" && !document.getElementById("gameDayEnhancementsScript")) {
     const script = document.createElement("script");
     script.id = "gameDayEnhancementsScript";
-    script.src = "./game-day-enhancements.js?v=20260912b";
+    script.src = "./game-day-enhancements.js?v=20260913a";
     script.defer = true;
     document.head.appendChild(script);
   }
