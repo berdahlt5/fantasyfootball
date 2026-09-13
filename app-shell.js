@@ -117,14 +117,14 @@
     el.innerHTML = `
       <div class="app-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="appSettingsTitle">
         <div class="app-settings-head">
-          <div><div class="app-settings-title" id="appSettingsTitle">App settings</div><div class="app-settings-subtitle">Saved on this device and used across the fantasy app.</div></div>
+          <div><div class="app-settings-title" id="appSettingsTitle">App Settings</div><div class="app-settings-subtitle">Saved on this device and used across the fantasy app.</div></div>
           <button class="app-settings-close" type="button" aria-label="Close settings">×</button>
         </div>
         <div class="app-settings-body">
           <div class="app-settings-field"><label for="appThemeSetting">Appearance</label><select id="appThemeSetting"><option value="light">Light</option><option value="dark">Dark</option></select></div>
-          <div class="app-settings-field"><label for="appFavoriteTeamSetting">Favorite NFL team</label><select id="appFavoriteTeamSetting">${NFL_TEAMS.map(([v,n])=>`<option value="${v}">${n}</option>`).join("")}</select><div class="app-settings-help">That team's game is always promoted to Must Watch.</div></div>
-          <div class="app-settings-field"><label for="appWatchCountSetting">Games you can watch at once</label><select id="appWatchCountSetting">${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n} game${n===1?"":"s"}</option>`).join("")}</select><div class="app-settings-help">Controls how many games are recommended in crowded Sunday windows.</div></div>
-          <div class="app-settings-field app-settings-wide"><label for="appPriorityLeaguesSetting">Starred leagues</label><textarea id="appPriorityLeaguesSetting" rows="4" spellcheck="false" placeholder="Gridiron Gurus\nTnT Fantasy"></textarea><div class="app-settings-help">One league name per line. Starred leagues get extra weight in Watch and are highlighted across the app.</div></div>
+          <div class="app-settings-field"><label for="appFavoriteTeamSetting">Favorite NFL Team</label><select id="appFavoriteTeamSetting">${NFL_TEAMS.map(([v,n])=>`<option value="${v}">${n}</option>`).join("")}</select><div class="app-settings-help">That team's game is always promoted to Must Watch.</div></div>
+          <div class="app-settings-field"><label for="appWatchCountSetting">Games You Can Watch at Once</label><select id="appWatchCountSetting">${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n} game${n===1?"":"s"}</option>`).join("")}</select><div class="app-settings-help">Controls how many games are recommended in crowded Sunday windows.</div></div>
+          <div class="app-settings-field app-settings-wide"><label for="appPriorityLeaguesSetting">Starred Leagues</label><textarea id="appPriorityLeaguesSetting" rows="4" spellcheck="false" placeholder="Gridiron Gurus\nTnT Fantasy"></textarea><div class="app-settings-help">One league name per line. Starred Leagues get extra weight in Watch and are highlighted across the app.</div></div>
         </div>
         <div class="app-settings-actions"><button class="app-settings-cancel" type="button">Cancel</button><button class="app-settings-save" type="button">Save settings</button></div>
       </div>`;

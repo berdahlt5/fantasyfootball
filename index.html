@@ -325,7 +325,7 @@
 
     <section class="panel controls">
       <div class="control-grid">
-        <label>Sleeper username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
+        <label>Sleeper Username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
         <label>Season<input id="season" type="number" min="2018" max="2035" value="2026" /></label>
         <label>Week<select id="week"></select></label>
         <button class="primary" id="loadBtn" type="button">Load Owner Dashboard</button>
@@ -372,7 +372,7 @@
       <details class="panel section draft-history-panel" id="draftHistoryPanel">
         <summary>
           <div>
-            <div class="section-title">Draft history</div>
+            <div class="section-title">Draft History</div>
             <div class="section-note" id="draftHistoryNote">Every pick made for your franchise across the available Sleeper draft history.</div>
           </div>
           <span class="draft-history-toggle">View drafts</span>
@@ -383,7 +383,7 @@
       <section class="panel section projections-section">
         <div class="section-head">
           <div>
-            <div class="section-title">Team projections</div>
+            <div class="section-title">Team Projections</div>
             <div class="section-note" id="projectionNote">Projected records and rankings will load for every owned league.</div>
           </div>
           <div class="legend" aria-label="Rank tiers">
@@ -396,7 +396,7 @@
       <section class="panel section">
         <div class="section-head">
           <div>
-            <div class="section-title">Owner history</div>
+            <div class="section-title">Owner History</div>
             <div class="section-note">League top-3 finishes come only from Sleeper's winners bracket. Toilet/consolation results are shown separately as lowlights.</div>
           </div>
         </div>
@@ -1063,7 +1063,7 @@
           const rounds=Number(draft?.settings?.rounds||0),status=String(draft?.status||"");
           return `<details class="draft-season"><summary><div class="draft-season-title">${escapeHtml(row.season)} · ${escapeHtml(draftLabel(draft))}</div><div class="draft-season-meta">${picks.length} pick${picks.length===1?"":"s"}${rounds?` · ${rounds} rounds`:""}${status?` · ${escapeHtml(status)}`:""}</div></summary><div class="draft-picks">${pickCards||'<div class="draft-empty">No picks were recorded for this roster.</div>'}</div></details>`;
         })).join("");
-        return `<details class="draft-team"><summary><div><div class="draft-team-name">${escapeHtml(view.myMeta?.name||"My team")}</div><div class="draft-team-meta">${escapeHtml(view.name)}</div></div><div class="draft-team-count"><span>Draft history</span><strong>${drafts.length} draft${drafts.length===1?"":"s"} · ${drafts.reduce((sum,d)=>sum+d.picks.length,0)} picks</strong></div><div class="draft-chevron">▶</div></summary><div class="draft-seasons">${body||'<div class="draft-empty">No Sleeper draft picks were found for this franchise history.</div>'}</div></details>`;
+        return `<details class="draft-team"><summary><div><div class="draft-team-name">${escapeHtml(view.myMeta?.name||"My team")}</div><div class="draft-team-meta">${escapeHtml(view.name)}</div></div><div class="draft-team-count"><span>Draft History</span><strong>${drafts.length} draft${drafts.length===1?"":"s"} · ${drafts.reduce((sum,d)=>sum+d.picks.length,0)} picks</strong></div><div class="draft-chevron">▶</div></summary><div class="draft-seasons">${body||'<div class="draft-empty">No Sleeper draft picks were found for this franchise history.</div>'}</div></details>`;
       }).join("");
       els.draftHistoryList.innerHTML=cards||'<div class="empty">No draft history was found.</div>';
       els.draftHistoryNote.textContent=`${totalPicks} recorded picks across ${totalDrafts} draft${totalDrafts===1?"":"s"} in the available franchise histories.`;
@@ -1096,7 +1096,7 @@
 
     async function loadDashboard(){
       const username=els.username.value.trim(),season=Number(els.season.value),week=Number(els.week.value);
-      if(!username)return showError(new Error("Enter a Sleeper username."));
+      if(!username)return showError(new Error("Enter a Sleeper Username."));
       if(!Number.isInteger(season)||season<2018)return showError(new Error("Enter a valid season."));
       clearError();setLoading(true,"Finding Sleeper account…");
       try{
@@ -1191,8 +1191,8 @@
         await loadDraftHistory();
         renderDraftHistory();
       }catch(error){
-        els.draftHistoryList.innerHTML=`<div class="empty">Draft history could not be loaded: ${escapeHtml(error?.message||error)}</div>`;
-        els.draftHistoryNote.textContent="Draft history is unavailable right now.";
+        els.draftHistoryList.innerHTML=`<div class="empty">Draft History could not be loaded: ${escapeHtml(error?.message||error)}</div>`;
+        els.draftHistoryNote.textContent="Draft History is unavailable right now.";
       }
     });
 

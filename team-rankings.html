@@ -82,7 +82,7 @@
 
     <section class="panel controls">
       <div class="control-grid">
-        <label>Sleeper username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
+        <label>Sleeper Username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
         <label>Season<input id="season" type="number" min="2018" max="2035" value="2026" /></label>
         <label>League<select id="league" disabled><option value="">Load leagues first</option></select></label>
         <label>Completed through<select id="completedThrough" disabled><option value="auto">Auto detect</option></select></label>
@@ -280,7 +280,7 @@
     function rebuildCompletedOptions(league){const max=regularSeasonWeeks(league),current=els.completedThrough.value;els.completedThrough.innerHTML=`<option value="auto">Auto detect</option>`;for(let w=0;w<=max;w++){const option=document.createElement("option");option.value=String(w);option.textContent=w===0?"No completed weeks":`Week ${w}`;els.completedThrough.appendChild(option)}els.completedThrough.value=[...els.completedThrough.options].some(o=>o.value===current)?current:"auto";els.completedThrough.disabled=false}
 
     async function loadLeagues(){
-      clearMessages();const username=els.username.value.trim(),season=String(els.season.value||"").trim();if(!username)return showError(new Error("Enter a Sleeper username."));if(!/^\d{4}$/.test(season))return showError(new Error("Enter a four-digit season."));
+      clearMessages();const username=els.username.value.trim(),season=String(els.season.value||"").trim();if(!username)return showError(new Error("Enter a Sleeper Username."));if(!/^\d{4}$/.test(season))return showError(new Error("Enter a four-digit season."));
       try{setLoading(true,"Finding Sleeper account…");const user=await fetchJson(`${SLEEPER_API}/user/${encodeURIComponent(username)}`,"Sleeper user lookup");if(!user?.user_id)throw new Error(`Sleeper user “${username}” was not found.`);state.user=user;
         setLoading(true,"Loading leagues…");const [leagues,nflState,players,dynastyMeta]=await Promise.all([fetchJson(`${SLEEPER_API}/user/${user.user_id}/leagues/nfl/${season}`,"Sleeper leagues"),optionalJson(`${SLEEPER_API}/state/nfl`),loadPlayerDirectory(),loadDynastyMetadata()]);if(!Array.isArray(leagues)||!leagues.length)throw new Error(`No NFL leagues were returned for ${username} in ${season}.`);state.leagues=leagues;state.nflState=nflState;state.players=players||{};state.dynastyMeta=dynastyMeta||new Map();state.dynastyMetaLoaded=state.dynastyMeta.size>0;
         els.league.innerHTML=leagues.slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))).map(league=>`<option value="${escapeHtml(league.league_id)}">${escapeHtml(league.name||`League ${league.league_id}`)} · ${Number(league.total_rosters||0)} teams</option>`).join("");els.league.disabled=false;const selected=state.leagues.find(l=>String(l.league_id)===String(els.league.value));if(selected)rebuildCompletedOptions(selected);els.runBtn.disabled=false;els.loadNote.textContent=`${leagues.length} league${leagues.length===1?"":"s"} loaded for ${user.display_name||user.username}. Draft-capital metadata ${state.dynastyMetaLoaded?"loaded":"was unavailable; upside will fall back to age, depth-chart path and offense"}. Select one league and build its rankings.`;setLoading(false)}catch(error){setLoading(false);showError(error)}

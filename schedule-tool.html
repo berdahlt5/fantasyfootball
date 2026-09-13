@@ -731,7 +731,7 @@
     <section class="panel controls">
       <div class="control-grid">
         <label>
-          Sleeper username
+          Sleeper Username
           <input id="username" value="tommyberdahl" autocomplete="off" />
         </label>
         <label>
@@ -755,7 +755,7 @@
         <label>
           Sort games by
           <select id="sort">
-            <option value="watch" selected>Best games to watch</option>
+            <option value="watch" selected>Best Games to Watch</option>
             <option value="priority">Priority leagues first</option>
             <option value="exposures">Most roster exposures</option>
             <option value="unique">Most unique players</option>
@@ -811,7 +811,7 @@
       </div>
     </section>
 
-    <details class="panel league-filter" id="leagueFilter"><summary>Leagues & priorities</summary>
+    <details class="panel league-filter" id="leagueFilter"><summary>Leagues & Priorities</summary>
       <div class="filter-head">
         <div>
           <div class="filter-title">League filters</div>
@@ -821,7 +821,7 @@
       <div class="league-chips" id="leagueChips"></div>
     </details>
 
-    <details class="panel live-scores-panel" id="liveScoresPanel"><summary>Live league scores</summary>
+    <details class="panel live-scores-panel" id="liveScoresPanel"><summary>Live League Scores</summary>
       <div class="live-score-head">
         <div>
           <div class="section-title">Live League Scores</div>
@@ -845,8 +845,8 @@
 
     <section class="panel lineup-pulse" id="lineupPulse">
       <div class="lineup-pulse-head">
-        <div><div class="lineup-pulse-title">Lineup check</div><div class="lineup-pulse-sub">Only the things that need attention: injured starters and FLEX / kickoff-timing mistakes.</div></div>
-        <a class="lineup-pulse-link" id="lineupPulseLink" href="./lineup-assistant.html">Full lineup assistant</a>
+        <div><div class="lineup-pulse-title">Lineup Check</div><div class="lineup-pulse-sub">Only the things that need attention: injured starters and FLEX / kickoff-timing mistakes.</div></div>
+        <a class="lineup-pulse-link" id="lineupPulseLink" href="./lineup-assistant.html">Full Lineup Assistant</a>
       </div>
       <div class="lineup-pulse-metrics">
         <span class="lineup-pulse-pill critical"><strong id="lineupCriticalCount">0</strong> fix now</span>
@@ -865,7 +865,7 @@
           </div>
         </div>
         <div class="games" id="games">
-          <div class="empty">Enter your Sleeper username and select <strong>Load My Rosters</strong>.</div>
+          <div class="empty">Enter your Sleeper Username and select <strong>Load My Rosters</strong>.</div>
         </div>
       </section>
 
@@ -1101,7 +1101,7 @@
       const season = String(els.season.value || "").trim();
 
       if (!username) {
-        showError("Enter a Sleeper username.");
+        showError("Enter a Sleeper Username.");
         return;
       }
       if (!/^\d{4}$/.test(season)) {
@@ -2434,7 +2434,7 @@
 
     function renderAll() {
       const week = Number(els.week.value);
-      els.gamesTitle.textContent = `Best games to watch · Week ${week}`;
+      els.gamesTitle.textContent = `Best Games to Watch · Week ${week}`;
 
       if (!state.user) {
         renderLineupPulse();

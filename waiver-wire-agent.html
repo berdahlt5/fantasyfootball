@@ -277,7 +277,7 @@
 
     <section class="panel controls">
       <div class="control-grid">
-        <label>Sleeper username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
+        <label>Sleeper Username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
         <label>Season<input id="season" type="number" min="2018" max="2035" value="2026" /></label>
         <label>Upcoming week<select id="week"></select></label>
         <label>Per position
@@ -365,7 +365,7 @@
           <label>Find player<input id="playerSearch" placeholder="Search name or team" /></label>
         </div>
       </div>
-      <div class="results" id="results"><div class="empty">Enter your Sleeper username and select <strong>Analyze Waiver Wire</strong>.</div></div>
+      <div class="results" id="results"><div class="empty">Enter your Sleeper Username and select <strong>Analyze Waiver Wire</strong>.</div></div>
       <div class="footer-note">Player, league, roster, waiver-position, projection, and game data provided by Sleeper.</div>
     </section>
   </main>
@@ -1357,7 +1357,7 @@
       const username = els.username.value.trim();
       const season = Number(els.season.value);
       const projectionWeek = Number(els.week.value);
-      if (!username) return showError(new Error("Enter a Sleeper username."));
+      if (!username) return showError(new Error("Enter a Sleeper Username."));
       if (!Number.isInteger(season) || season < 2018) return showError(new Error("Enter a valid season."));
 
       clearError();
