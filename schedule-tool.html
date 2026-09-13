@@ -1908,7 +1908,7 @@
     }
 
     function scheduleOpponentPlayerMarkup(player) {
-      const projection = schedulePlayerProjection(player.playerId);
+      const projection = scheduleImpactForPlayer(player.playerId).projection;
       return `<div class="impact-player"><div class="impact-player-main"><span>${escapeHtml(player.name)}</span><span class="impact-pos">${escapeHtml(player.position || "")}</span>${projection > 0 ? `<span class="impact-proj">proj ~${projection.toFixed(1)}</span>` : ""}</div></div>`;
     }
 
