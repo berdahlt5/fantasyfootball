@@ -1,0 +1,36 @@
+name: Apply gradient palette v6
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-gradient-palette-v6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply palette cleanup
+        run: python .github/scripts/unify_palette_v6.py
+      - name: Validate CSS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          css=Path('app-shell.css').read_text()
+          assert '/* gradient-palette-v6 */' in css
+          assert css.count('{') == css.count('}'), (css.count('{'), css.count('}'))
+          for token in ['--brand-cyan:#27c9e8','--brand-blue:#438cf5','--brand-violet:#6a5cf4','--app-success:#239b74','--app-warning:#b87922','--app-danger:#d95f6a']:
+              assert token in css, token
+          print('CSS validation passed')
+          PY
+      - name: Commit changes and remove one-time patch files
+        run: |
+          rm -f .github/scripts/unify_palette_v6.py .github/workflows/apply-gradient-palette-v6.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Unify app around gradient color system'
+          git push
