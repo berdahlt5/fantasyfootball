@@ -1,0 +1,146 @@
+/* Color tune for Crunchtime Liquid Glass: greener left edge, blue center, lavender right.
+   Keeps the newer material more transparent while restoring chromatic depth. */
+
+body.crunch-planner-ready .ct-matchup-card,
+body.crunch-planner-ready .ct-points-planner,
+body.crunch-planner-ready .ct-plan-player,
+body.crunch-planner-ready .ct-team-scoreboard,
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed{
+  -webkit-backdrop-filter:blur(30px) saturate(1.58) brightness(1.03);
+  backdrop-filter:blur(30px) saturate(1.58) brightness(1.03);
+}
+
+/* Primary glass: green -> blue -> lavender, with lower neutral opacity. */
+body.crunch-planner-ready .ct-matchup-card.is-expanded,
+body.crunch-planner-ready .ct-matchup-card:not(.is-collapsed){
+  background:
+    radial-gradient(circle at 0% 18%,rgba(91,224,166,.18),transparent 34%),
+    radial-gradient(circle at 35% 0%,rgba(67,194,239,.18),transparent 37%),
+    radial-gradient(circle at 96% 7%,rgba(190,111,232,.12),transparent 34%),
+    linear-gradient(120deg,rgba(255,255,255,.32),rgba(232,247,253,.19) 48%,rgba(244,236,253,.17));
+}
+
+body.crunch-planner-ready .ct-points-planner{
+  background:
+    radial-gradient(circle at 0% 12%,rgba(87,225,164,.16),transparent 34%),
+    radial-gradient(circle at 34% 0%,rgba(57,197,239,.16),transparent 37%),
+    radial-gradient(circle at 98% 5%,rgba(183,108,232,.11),transparent 33%),
+    linear-gradient(120deg,rgba(255,255,255,.27),rgba(231,246,253,.16) 50%,rgba(244,236,252,.14));
+}
+
+body.crunch-planner-ready .ct-team-scoreboard{
+  background:
+    radial-gradient(circle at 0% 30%,rgba(88,225,165,.15),transparent 34%),
+    radial-gradient(circle at 38% 0%,rgba(66,198,238,.16),transparent 37%),
+    radial-gradient(circle at 96% 4%,rgba(183,109,232,.11),transparent 34%),
+    linear-gradient(120deg,rgba(247,253,255,.25),rgba(227,242,252,.16) 50%,rgba(241,233,252,.15));
+}
+
+body.crunch-planner-ready .ct-scoreboard-head{
+  background:linear-gradient(90deg,rgba(107,226,174,.12),rgba(89,196,239,.15) 46%,rgba(190,121,230,.11));
+}
+
+body.crunch-planner-ready .ct-scoreboard-row.scenario{
+  background:
+    radial-gradient(circle at 0% 50%,rgba(91,226,168,.15),transparent 34%),
+    radial-gradient(circle at 42% 50%,rgba(74,190,241,.15),transparent 39%),
+    radial-gradient(circle at 98% 50%,rgba(181,119,232,.11),transparent 36%),
+    linear-gradient(100deg,rgba(226,250,241,.15),rgba(222,237,255,.2) 52%,rgba(239,229,255,.17));
+}
+
+body.crunch-planner-ready .ct-plan-player{
+  background:
+    radial-gradient(circle at 0% 12%,rgba(93,224,167,.12),transparent 34%),
+    radial-gradient(circle at 35% 0%,rgba(67,194,239,.13),transparent 37%),
+    radial-gradient(circle at 98% 5%,rgba(183,111,230,.085),transparent 33%),
+    linear-gradient(120deg,rgba(255,255,255,.22),rgba(233,246,254,.13) 52%,rgba(244,238,253,.12));
+}
+
+/* Controls keep the same left-to-right color language. */
+body.crunch-planner-ready .ct-plan-mode{
+  background:
+    radial-gradient(circle at 0% 50%,rgba(91,222,165,.11),transparent 38%),
+    linear-gradient(110deg,rgba(255,255,255,.27),rgba(221,242,253,.18) 53%,rgba(242,230,252,.14));
+}
+body.crunch-planner-ready .ct-plan-mode button.active{
+  background:
+    radial-gradient(circle at 0% 50%,rgba(80,226,164,.28),transparent 48%),
+    linear-gradient(110deg,rgba(76,215,187,.28),rgba(77,158,239,.34) 52%,rgba(163,113,227,.25));
+}
+
+/* Collapsed cards use the same green-left / blue-middle / lavender-right flow. */
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed{
+  background:
+    radial-gradient(circle at 0% 18%,rgba(91,224,166,.17),transparent 34%),
+    radial-gradient(circle at 36% 0%,rgba(68,195,239,.16),transparent 38%),
+    radial-gradient(circle at 98% 5%,rgba(186,111,232,.11),transparent 34%),
+    linear-gradient(120deg,rgba(255,255,255,.31),rgba(230,244,253,.19) 54%,rgba(243,234,252,.16));
+}
+
+/* Preserve status colors while keeping the base chromatic flow visible. */
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.hot{
+  background:
+    radial-gradient(circle at 88% 0%,rgba(246,194,66,.18),transparent 37%),
+    radial-gradient(circle at 0% 20%,rgba(91,224,166,.14),transparent 32%),
+    radial-gradient(circle at 34% 0%,rgba(69,195,239,.13),transparent 36%),
+    linear-gradient(120deg,rgba(255,255,255,.3),rgba(244,239,216,.19),rgba(238,238,252,.15));
+}
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.good{
+  background:
+    radial-gradient(circle at 0% 24%,rgba(76,226,158,.22),transparent 36%),
+    radial-gradient(circle at 38% 0%,rgba(68,196,239,.13),transparent 36%),
+    radial-gradient(circle at 98% 4%,rgba(182,112,230,.08),transparent 34%),
+    linear-gradient(120deg,rgba(255,255,255,.29),rgba(222,248,238,.18),rgba(233,241,253,.15));
+}
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.bad{
+  background:
+    radial-gradient(circle at 90% 0%,rgba(231,105,146,.16),transparent 37%),
+    radial-gradient(circle at 0% 20%,rgba(91,224,166,.12),transparent 32%),
+    radial-gradient(circle at 35% 0%,rgba(73,191,237,.11),transparent 36%),
+    linear-gradient(120deg,rgba(255,255,255,.29),rgba(247,230,238,.18),rgba(235,240,252,.14));
+}
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.watch{
+  background:
+    radial-gradient(circle at 92% 0%,rgba(137,113,233,.16),transparent 37%),
+    radial-gradient(circle at 0% 20%,rgba(91,224,166,.13),transparent 32%),
+    radial-gradient(circle at 36% 0%,rgba(68,195,239,.12),transparent 36%),
+    linear-gradient(120deg,rgba(255,255,255,.29),rgba(228,240,253,.18),rgba(241,232,252,.15));
+}
+
+/* Dark mode: same color order, slightly brighter chroma over a more transparent dark core. */
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card.is-expanded,
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card:not(.is-collapsed){
+  background:
+    radial-gradient(circle at 0% 18%,rgba(60,201,137,.16),transparent 35%),
+    radial-gradient(circle at 36% 0%,rgba(49,166,224,.17),transparent 38%),
+    radial-gradient(circle at 97% 6%,rgba(177,84,209,.13),transparent 34%),
+    linear-gradient(120deg,rgba(14,28,47,.52),rgba(22,39,66,.4) 50%,rgba(39,27,61,.34));
+}
+html[data-theme="dark"] body.crunch-planner-ready .ct-points-planner{
+  background:
+    radial-gradient(circle at 0% 14%,rgba(57,198,134,.14),transparent 35%),
+    radial-gradient(circle at 35% 0%,rgba(47,163,221,.15),transparent 38%),
+    radial-gradient(circle at 98% 5%,rgba(166,79,201,.12),transparent 34%),
+    linear-gradient(120deg,rgba(15,31,52,.46),rgba(23,42,68,.35) 52%,rgba(37,28,63,.3));
+}
+html[data-theme="dark"] body.crunch-planner-ready .ct-team-scoreboard{
+  background:
+    radial-gradient(circle at 0% 28%,rgba(57,198,134,.13),transparent 35%),
+    radial-gradient(circle at 38% 0%,rgba(49,165,222,.15),transparent 38%),
+    radial-gradient(circle at 98% 5%,rgba(167,80,201,.115),transparent 34%),
+    linear-gradient(120deg,rgba(17,34,56,.43),rgba(24,44,70,.34) 50%,rgba(39,29,65,.29));
+}
+html[data-theme="dark"] body.crunch-planner-ready .ct-plan-player{
+  background:
+    radial-gradient(circle at 0% 15%,rgba(57,198,134,.11),transparent 34%),
+    radial-gradient(circle at 36% 0%,rgba(49,165,222,.12),transparent 37%),
+    radial-gradient(circle at 98% 5%,rgba(166,80,201,.09),transparent 34%),
+    linear-gradient(120deg,rgba(17,34,57,.36),rgba(24,43,68,.29) 52%,rgba(38,29,63,.25));
+}
+html[data-theme="dark"] body.crunch-collapse-ready .ct-matchup-card.is-collapsed{
+  background:
+    radial-gradient(circle at 0% 18%,rgba(59,199,136,.15),transparent 34%),
+    radial-gradient(circle at 36% 0%,rgba(48,165,222,.15),transparent 38%),
+    radial-gradient(circle at 98% 5%,rgba(170,81,204,.11),transparent 34%),
+    linear-gradient(120deg,rgba(14,29,49,.47),rgba(23,41,66,.36) 54%,rgba(38,28,61,.3));
+}
