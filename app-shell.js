@@ -235,10 +235,10 @@
     loadStyle("gameDayScoreboardGlassStyles","./gameday-scoreboard-glass.css?v=20260913a");
     loadStyle("gameDayMatchupFootprintStyles","./gameday-matchup-footprint.css?v=20260913a");
 
-    loadScript("gameDayPlayerPulseScript","./gameday-player-pulse-windowed.js?v=20260913a");
+    loadScript("gameDayPlayerPulseScript","./gameday-player-pulse-windowed.js?v=20260914a");
     loadScript("gameDayPulsePolishScript","./gameday-pulse-polish.js?v=20260913b");
     loadScript("gameDayPulseActualScript","./gameday-pulse-actual.js?v=20260913b");
-    loadScript("gameDayPulseFinalRankingScript","./gameday-pulse-final-ranking.js?v=20260913a");
+    loadScript("gameDayPulseFinalRankingScript","./gameday-pulse-final-ranking.js?v=20260914a");
     loadScript("gameDayEnhancementsScript","./game-day-enhancements.js?v=20260913c");
     loadScript("gameDayHubDetailsScript","./gameday-hub-details.js?v=20260913a");
     loadScript("gameDayWatchRelevanceScript","./gameday-watch-relevance-v2.js?v=20260913a");
@@ -250,7 +250,7 @@
     loadStyle("crunchTimeLiveContextStyles","./crunchtime-live-context.css?v=20260913a");
     loadScript("crunchTimeCommandCenterScript","./crunchtime-command-center.js?v=20260913a");
     loadScript("crunchTimePointsPlannerScript","./crunchtime-points-planner.js?v=20260913c");
-    loadScript("crunchTimeTargetClarityScript","./crunchtime-target-clarity.js?v=20260913a");
+    loadScript("crunchTimeTargetClarityScript","./crunchtime-target-clarity.js?v=20260913b");
     loadScript("crunchTimeLiveContextScript","./crunchtime-live-context.js?v=20260913a");
   }
 })();
