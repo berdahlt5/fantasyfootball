@@ -154,3 +154,72 @@ html[data-theme="dark"] .gameday-league-name { color:#a9c9ff; }
   .gameday-player-leagues{display:grid;gap:1px;font-size:.58rem;margin-top:3px}
   .gameday-league-label{font-size:.54rem}
 }
+
+/* -------------------------------------------------------------------------
+   OWNER DASHBOARD: tier contrast + cool navigation controls.
+   Gold is reserved for caution / priority, not disclosure arrows.
+   ------------------------------------------------------------------------- */
+.projections-section .legend span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:6px 11px;
+  border-radius:999px;
+  font-size:.65rem;
+  font-weight:1000;
+  letter-spacing:.025em;
+  -webkit-backdrop-filter:blur(16px) saturate(1.35);
+  backdrop-filter:blur(16px) saturate(1.35);
+}
+.projections-section .legend .playoff{
+  color:#267c5e!important;
+  border:1px solid rgba(61,159,123,.38)!important;
+  background:linear-gradient(135deg,rgba(98,215,166,.24),rgba(255,255,255,.34))!important;
+  box-shadow:0 0 15px rgba(62,170,127,.10),inset 0 1px 0 rgba(255,255,255,.78)!important;
+}
+.projections-section .legend .bubble{
+  color:#9a6b10!important;
+  border:1px solid rgba(213,163,52,.34)!important;
+  background:linear-gradient(135deg,rgba(226,183,76,.16),rgba(255,255,255,.28))!important;
+}
+.projections-section .legend .longshot{
+  color:#b84b67!important;
+  border:1px solid rgba(216,95,124,.32)!important;
+  background:linear-gradient(135deg,rgba(216,95,124,.13),rgba(255,255,255,.28))!important;
+}
+html[data-theme="dark"] .projections-section .legend .playoff{
+  color:#80e3bb!important;
+  border-color:rgba(98,215,166,.34)!important;
+  background:linear-gradient(135deg,rgba(62,167,124,.19),rgba(26,45,65,.42))!important;
+}
+html[data-theme="dark"] .projections-section .legend .bubble{color:#f0c968!important}
+html[data-theme="dark"] .projections-section .legend .longshot{color:#f09ab0!important}
+
+.projection-card .chevron,
+.history-chevron,
+.draft-chevron{
+  color:#5d83c9!important;
+  border-color:rgba(103,153,238,.27)!important;
+  background:linear-gradient(135deg,rgba(85,205,232,.11),rgba(103,153,238,.14),rgba(155,130,231,.10))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.66),0 4px 12px rgba(78,122,197,.06)!important;
+}
+.projection-card:hover .chevron,
+.team-history-team:hover .history-chevron,
+.draft-team:hover .draft-chevron{
+  color:#466fae!important;
+  border-color:rgba(92,144,221,.40)!important;
+  background:linear-gradient(135deg,rgba(85,205,232,.16),rgba(103,153,238,.20),rgba(155,130,231,.14))!important;
+}
+.projection-card[open]{
+  border-color:rgba(103,153,238,.32)!important;
+  box-shadow:inset 4px 0 0 rgba(103,153,238,.48),0 9px 24px rgba(77,112,171,.07)!important;
+}
+html[data-theme="dark"] .projection-card .chevron,
+html[data-theme="dark"] .history-chevron,
+html[data-theme="dark"] .draft-chevron{
+  color:#aec8fa!important;
+  border-color:rgba(112,157,234,.24)!important;
+  background:linear-gradient(135deg,rgba(56,169,207,.11),rgba(76,118,218,.14),rgba(139,79,198,.11))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
