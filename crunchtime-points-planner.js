@@ -121,12 +121,16 @@
     const theirs = remaining(opp,league,projections);
     const myScore = n(my.points);
     const oppScore = n(opp.points);
+    const myProjectedLeft = mine.reduce((sum,row)=>sum+row.expectedRemaining,0);
     const oppProjectedLeft = theirs.reduce((sum,row)=>sum+row.expectedRemaining,0);
+    const myProjectedFinal = myScore + myProjectedLeft;
+    const oppProjectedFinal = oppScore + oppProjectedLeft;
     const currentNeed = targetTenth(Math.max(0,oppScore-myScore+.01));
-    const projectedNeed = targetTenth(Math.max(0,oppScore+oppProjectedLeft-myScore+.01));
+    const projectedNeed = targetTenth(Math.max(0,oppProjectedFinal-myScore+.01));
     const target = theirs.length ? projectedNeed : currentNeed;
     return {
-      view,league,mine,theirs,myScore,oppScore,oppProjectedLeft,target,
+      view,league,mine,theirs,myScore,oppScore,myProjectedLeft,oppProjectedLeft,
+      myProjectedFinal,oppProjectedFinal,target,
       final:mine.length===0 && theirs.length===0
     };
   }
@@ -139,11 +143,13 @@
 
   function stateFor(data){
     const key = String(data.view.leagueId || data.view.name || "league");
-    if (!planState.has(key)) planState.set(key,{allocations:new Map(),target:null});
-    return planState.get(key);
+    if (!planState.has(key)) planState.set(key,{allocations:new Map(),target:null,mode:"win"});
+    const plan = planState.get(key);
+    if (!plan.mode) plan.mode = "win";
+    return plan;
   }
 
-  function distribute(data,plan,changedId=null,changedValue=null){
+  function distributeToWin(data,plan,changedId=null,changedValue=null){
     const rows = data.mine;
     const target = data.target;
     if (!rows.length) return;
@@ -189,10 +195,30 @@
     plan.target = target;
   }
 
+  function seedFree(data,plan,keepExisting=false){
+    const next = new Map();
+    for (const row of data.mine){
+      const existing = keepExisting ? plan.allocations.get(row.id) : null;
+      next.set(row.id,existing==null ? roundTenth(row.expectedRemaining) : Math.max(0,roundTenth(existing)));
+    }
+    plan.allocations = next;
+    plan.target = data.target;
+  }
+
   function ensurePlan(data,plan){
-    if (plan.target!==data.target || data.mine.some(row=>!plan.allocations.has(row.id))){
+    const rowIds = new Set(data.mine.map(row=>row.id));
+    const missing = data.mine.some(row=>!plan.allocations.has(row.id));
+    const stale = [...plan.allocations.keys()].some(id=>!rowIds.has(id));
+
+    if (plan.mode === "free"){
+      if (missing || stale || !plan.allocations.size) seedFree(data,plan,true);
+      plan.target = data.target;
+      return;
+    }
+
+    if (plan.target!==data.target || missing || stale || !plan.allocations.size){
       plan.allocations = new Map();
-      distribute(data,plan);
+      distributeToWin(data,plan);
     }
   }
 
@@ -221,7 +247,7 @@
     const actual = Math.max(0,n(row.actual));
     const projectedFinal = actual + Math.max(0,n(row.expectedRemaining));
     const scenarioFinal = actual + allocation;
-    const axisMax = sliderScale(row,target);
+    const axisMax = sliderScale(row,Math.max(target,allocation));
     const pct = Math.min(100,Math.max(0,(scenarioFinal/axisMax)*100));
     const currentPct = Math.min(100,Math.max(0,(actual/axisMax)*100));
     const projPct = Math.min(100,Math.max(0,(projectedFinal/axisMax)*100));
@@ -251,8 +277,55 @@
     return "";
   }
 
+  function scenarioValues(data,plan){
+    const additional = data.mine.reduce((sum,row)=>sum+Math.max(0,n(plan.allocations.get(row.id))),0);
+    const mine = data.myScore + additional;
+    const opp = data.oppProjectedFinal;
+    const edge = mine-opp;
+    const result = Math.abs(edge)<.05 ? "tie" : edge>0 ? "win" : "loss";
+    return {additional,mine,opp,edge,result};
+  }
+
+  function resultLabel(values){
+    if (values.result === "tie") return "TIE";
+    const sign = values.edge>0 ? "+" : "−";
+    return `${values.result.toUpperCase()} ${sign}${f(Math.abs(values.edge))}`;
+  }
+
+  function scoreboardMarkup(data,plan){
+    const scenario = scenarioValues(data,plan);
+    const opponentBasis = data.theirs.length ? "opponent projected finish" : "opponent final score";
+    return `<div class="ct-plan-scoreboard">
+      <div class="ct-plan-score-cell current"><span>Current</span><strong>${f(data.myScore)} <em>–</em> ${f(data.oppScore)}</strong><small>actual now</small></div>
+      <div class="ct-plan-score-cell projected"><span>Projected</span><strong>${f(data.myProjectedFinal)} <em>–</em> ${f(data.oppProjectedFinal)}</strong><small>current projections</small></div>
+      <div class="ct-plan-score-cell scenario ${scenario.result}"><span>Your scenario</span><strong data-ct-scenario-score>${f(scenario.mine)} <em>–</em> ${f(scenario.opp)}</strong><b data-ct-scenario-result>${esc(resultLabel(scenario))}</b></div>
+    </div><div class="ct-plan-score-note">Scenario uses ${esc(opponentBasis)}.</div>`;
+  }
+
   function allocationEquation(data,plan){
-    return data.mine.map(row=>`+${f(plan.allocations.get(row.id))}`).join(" + ");
+    return data.mine.map(row=>f(plan.allocations.get(row.id))).join(" + ");
+  }
+
+  function headerMarkup(data,plan){
+    const opponentDone = data.theirs.length===0;
+    const mode = plan.mode === "free" ? "free" : "win";
+    const label = mode === "free" ? "Free scenario" : opponentDone ? "To win · final target" : "To win · projected target";
+    const title = mode === "free"
+      ? "Build any finish"
+      : data.target>0 ? `Need ${f(data.target)} more` : "Already above the target";
+    const detail = mode === "free"
+      ? "Sliders move independently · result updates live"
+      : opponentDone ? `Opponent is finished at ${f(data.oppScore)}` : `Beat opponent projected ${f(data.oppProjectedFinal)}`;
+    return `<div class="ct-plan-head-simple">
+      <div><span>${esc(label)}</span><strong>${esc(title)}</strong><small>${esc(detail)}</small></div>
+      <div class="ct-plan-head-actions">
+        <div class="ct-plan-mode" role="group" aria-label="Scenario mode">
+          <button type="button" data-ct-plan-mode="win" class="${mode==="win"?"active":""}" aria-pressed="${mode==="win"}">To win</button>
+          <button type="button" data-ct-plan-mode="free" class="${mode==="free"?"active":""}" aria-pressed="${mode==="free"}">Free</button>
+        </div>
+        <button type="button" class="ct-plan-reset" data-ct-plan-reset>Reset</button>
+      </div>
+    </div>`;
   }
 
   function plannerMarkup(data,plan){
@@ -262,22 +335,29 @@
     }
 
     ensurePlan(data,plan);
-    if (data.target<=0){
-      return `<div class="ct-plan-passive good"><strong>You’re already ahead of the projected finish.</strong></div>`;
-    }
+    const equation = plan.mode === "win"
+      ? `<div class="ct-plan-equation"><small>From here</small><span data-ct-plan-equation>${esc(allocationEquation(data,plan))}</span><strong>= ${f(data.target)} more</strong></div>`
+      : "";
 
-    const context = data.theirs.length
-      ? `vs projected finish · opponent has ${f(data.oppProjectedLeft)} projected left`
-      : "opponent is finished";
-
-    return `<section class="ct-points-planner" data-league-id="${esc(data.view.leagueId)}">
-      <div class="ct-plan-head-simple">
-        <div><span>You need</span><strong>${f(data.target)} pts</strong><small>${esc(context)}</small></div>
-        <button type="button" data-ct-plan-reset>Reset</button>
-      </div>
+    return `<section class="ct-points-planner" data-league-id="${esc(data.view.leagueId)}" data-plan-mode="${esc(plan.mode)}">
+      ${headerMarkup(data,plan)}
+      ${scoreboardMarkup(data,plan)}
       <div class="ct-plan-players">${data.mine.map(row=>playerRow(row,data.target,plan)).join("")}</div>
-      <div class="ct-plan-equation"><small>From here</small><span data-ct-plan-equation>${esc(allocationEquation(data,plan))}</span><strong>= ${f(data.target)} more</strong></div>
+      ${equation}
     </section>`;
+  }
+
+  function updateScenarioSummary(card,data,plan){
+    const values = scenarioValues(data,plan);
+    const score = card.querySelector("[data-ct-scenario-score]");
+    const result = card.querySelector("[data-ct-scenario-result]");
+    const cell = card.querySelector(".ct-plan-score-cell.scenario");
+    if (score) score.innerHTML = `${f(values.mine)} <em>–</em> ${f(values.opp)}`;
+    if (result) result.textContent = resultLabel(values);
+    if (cell){
+      cell.classList.remove("win","tie","loss");
+      cell.classList.add(values.result);
+    }
   }
 
   function updateInteractive(card,data,plan){
@@ -293,14 +373,29 @@
       player.classList.add(tone(allocation,row.expectedRemaining));
       const slider = player.querySelector("[data-ct-plan-slider]");
       if (slider){
-        const axisMax = Math.max(.1,n(slider.max));
-        slider.value = String(scenarioFinal);
-        const pct = Math.min(100,Math.max(0,(scenarioFinal/axisMax)*100));
+        const min = n(slider.min);
+        const max = Math.max(min+.1,n(slider.max));
+        slider.value = String(Math.min(max,Math.max(min,scenarioFinal)));
+        const pct = Math.min(100,Math.max(0,((n(slider.value)-min)/(max-min))*100));
         slider.style.setProperty("--fill",`${pct}%`);
       }
     }
     const equation = card.querySelector("[data-ct-plan-equation]");
     if (equation) equation.textContent = allocationEquation(data,plan);
+    updateScenarioSummary(card,data,plan);
+  }
+
+  function replacePlanner(card,data,plan){
+    const existing = card.querySelector(".ct-points-planner,.ct-plan-passive");
+    const html = plannerMarkup(data,plan);
+    if (!html){ existing?.remove(); return; }
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+    const next = temp.firstElementChild;
+    if (existing) existing.replaceWith(next);
+    else card.appendChild(next);
+    card.__ctPlannerData = data;
+    card.__ctPlannerState = plan;
   }
 
   async function decorate(){
@@ -328,16 +423,7 @@
       const data = buildData(view,leagues[index],projections);
       if (!data) return;
       const plan = stateFor(data);
-      const existing = card.querySelector(".ct-points-planner,.ct-plan-passive");
-      const html = plannerMarkup(data,plan);
-      if (!html){ existing?.remove(); return; }
-      const temp = document.createElement("div");
-      temp.innerHTML = html;
-      const next = temp.firstElementChild;
-      if (existing) existing.replaceWith(next);
-      else card.appendChild(next);
-      card.__ctPlannerData = data;
-      card.__ctPlannerState = plan;
+      replacePlanner(card,data,plan);
     });
 
     document.body.classList.add("crunch-planner-ready");
@@ -362,11 +448,31 @@
       if (!row) return;
       const finalScenario = Math.max(n(row.actual),n(slider.value));
       const additional = Math.max(0,roundTenth(finalScenario-n(row.actual)));
-      distribute(data,plan,id,additional);
+      if (plan.mode === "free") plan.allocations.set(id,additional);
+      else distributeToWin(data,plan,id,additional);
       updateInteractive(card,data,plan);
     });
 
     document.addEventListener("click",event=>{
+      const modeButton = event.target.closest?.("[data-ct-plan-mode]");
+      if (modeButton){
+        const card = modeButton.closest(".ct-matchup-card");
+        const data = card?.__ctPlannerData;
+        const plan = card?.__ctPlannerState;
+        if (!card || !data || !plan) return;
+        const nextMode = modeButton.dataset.ctPlanMode === "free" ? "free" : "win";
+        if (plan.mode === nextMode) return;
+        plan.mode = nextMode;
+        if (nextMode === "win"){
+          plan.allocations = new Map();
+          distributeToWin(data,plan);
+        } else {
+          seedFree(data,plan,true);
+        }
+        replacePlanner(card,data,plan);
+        return;
+      }
+
       const reset = event.target.closest?.("[data-ct-plan-reset]");
       if (!reset) return;
       const card = reset.closest(".ct-matchup-card");
@@ -374,8 +480,9 @@
       const plan = card?.__ctPlannerState;
       if (!card || !data || !plan) return;
       plan.allocations = new Map();
-      distribute(data,plan);
-      updateInteractive(card,data,plan);
+      if (plan.mode === "free") seedFree(data,plan,false);
+      else distributeToWin(data,plan);
+      replacePlanner(card,data,plan);
     });
 
     const observer = new MutationObserver(mutations=>{
