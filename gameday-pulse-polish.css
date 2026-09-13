@@ -1,0 +1,267 @@
+/* Featured glass treatment for the Game Day Hub player pulse. */
+
+#gameDayPlayerPulse{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  padding:18px!important;
+  border:1px solid rgba(126,163,224,.30)!important;
+  background:
+    radial-gradient(circle at 12% 0%,rgba(94,210,236,.20),transparent 34%),
+    radial-gradient(circle at 78% 12%,rgba(156,143,243,.18),transparent 36%),
+    radial-gradient(circle at 100% 78%,rgba(167,228,199,.22),transparent 38%),
+    linear-gradient(135deg,rgba(255,255,255,.72),rgba(239,246,255,.64) 52%,rgba(236,251,244,.68))!important;
+  box-shadow:
+    0 18px 42px rgba(72,108,159,.12),
+    0 4px 16px rgba(135,186,221,.08),
+    inset 0 1px 0 rgba(255,255,255,.96)!important;
+  backdrop-filter:blur(22px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(145%)!important;
+}
+
+#gameDayPlayerPulse::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,.44),transparent 34%,rgba(255,255,255,.18) 62%,transparent 82%);
+}
+
+#gameDayPlayerPulse::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  top:0;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(89,211,239,.95),rgba(111,174,247,.95),rgba(158,148,244,.94),rgba(166,225,199,.95));
+  box-shadow:0 0 18px rgba(118,170,236,.24);
+}
+
+.game-day-pulse-head{
+  position:relative;
+  align-items:center!important;
+  margin-bottom:15px!important;
+  padding:2px 1px 1px;
+}
+
+.game-day-pulse-head > div:first-child{
+  min-width:0;
+}
+
+.game-day-pulse-eyebrow{
+  margin-bottom:4px;
+  color:#7188ae!important;
+  font-size:.64rem!important;
+  letter-spacing:.11em!important;
+}
+
+.game-day-pulse-title{
+  display:inline-block;
+  margin-top:0!important;
+  font-size:clamp(1.25rem,2.1vw,1.62rem)!important;
+  line-height:1.05!important;
+  letter-spacing:-.035em;
+  font-weight:1000!important;
+  color:#31415e!important;
+  background:linear-gradient(100deg,#355b83 0%,#5977b7 44%,#7669b8 72%,#4f927b 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.game-day-pulse-sub{
+  max-width:760px;
+  margin-top:7px!important;
+  color:#6f7d95!important;
+  font-size:.71rem!important;
+}
+
+.game-day-pulse-head-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+.game-day-pulse-badge,
+.game-day-pulse-collapse{
+  min-height:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(124,161,220,.28)!important;
+  background:linear-gradient(120deg,rgba(255,255,255,.60),rgba(227,239,255,.54),rgba(230,248,239,.58))!important;
+  color:#647ca4!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.90),0 5px 14px rgba(91,127,178,.07);
+  backdrop-filter:blur(13px) saturate(130%);
+  -webkit-backdrop-filter:blur(13px) saturate(130%);
+  font-size:.59rem!important;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+  white-space:nowrap;
+}
+
+.game-day-pulse-collapse{
+  cursor:pointer;
+  appearance:none;
+  font-family:inherit;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+
+.game-day-pulse-collapse:hover{
+  transform:translateY(-1px);
+  border-color:rgba(106,151,221,.48)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.94),0 7px 18px rgba(91,127,178,.10);
+}
+
+.pulse-collapse-icon{
+  font-size:.82rem;
+  line-height:1;
+}
+
+.game-day-pulse-grid{
+  transition:opacity .18s ease,transform .18s ease,max-height .24s ease,margin .18s ease;
+  transform-origin:top;
+}
+
+#gameDayPlayerPulse.is-collapsed{
+  padding-bottom:14px!important;
+}
+
+#gameDayPlayerPulse.is-collapsed .game-day-pulse-head{
+  margin-bottom:0!important;
+}
+
+#gameDayPlayerPulse.is-collapsed .game-day-pulse-sub,
+#gameDayPlayerPulse.is-collapsed .game-day-pulse-grid{
+  display:none!important;
+}
+
+.game-day-pulse-column{
+  border:1px solid rgba(121,160,218,.22)!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.60),rgba(246,250,255,.48))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.88),
+    0 8px 24px rgba(79,113,162,.06)!important;
+  backdrop-filter:blur(14px) saturate(125%);
+  -webkit-backdrop-filter:blur(14px) saturate(125%);
+}
+
+.game-day-pulse-column.villains{
+  background:linear-gradient(145deg,rgba(255,255,255,.58),rgba(255,241,245,.48))!important;
+  border-color:rgba(211,112,132,.18)!important;
+}
+
+.game-day-pulse-column-head{
+  margin-bottom:9px!important;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(123,157,208,.13);
+  color:#516782!important;
+}
+
+.game-day-pulse-column.villains .game-day-pulse-column-head{
+  border-bottom-color:rgba(202,111,130,.12);
+}
+
+.game-day-pulse-card{
+  border-color:rgba(119,156,211,.18)!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.68),rgba(245,249,255,.53))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.96),0 5px 16px rgba(72,107,155,.045)!important;
+  backdrop-filter:blur(11px) saturate(120%);
+  -webkit-backdrop-filter:blur(11px) saturate(120%);
+}
+
+.game-day-pulse-card.villain{
+  background:linear-gradient(135deg,rgba(255,255,255,.67),rgba(255,243,246,.51))!important;
+  border-color:rgba(210,111,131,.17)!important;
+}
+
+.game-day-pulse-score strong{
+  font-size:.94rem!important;
+  letter-spacing:-.02em;
+}
+
+.game-day-pulse-score span{
+  margin-top:3px!important;
+  font-size:.5rem!important;
+  letter-spacing:.065em!important;
+}
+
+.game-day-pulse-score small{
+  margin-top:3px!important;
+  opacity:.82;
+}
+
+html[data-theme="dark"] #gameDayPlayerPulse{
+  background:
+    radial-gradient(circle at 10% 0%,rgba(57,168,221,.16),transparent 34%),
+    radial-gradient(circle at 76% 8%,rgba(118,93,215,.18),transparent 38%),
+    radial-gradient(circle at 100% 78%,rgba(78,176,139,.16),transparent 40%),
+    linear-gradient(135deg,rgba(23,36,71,.91),rgba(17,28,55,.94) 55%,rgba(20,46,53,.89))!important;
+  border-color:rgba(104,148,224,.31)!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.27),0 0 28px rgba(66,112,218,.08),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+
+html[data-theme="dark"] #gameDayPlayerPulse::before{
+  background:linear-gradient(115deg,rgba(255,255,255,.055),transparent 35%,rgba(126,161,226,.045) 62%,transparent 84%);
+}
+
+html[data-theme="dark"] .game-day-pulse-title{
+  color:#e0e9fb!important;
+  background:linear-gradient(100deg,#a7d7ff 0%,#a9c3ff 42%,#b7aaff 70%,#9de0c4 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+html[data-theme="dark"] .game-day-pulse-eyebrow{color:#8facd8!important}
+html[data-theme="dark"] .game-day-pulse-sub{color:#a7b5ce!important}
+
+html[data-theme="dark"] .game-day-pulse-badge,
+html[data-theme="dark"] .game-day-pulse-collapse{
+  background:linear-gradient(120deg,rgba(39,58,102,.75),rgba(30,46,82,.72),rgba(31,70,68,.64))!important;
+  border-color:rgba(111,155,229,.28)!important;
+  color:#b7c9e8!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 17px rgba(0,0,0,.14);
+}
+
+html[data-theme="dark"] .game-day-pulse-column{
+  background:linear-gradient(145deg,rgba(28,43,80,.72),rgba(19,31,60,.68))!important;
+  border-color:rgba(103,145,215,.20)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 9px 25px rgba(0,0,0,.12)!important;
+}
+
+html[data-theme="dark"] .game-day-pulse-column.villains{
+  background:linear-gradient(145deg,rgba(31,42,76,.72),rgba(62,28,47,.50))!important;
+  border-color:rgba(219,111,135,.18)!important;
+}
+
+html[data-theme="dark"] .game-day-pulse-card{
+  background:linear-gradient(135deg,rgba(32,48,88,.70),rgba(24,37,70,.63))!important;
+  border-color:rgba(102,145,218,.19)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 5px 15px rgba(0,0,0,.09)!important;
+}
+
+html[data-theme="dark"] .game-day-pulse-card.villain{
+  background:linear-gradient(135deg,rgba(34,47,83,.68),rgba(68,31,50,.50))!important;
+  border-color:rgba(219,111,135,.18)!important;
+}
+
+@media(max-width:650px){
+  .game-day-pulse-head{
+    align-items:flex-start!important;
+    flex-direction:column;
+  }
+  .game-day-pulse-head-actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+}
