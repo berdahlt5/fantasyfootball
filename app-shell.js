@@ -238,6 +238,7 @@
     loadScript("gameDayPlayerPulseScript","./gameday-player-pulse-windowed.js?v=20260913a");
     loadScript("gameDayPulsePolishScript","./gameday-pulse-polish.js?v=20260913b");
     loadScript("gameDayPulseActualScript","./gameday-pulse-actual.js?v=20260913b");
+    loadScript("gameDayPulseFinalRankingScript","./gameday-pulse-final-ranking.js?v=20260913a");
     loadScript("gameDayEnhancementsScript","./game-day-enhancements.js?v=20260913c");
     loadScript("gameDayHubDetailsScript","./gameday-hub-details.js?v=20260913a");
     loadScript("gameDayWatchRelevanceScript","./gameday-watch-relevance-v2.js?v=20260913a");
