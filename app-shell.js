@@ -243,4 +243,9 @@
     loadScript("gameDayHubDetailsScript","./gameday-hub-details.js?v=20260913a");
     loadScript("gameDayWatchRelevanceScript","./gameday-watch-relevance-v2.js?v=20260913a");
   }
+
+  if (page === "crunchtime.html") {
+    loadStyle("crunchTimeCommandCenterStyles","./crunchtime-command-center.css?v=20260913a");
+    loadScript("crunchTimeCommandCenterScript","./crunchtime-command-center.js?v=20260913a");
+  }
 })();
