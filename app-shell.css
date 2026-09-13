@@ -1397,3 +1397,22 @@ html[data-theme="dark"] .team-detail-row td{background:rgba(18,25,46,.55)!import
   }
 }
 
+
+
+/* fantasy-assistant-brand-v7 */
+.app-product-name{
+  margin:0 0 3px;
+  font-size:.58rem;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.105em;
+  text-transform:uppercase;
+  background:var(--app-gradient);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+html[data-theme="dark"] .app-product-name{filter:brightness(1.16) saturate(1.05)}
+@media(max-width:560px){
+  .app-product-name{font-size:.55rem;letter-spacing:.09em;margin-bottom:4px}
+}

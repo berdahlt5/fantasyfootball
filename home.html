@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fantasy Football Owner Dashboard</title>
+  <title>Fantasy Assistant · Owner Dashboard</title>
   <script>
     try {
       const savedTheme = localStorage.getItem("fantasyUiTheme") || localStorage.getItem("fantasyRankingsTheme");
@@ -328,7 +328,7 @@
         <label>Sleeper Username<input id="username" value="tommyberdahl" autocomplete="off" /></label>
         <label>Season<input id="season" type="number" min="2018" max="2035" value="2026" /></label>
         <label>Week<select id="week"></select></label>
-        <button class="primary" id="loadBtn" type="button">Load Owner Dashboard</button>
+        <button class="primary" id="loadBtn" type="button">Refresh Owner Dashboard</button>
       </div>
       <div class="load-note" id="loadNote">Current records load first; full-season team projections use the same best-lineup and waiver-replacement rules as Team Rankings. K/D-ST are excluded from projected strength.</div>
     </section>
@@ -1208,6 +1208,7 @@
         const currentWeek=Number(nflState?.display_week||nflState?.week||1);
         if(!params.get("week")&&currentWeek>=1&&currentWeek<=18)els.week.value=String(currentWeek);
       }catch(error){}
+      if(els.username.value.trim()) await loadDashboard();
     }
 
     function applyTheme(theme){
