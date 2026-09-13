@@ -320,8 +320,10 @@
   function rankedForWindow(all,windowId){
     const eligible = windowId === "all" ? all : all.filter(item=>teamMatchesWindow(item.record?.team,windowId));
     return {
-      important:eligible.filter(item=>item.owned.length).sort((a,b)=>b.netFor-a.netFor || b.ownedWeighted-a.ownedWeighted || b.ownedRaw-a.ownedRaw).slice(0,5),
-      villains:eligible.filter(item=>item.against.length && item.netAgainst>.05).sort((a,b)=>b.netAgainst-a.netAgainst || b.againstWeighted-a.againstWeighted || b.againstRaw-a.againstRaw).slice(0,5),
+      /* Keep the complete candidate pool. The final-ranking layer chooses the
+         visible five using projection before final and Actual after final. */
+      important:eligible.filter(item=>item.owned.length).sort((a,b)=>b.ownedRaw-a.ownedRaw || b.ownedWeighted-a.ownedWeighted || b.netFor-a.netFor),
+      villains:eligible.filter(item=>item.against.length && item.netAgainst>.05).sort((a,b)=>b.againstRaw-a.againstRaw || b.againstWeighted-a.againstWeighted || b.netAgainst-a.netAgainst),
       eligibleCount:eligible.length
     };
   }
