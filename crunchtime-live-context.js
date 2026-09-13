@@ -47,6 +47,12 @@
       catch (_) { player = card.querySelector(`.ct-plan-player[data-player-id="${id.replace(/"/g,"\\\"")}"]`); }
       decoratePlayer(player,row);
     }
+
+    const equation = card.querySelector("[data-ct-plan-equation]");
+    if (equation){
+      const clean = String(equation.textContent || "").replace(/^\+/u,"").replace(/\s+\+\s+\+/gu," + ");
+      if (equation.textContent !== clean) equation.textContent = clean;
+    }
   }
 
   function apply(){
