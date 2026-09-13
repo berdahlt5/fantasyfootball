@@ -31,7 +31,7 @@
 
     script("gameDayPlayerPulseScript","./gameday-player-pulse-windowed.js?v=20260913a");
     script("gameDayPulsePolishScript","./gameday-pulse-polish.js?v=20260913b");
-    script("gameDayPulseActualScript","./gameday-pulse-actual.js?v=20260913a");
+    script("gameDayPulseActualScript","./gameday-pulse-actual.js?v=20260913b");
     script("gameDayHubDetailsScript","./gameday-hub-details.js?v=20260913a");
     script("gameDayWatchRelevanceScript","./gameday-watch-relevance-v2.js?v=20260913a");
   }
