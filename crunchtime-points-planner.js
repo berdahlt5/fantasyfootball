@@ -16,12 +16,12 @@
   const n = value => Number.isFinite(Number(value)) ? Number(value) : 0;
   const f = value => n(value).toFixed(1);
   const esc = value => String(value ?? "").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+  const roundTenth = value => Math.round(n(value)*10)/10;
+  const targetTenth = value => Math.max(0,Math.ceil(n(value)*10)/10);
   const normalizeTeam = value => {
     const team = String(value || "").toUpperCase();
     return TEAM_ALIASES[team] || team;
   };
-  const roundTenth = value => Math.round(n(value)*10)/10;
-  const targetTenth = value => Math.max(0,Math.ceil(n(value)*10)/10);
 
   async function json(url,cache="force-cache"){
     const response = await fetch(url,{cache});
@@ -63,7 +63,9 @@
 
   function getLeague(id){
     const key = String(id || "");
-    if (!leagueCache.has(key)) leagueCache.set(key,json(`${API}/league/${encodeURIComponent(key)}`).catch(()=>({league_id:key,scoring_settings:{rec:1}})));
+    if (!leagueCache.has(key)){
+      leagueCache.set(key,json(`${API}/league/${encodeURIComponent(key)}`).catch(()=>({league_id:key,scoring_settings:{rec:1}})));
+    }
     return leagueCache.get(key);
   }
 
@@ -81,11 +83,11 @@
     catch (_) { return null; }
   }
 
-  function nameOf(player,id){
+  function playerName(player,id){
     return player?.full_name || [player?.first_name,player?.last_name].filter(Boolean).join(" ") || `Player ${id}`;
   }
 
-  function remaining(matchup,league,projections,side){
+  function remaining(matchup,league,projections){
     const starters = Array.isArray(matchup?.starters) ? matchup.starters : [];
     return starters.map(rawId=>{
       const id = String(rawId);
@@ -98,11 +100,15 @@
       const live = String(game?.state || "").toLowerCase()==="in";
       const expectedRemaining = live ? Math.max(0,fullProjection-actual) : Math.max(0,fullProjection);
       return {
-        id,side,
-        name:nameOf(player,id),
+        id,
+        name:playerName(player,id),
         team:normalizeTeam(player?.team)||"FA",
         position:String(player?.position||"—").toUpperCase(),
-        actual,fullProjection,expectedRemaining,live,game
+        actual,
+        fullProjection,
+        expectedRemaining,
+        live,
+        game
       };
     }).filter(Boolean);
   }
@@ -111,17 +117,16 @@
     const my = view?.myMatchup;
     const opp = view?.oppMatchup;
     if (!my || !opp) return null;
-    const mine = remaining(my,league,projections,"mine");
-    const theirs = remaining(opp,league,projections,"opp");
+    const mine = remaining(my,league,projections);
+    const theirs = remaining(opp,league,projections);
     const myScore = n(my.points);
     const oppScore = n(opp.points);
     const oppProjectedLeft = theirs.reduce((sum,row)=>sum+row.expectedRemaining,0);
-    const myProjectedLeft = mine.reduce((sum,row)=>sum+row.expectedRemaining,0);
     const currentNeed = targetTenth(Math.max(0,oppScore-myScore+.01));
     const projectedNeed = targetTenth(Math.max(0,oppScore+oppProjectedLeft-myScore+.01));
+    const target = theirs.length ? projectedNeed : currentNeed;
     return {
-      view,league,mine,theirs,myScore,oppScore,
-      myProjectedLeft,oppProjectedLeft,currentNeed,projectedNeed,
+      view,league,mine,theirs,myScore,oppScore,oppProjectedLeft,target,
       final:mine.length===0 && theirs.length===0
     };
   }
@@ -134,36 +139,61 @@
 
   function stateFor(data){
     const key = String(data.view.leagueId || data.view.name || "league");
-    if (!planState.has(key)) planState.set(key,{mode:data.theirs.length?"projected":"current",allocations:new Map(),initialized:false,target:null});
+    if (!planState.has(key)) planState.set(key,{allocations:new Map(),target:null});
     return planState.get(key);
   }
 
-  function targetFor(data,plan){
-    return plan.mode === "projected" ? data.projectedNeed : data.currentNeed;
-  }
+  function distribute(data,plan,changedId=null,changedValue=null){
+    const rows = data.mine;
+    const target = data.target;
+    if (!rows.length) return;
 
-  function balanceAllocations(data,plan){
-    const target = targetFor(data,plan);
-    plan.allocations = new Map();
-    if (!data.mine.length) return;
-    const weights = data.mine.map(row=>Math.max(.1,row.expectedRemaining));
-    const totalWeight = weights.reduce((a,b)=>a+b,0) || data.mine.length;
+    if (!changedId){
+      const weightTotal = rows.reduce((sum,row)=>sum+Math.max(.1,row.expectedRemaining),0) || rows.length;
+      let used = 0;
+      rows.forEach((row,index)=>{
+        const value = index===rows.length-1
+          ? Math.max(0,roundTenth(target-used))
+          : roundTenth(target*(Math.max(.1,row.expectedRemaining)/weightTotal));
+        plan.allocations.set(row.id,value);
+        used += value;
+      });
+      plan.target = target;
+      return;
+    }
+
+    const changed = rows.find(row=>row.id===changedId);
+    if (!changed) return;
+    const fixed = Math.min(target,Math.max(0,roundTenth(changedValue)));
+    plan.allocations.set(changed.id,fixed);
+    const others = rows.filter(row=>row.id!==changed.id);
+    if (!others.length){
+      plan.allocations.set(changed.id,target);
+      plan.target = target;
+      return;
+    }
+
+    const remainder = Math.max(0,roundTenth(target-fixed));
+    const currentWeight = others.reduce((sum,row)=>sum+Math.max(0,n(plan.allocations.get(row.id))),0);
+    const projectionWeight = others.reduce((sum,row)=>sum+Math.max(.1,row.expectedRemaining),0);
     let used = 0;
-    data.mine.forEach((row,index)=>{
-      let value;
-      if (index === data.mine.length-1) value = Math.max(0,roundTenth(target-used));
-      else value = roundTenth(target*(weights[index]/totalWeight));
-      used += value;
+    others.forEach((row,index)=>{
+      const base = currentWeight>0 ? Math.max(0,n(plan.allocations.get(row.id))) : Math.max(.1,row.expectedRemaining);
+      const denom = currentWeight>0 ? currentWeight : projectionWeight;
+      const value = index===others.length-1
+        ? Math.max(0,roundTenth(remainder-used))
+        : roundTenth(remainder*(base/denom));
       plan.allocations.set(row.id,value);
+      used += value;
     });
-    plan.initialized = true;
     plan.target = target;
   }
 
-  function useProjections(data,plan){
-    plan.allocations = new Map(data.mine.map(row=>[row.id,roundTenth(row.expectedRemaining)]));
-    plan.initialized = true;
-    plan.target = targetFor(data,plan);
+  function ensurePlan(data,plan){
+    if (plan.target!==data.target || data.mine.some(row=>!plan.allocations.has(row.id))){
+      plan.allocations = new Map();
+      distribute(data,plan);
+    }
   }
 
   function avatar(row){
@@ -171,34 +201,26 @@
     return `<span class="ct-plan-photo"><img src="https://sleepercdn.com/content/nfl/players/thumb/${encodeURIComponent(row.id)}.jpg" alt="" loading="lazy" onerror="this.remove()"><span>${initials}</span></span>`;
   }
 
-  function difficulty(allocation,projection){
-    if (allocation<=0) return {label:"No points assigned",tone:"neutral",ratio:0};
-    if (projection<=0) return {label:"No projection support",tone:"long",ratio:Infinity};
+  function tone(allocation,projection){
+    if (projection<=0) return allocation>0 ? "long" : "neutral";
     const ratio = allocation/projection;
-    if (ratio<=.8) return {label:"Below projection",tone:"easy",ratio};
-    if (ratio<=1.05) return {label:"Near projection",tone:"normal",ratio};
-    if (ratio<=1.3) return {label:"Stretch",tone:"stretch",ratio};
-    return {label:"Long shot",tone:"long",ratio};
-  }
-
-  function sliderMax(row,target){
-    const raw = Math.max(25,target,row.expectedRemaining*2.25,row.fullProjection*1.75);
-    return Math.max(25,Math.ceil(raw/5)*5);
+    if (ratio<=1.05) return "normal";
+    if (ratio<=1.3) return "stretch";
+    return "long";
   }
 
   function playerRow(row,target,plan){
     const allocation = n(plan.allocations.get(row.id));
-    const d = difficulty(allocation,row.expectedRemaining);
-    const ratio = Number.isFinite(d.ratio) ? `${d.ratio.toFixed(2)}× proj left` : "—";
-    const status = row.game?.detail || (row.live?"Live":"Upcoming");
-    return `<div class="ct-plan-player ${d.tone}" data-player-id="${esc(row.id)}">
+    const pct = target>0 ? Math.min(100,Math.max(0,(allocation/target)*100)) : 0;
+    const status = row.live ? "Live" : "Upcoming";
+    const playerTone = tone(allocation,row.expectedRemaining);
+    return `<div class="ct-plan-player ${playerTone}" data-player-id="${esc(row.id)}">
       <div class="ct-plan-player-head">
         ${avatar(row)}
-        <div class="ct-plan-player-copy"><strong>${esc(row.name)}</strong><span>${esc(row.position)} · ${esc(row.team)} · ${esc(status)}</span></div>
-        <div class="ct-plan-assigned"><strong data-ct-assigned>${f(allocation)}</strong><span>assigned</span></div>
+        <div class="ct-plan-player-copy"><strong>${esc(row.name)}</strong><span>${esc(row.position)} · ${esc(row.team)} · ${status} · proj ${f(row.expectedRemaining)}</span></div>
+        <strong class="ct-plan-value" data-ct-assigned>${f(allocation)}</strong>
       </div>
-      <input class="ct-plan-slider" type="range" min="0" max="${sliderMax(row,target)}" step="0.1" value="${allocation}" data-ct-plan-slider data-player-id="${esc(row.id)}" aria-label="Points assigned to ${esc(row.name)}">
-      <div class="ct-plan-player-foot"><span>Proj. left <strong>${f(row.expectedRemaining)}</strong></span><span class="ct-plan-difficulty ${d.tone}" data-ct-difficulty>${esc(d.label)} · ${esc(ratio)}</span></div>
+      <input class="ct-plan-slider" type="range" min="0" max="${Math.max(.1,target)}" step="0.1" value="${allocation}" style="--fill:${pct}%" data-ct-plan-slider data-player-id="${esc(row.id)}" aria-label="Allocate points to ${esc(row.name)}">
     </div>`;
   }
 
@@ -206,81 +228,59 @@
     const margin = data.myScore-data.oppScore;
     if (data.final) return margin>0 ? `Final win ${f(data.myScore)}–${f(data.oppScore)}.` : margin<0 ? `Final loss ${f(data.myScore)}–${f(data.oppScore)}.` : `Final tie ${f(data.myScore)}–${f(data.oppScore)}.`;
     if (!data.mine.length && data.theirs.length){
-      if (margin>0) return `No players left for you. Your opponent's remaining starters must score fewer than ${f(margin)} more points.`;
-      return `No players left for you and you're down ${f(Math.abs(margin))}. You need negative opponent scoring or a stat correction.`;
+      if (margin>0) return `Hold on: opponent needs ${f(margin)} more to catch you.`;
+      return `No players left for you. You need negative opponent scoring or a stat correction.`;
     }
     return "";
+  }
+
+  function allocationEquation(data,plan){
+    return data.mine.map(row=>f(plan.allocations.get(row.id))).join(" + ");
   }
 
   function plannerMarkup(data,plan){
     if (!data.mine.length){
       const text = passiveCondition(data);
-      return text ? `<div class="ct-plan-passive"><span>Win condition</span><strong>${esc(text)}</strong></div>` : "";
+      return text ? `<div class="ct-plan-passive"><strong>${esc(text)}</strong></div>` : "";
     }
 
-    const target = targetFor(data,plan);
-    if (!plan.initialized || !Number.isFinite(plan.target)) balanceAllocations(data,plan);
-    const projectedModeAvailable = data.theirs.length>0;
-    const allocated = data.mine.reduce((sum,row)=>sum+n(plan.allocations.get(row.id)),0);
-    const delta = target-allocated;
-    const projectionDelta = data.myProjectedLeft-target;
-    const summaryTone = projectionDelta>=0 ? "covers" : "short";
-    const targetCopy = plan.mode === "projected" && projectedModeAvailable
-      ? `Includes ${f(data.oppProjectedLeft)} projected opponent points still remaining.`
-      : projectedModeAvailable
-        ? "Minimum to take the lead at the current score; ignores future opponent scoring."
-        : "Exact catch-up target from the current score because your opponent has no players left.";
-    const allocationStatus = Math.abs(delta)<=.05
-      ? "Target fully allocated"
-      : delta>0 ? `${f(delta)} still unassigned` : `${f(Math.abs(delta))} above target`;
-    const projectionStatus = projectionDelta>=0
-      ? `Combined projection covers this target by ${f(projectionDelta)}.`
-      : `You need ${f(Math.abs(projectionDelta))} above the combined remaining projection.`;
+    ensurePlan(data,plan);
+    if (data.target<=0){
+      return `<div class="ct-plan-passive good"><strong>You’re already ahead of the projected finish.</strong></div>`;
+    }
+
+    const context = data.theirs.length
+      ? `vs projected finish · opponent has ${f(data.oppProjectedLeft)} projected left`
+      : "opponent is finished";
 
     return `<section class="ct-points-planner" data-league-id="${esc(data.view.leagueId)}">
-      <div class="ct-plan-head">
-        <div><span>Points Needed Planner</span><strong>Need ${f(target)} more from ${data.mine.length} player${data.mine.length===1?"":"s"}</strong><p>${esc(targetCopy)}</p></div>
-        ${projectedModeAvailable?`<div class="ct-plan-mode" role="group" aria-label="Points-needed target">
-          <button type="button" data-ct-plan-mode="current" class="${plan.mode==="current"?"active":""}">Current score</button>
-          <button type="button" data-ct-plan-mode="projected" class="${plan.mode==="projected"?"active":""}">Projected finish</button>
-        </div>`:""}
+      <div class="ct-plan-head-simple">
+        <div><span>You need</span><strong>${f(data.target)} pts</strong><small>${esc(context)}</small></div>
+        <button type="button" data-ct-plan-reset>Reset</button>
       </div>
-      <div class="ct-plan-summary">
-        <div><span>Need</span><strong>${f(target)}</strong></div>
-        <div><span>Assigned</span><strong data-ct-plan-assigned-total>${f(allocated)}</strong><small data-ct-plan-allocation-status>${esc(allocationStatus)}</small></div>
-        <div class="${summaryTone}"><span>Proj. left</span><strong>${f(data.myProjectedLeft)}</strong><small>${esc(projectionStatus)}</small></div>
-      </div>
-      <div class="ct-plan-players">${data.mine.map(row=>playerRow(row,target,plan)).join("")}</div>
-      <div class="ct-plan-actions"><button type="button" data-ct-plan-balance>Balance target by projections</button><button type="button" data-ct-plan-projections>Use player projections</button></div>
-      <div class="ct-plan-note">This is a scenario planner, not a win probability. “Stretch” labels compare your assigned target with that player's remaining projection.</div>
+      <div class="ct-plan-players">${data.mine.map(row=>playerRow(row,data.target,plan)).join("")}</div>
+      <div class="ct-plan-equation"><span data-ct-plan-equation>${esc(allocationEquation(data,plan))}</span><strong>= ${f(data.target)}</strong></div>
     </section>`;
   }
 
   function updateInteractive(card,data,plan){
-    const target = targetFor(data,plan);
-    let total = 0;
     for (const row of data.mine){
       const allocation = n(plan.allocations.get(row.id));
-      total += allocation;
       const player = card.querySelector(`.ct-plan-player[data-player-id="${CSS.escape(row.id)}"]`);
       if (!player) continue;
-      const assigned = player.querySelector("[data-ct-assigned]");
-      if (assigned) assigned.textContent = f(allocation);
-      const d = difficulty(allocation,row.expectedRemaining);
-      player.classList.remove("neutral","easy","normal","stretch","long");
-      player.classList.add(d.tone);
-      const label = player.querySelector("[data-ct-difficulty]");
-      const ratio = Number.isFinite(d.ratio) ? `${d.ratio.toFixed(2)}× proj left` : "—";
-      if (label){
-        label.className = `ct-plan-difficulty ${d.tone}`;
-        label.textContent = `${d.label} · ${ratio}`;
+      const value = player.querySelector("[data-ct-assigned]");
+      if (value) value.textContent = f(allocation);
+      player.classList.remove("neutral","normal","stretch","long");
+      player.classList.add(tone(allocation,row.expectedRemaining));
+      const slider = player.querySelector("[data-ct-plan-slider]");
+      if (slider){
+        slider.value = String(allocation);
+        const pct = data.target>0 ? Math.min(100,Math.max(0,(allocation/data.target)*100)) : 0;
+        slider.style.setProperty("--fill",`${pct}%`);
       }
     }
-    const totalNode = card.querySelector("[data-ct-plan-assigned-total]");
-    if (totalNode) totalNode.textContent = f(total);
-    const status = card.querySelector("[data-ct-plan-allocation-status]");
-    const delta = target-total;
-    if (status) status.textContent = Math.abs(delta)<=.05 ? "Target fully allocated" : delta>0 ? `${f(delta)} still unassigned` : `${f(Math.abs(delta))} above target`;
+    const equation = card.querySelector("[data-ct-plan-equation]");
+    if (equation) equation.textContent = allocationEquation(data,plan);
   }
 
   async function decorate(){
@@ -300,7 +300,7 @@
       getProjections(season,week),
       Promise.all(views.map(view=>getLeague(view.leagueId)))
     ]);
-    if (version !== renderVersion) return;
+    if (version!==renderVersion) return;
 
     views.forEach((view,index)=>{
       const card = cardForLeague(view.name);
@@ -315,12 +315,7 @@
       temp.innerHTML = html;
       const next = temp.firstElementChild;
       if (existing) existing.replaceWith(next);
-      else {
-        const action = card.querySelector(".ct-action");
-        if (action) action.insertAdjacentElement("afterend",next);
-        else card.appendChild(next);
-      }
-      card.dataset.ctPlannerLeagueId = String(view.leagueId);
+      else card.appendChild(next);
       card.__ctPlannerData = data;
       card.__ctPlannerState = plan;
     });
@@ -342,31 +337,20 @@
       const data = card?.__ctPlannerData;
       const plan = card?.__ctPlannerState;
       if (!card || !data || !plan) return;
-      plan.allocations.set(String(slider.dataset.playerId),roundTenth(slider.value));
+      distribute(data,plan,String(slider.dataset.playerId),slider.value);
       updateInteractive(card,data,plan);
     });
 
     document.addEventListener("click",event=>{
-      const mode = event.target.closest?.("[data-ct-plan-mode]");
-      const balance = event.target.closest?.("[data-ct-plan-balance]");
-      const projections = event.target.closest?.("[data-ct-plan-projections]");
-      const trigger = mode || balance || projections;
-      if (!trigger) return;
-      const card = trigger.closest(".ct-matchup-card");
+      const reset = event.target.closest?.("[data-ct-plan-reset]");
+      if (!reset) return;
+      const card = reset.closest(".ct-matchup-card");
       const data = card?.__ctPlannerData;
       const plan = card?.__ctPlannerState;
       if (!card || !data || !plan) return;
-      if (mode){
-        plan.mode = mode.dataset.ctPlanMode === "projected" ? "projected" : "current";
-        balanceAllocations(data,plan);
-      } else if (balance) balanceAllocations(data,plan);
-      else if (projections) useProjections(data,plan);
-      plan.target = targetFor(data,plan);
-      plan.initialized = true;
-      const old = card.querySelector(".ct-points-planner,.ct-plan-passive");
-      const temp = document.createElement("div");
-      temp.innerHTML = plannerMarkup(data,plan);
-      if (old && temp.firstElementChild) old.replaceWith(temp.firstElementChild);
+      plan.allocations = new Map();
+      distribute(data,plan);
+      updateInteractive(card,data,plan);
     });
 
     const observer = new MutationObserver(mutations=>{
@@ -374,7 +358,6 @@
     });
     observer.observe(document.body,{childList:true,subtree:true});
     queue();
-    setInterval(queue,5000);
   }
 
   if (document.body) init();
