@@ -1,6 +1,107 @@
-/* Focused glass refresh for lineup-health status elements.
-   Loaded after app-shell.css so these rules only refine the existing UI. */
+/* Dark-theme glass cleanup.
+   Loaded after app-shell.css so these rules refine the shared UI without
+   changing the underlying layout or app behavior. */
 
+html[data-theme="dark"]{
+  --glass-bg-1:rgba(20,32,66,.90);
+  --glass-bg-2:rgba(15,24,49,.96);
+  --glass-bg-soft:rgba(28,44,84,.62);
+  --glass-border:rgba(101,144,230,.30);
+  --glass-border-strong:rgba(120,168,255,.48);
+  --glass-text:#dfe8ff;
+  --glass-muted:#aebcdc;
+  --glass-glow:0 12px 28px rgba(0,0,0,.24),0 0 20px rgba(65,110,220,.10);
+}
+
+/* Broad card/panel cleanup: remove warm brown/taupe remnants. */
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .section,
+html[data-theme="dark"] .watch-card,
+html[data-theme="dark"] .league-card,
+html[data-theme="dark"] .live-score-card,
+html[data-theme="dark"] .remaining-box,
+html[data-theme="dark"] .lineup-row,
+html[data-theme="dark"] .headline,
+html[data-theme="dark"] .team-history-team,
+html[data-theme="dark"] .draft-team,
+html[data-theme="dark"] .draft-season,
+html[data-theme="dark"] .app-more-menu {
+  background:linear-gradient(135deg,var(--glass-bg-1),var(--glass-bg-2))!important;
+  border-color:var(--glass-border)!important;
+  box-shadow:var(--glass-glow),inset 0 1px 0 rgba(255,255,255,.08)!important;
+  backdrop-filter:blur(16px) saturate(130%);
+  -webkit-backdrop-filter:blur(16px) saturate(130%);
+  color:var(--glass-text)!important;
+}
+
+/* Expandable/accordion headers — including Account / Reload Settings. */
+html[data-theme="dark"] details > summary,
+html[data-theme="dark"] .watch-details > summary,
+html[data-theme="dark"] .league-head,
+html[data-theme="dark"] .section-head,
+html[data-theme="dark"] .draft-team > summary,
+html[data-theme="dark"] .draft-season > summary,
+html[data-theme="dark"] .team-history-team > summary {
+  background:linear-gradient(135deg,rgba(33,47,88,.92),rgba(20,31,60,.96))!important;
+  border-color:var(--glass-border-strong)!important;
+  color:var(--glass-text)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.18)!important;
+  backdrop-filter:blur(14px) saturate(128%);
+  -webkit-backdrop-filter:blur(14px) saturate(128%);
+}
+
+/* Keep nested header text cool-toned even if an older rule set it explicitly. */
+html[data-theme="dark"] details > summary *,
+html[data-theme="dark"] .watch-details > summary *,
+html[data-theme="dark"] .league-head *,
+html[data-theme="dark"] .section-head * {
+  color:inherit;
+}
+
+/* Form controls and utility surfaces. */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .league-control,
+html[data-theme="dark"] .league-chip,
+html[data-theme="dark"] .empty,
+html[data-theme="dark"] .status-pill,
+html[data-theme="dark"] .watch-tier,
+html[data-theme="dark"] .watch-count {
+  background:linear-gradient(135deg,rgba(24,37,73,.82),rgba(17,27,54,.92))!important;
+  border-color:var(--glass-border)!important;
+  color:var(--glass-text)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+
+/* Headings and body copy. */
+html[data-theme="dark"] .section-title,
+html[data-theme="dark"] .league-title,
+html[data-theme="dark"] .watch-window-title,
+html[data-theme="dark"] .headline-title,
+html[data-theme="dark"] .draft-team-name,
+html[data-theme="dark"] .team-history-name,
+html[data-theme="dark"] .metric-group-label,
+html[data-theme="dark"] .player-name,
+html[data-theme="dark"] .remaining-title {
+  color:var(--glass-text)!important;
+}
+
+html[data-theme="dark"] .section-note,
+html[data-theme="dark"] .league-meta,
+html[data-theme="dark"] .watch-time,
+html[data-theme="dark"] .watch-window-note,
+html[data-theme="dark"] .headline-meta,
+html[data-theme="dark"] .player-sub,
+html[data-theme="dark"] .lineup-issue-meta,
+html[data-theme="dark"] .team-history-league,
+html[data-theme="dark"] .draft-team-meta,
+html[data-theme="dark"] .metric-note,
+html[data-theme="dark"] .metric-group-subtitle {
+  color:var(--glass-muted)!important;
+}
+
+/* Focused lineup-health glass treatment. */
 html[data-theme="dark"] .lineup-issue.warn,
 html[data-theme="dark"] .alert.warn {
   background:linear-gradient(135deg,rgba(31,48,88,.88),rgba(19,31,62,.94))!important;
@@ -23,6 +124,7 @@ html[data-theme="dark"] .lineup-issue.warn .lineup-issue-meta {
   color:#b8c4df!important;
 }
 
+/* Make semantic status chips vivid while keeping the glass language. */
 html[data-theme="dark"] .lineup-pulse-pill {
   backdrop-filter:blur(14px) saturate(145%);
   -webkit-backdrop-filter:blur(14px) saturate(145%);
@@ -38,10 +140,7 @@ html[data-theme="dark"] .lineup-pulse-pill.critical {
     inset 0 1px 0 rgba(255,255,255,.15),
     inset 0 -8px 18px rgba(118,16,38,.10)!important;
 }
-
-html[data-theme="dark"] .lineup-pulse-pill.critical strong {
-  color:#ff8b9a!important;
-}
+html[data-theme="dark"] .lineup-pulse-pill.critical strong{color:#ff8b9a!important}
 
 html[data-theme="dark"] .lineup-pulse-pill.warn {
   background:linear-gradient(135deg,rgba(255,199,60,.28),rgba(127,88,12,.17))!important;
@@ -52,10 +151,7 @@ html[data-theme="dark"] .lineup-pulse-pill.warn {
     inset 0 1px 0 rgba(255,255,255,.16),
     inset 0 -8px 18px rgba(101,69,6,.09)!important;
 }
-
-html[data-theme="dark"] .lineup-pulse-pill.warn strong {
-  color:#ffd269!important;
-}
+html[data-theme="dark"] .lineup-pulse-pill.warn strong{color:#ffd269!important}
 
 html[data-theme="dark"] .lineup-pulse-pill.timing {
   background:linear-gradient(135deg,rgba(126,151,199,.18),rgba(61,76,111,.14))!important;
@@ -63,9 +159,15 @@ html[data-theme="dark"] .lineup-pulse-pill.timing {
   color:#cbd6ec!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.10)!important;
 }
+html[data-theme="dark"] .lineup-pulse-pill.timing strong{color:#d7e0f2!important}
 
-html[data-theme="dark"] .lineup-pulse-pill.timing strong {
-  color:#d7e0f2!important;
+/* Preserve meaningful warning accents without bringing back brown backgrounds. */
+html[data-theme="dark"] .priority-badge,
+html[data-theme="dark"] .favorite-watch,
+html[data-theme="dark"] .watch-count.starred {
+  background:linear-gradient(135deg,rgba(255,199,60,.17),rgba(84,61,14,.12))!important;
+  border-color:rgba(255,198,55,.36)!important;
+  color:#ffd269!important;
 }
 
 @media (hover:hover) {
