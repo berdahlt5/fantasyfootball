@@ -242,6 +242,49 @@ html:not([data-theme="dark"]) .watch-tier.watch {
   box-shadow:0 0 11px rgba(75,131,243,.08)!important;
 }
 
+/* -------------------------------------------------------------------------
+   LOADING ACCENT: carry the product gradient into progress states.
+   A soft pastel-green finish keeps it fresh without turning rainbow-like.
+   ------------------------------------------------------------------------- */
+
+html:not([data-theme="dark"]) .loading-line {
+  height:6px!important;
+  border-radius:999px!important;
+  background:linear-gradient(
+    90deg,
+    rgba(89,211,239,.88) 0%,
+    rgba(110,174,246,.88) 34%,
+    rgba(153,145,244,.86) 70%,
+    rgba(164,224,198,.92) 100%
+  )!important;
+  box-shadow:
+    0 0 0 1px rgba(148,177,231,.16),
+    0 5px 15px rgba(111,160,232,.10),
+    0 2px 9px rgba(151,214,191,.10)!important;
+}
+
+/* Match loading buttons to the same cyan → blue → lavender → pastel-green family. */
+html:not([data-theme="dark"]) .primary:disabled,
+html:not([data-theme="dark"]) .primary[aria-busy="true"] {
+  background:linear-gradient(
+    100deg,
+    rgba(89,211,239,.92) 0%,
+    rgba(111,175,247,.92) 38%,
+    rgba(160,148,244,.90) 72%,
+    rgba(166,225,199,.90) 100%
+  )!important;
+  border-color:rgba(145,175,233,.30)!important;
+  color:#fff!important;
+  box-shadow:
+    0 8px 22px rgba(117,164,235,.11),
+    inset 0 1px 0 rgba(255,255,255,.34)!important;
+}
+
+/* Keep the animated loading bar polished rather than pulsing too aggressively. */
+html:not([data-theme="dark"]) .loading-line.show {
+  opacity:1!important;
+}
+
 @media (hover:hover) {
   html[data-theme="dark"] .lineup-pulse-pill.critical:hover,
   html[data-theme="dark"] .lineup-pulse-pill.warn:hover,
