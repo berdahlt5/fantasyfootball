@@ -1,0 +1,41 @@
+name: Simplify opponent impact
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/simplify-opponent-impact.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply opponent impact patch
+        run: python .github/scripts/simplify_opponent_impact.py
+      - name: Validate schedule markup
+        run: |
+          grep -q 'function scheduleOpponentPlayerMarkup' schedule-tool.html
+          grep -q 'analysis.oppAll.map(scheduleOpponentPlayerMarkup)' schedule-tool.html
+          grep -q 'analysis.myAll.map(scheduleImpactPlayerMarkup)' schedule-tool.html
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const html = fs.readFileSync('schedule-tool.html','utf8');
+          const re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+          let m, i=0;
+          while ((m = re.exec(html))) { i += 1; new vm.Script(m[1], {filename:`schedule-tool:inline-${i}`}); }
+          console.log('schedule scripts parse');
+          NODE
+          git diff --check
+      - name: Commit change
+        run: |
+          rm -f .github/scripts/simplify_opponent_impact.py .github/workflows/simplify-opponent-impact.yml
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Show helps and hurts only for owned players"
+          git push
