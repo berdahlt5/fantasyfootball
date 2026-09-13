@@ -1,0 +1,163 @@
+/* Neutral glass scoreboard: score hierarchy first, status color second. */
+.live-scores-panel{
+  position:relative;
+  isolation:isolate;
+  border-color:rgba(116,156,220,.26)!important;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(88,205,235,.13),transparent 32%),
+    radial-gradient(circle at 85% 0%,rgba(151,139,239,.12),transparent 34%),
+    linear-gradient(135deg,rgba(255,255,255,.67),rgba(240,247,255,.60) 56%,rgba(237,249,244,.61))!important;
+  box-shadow:0 14px 34px rgba(74,108,155,.09),inset 0 1px 0 rgba(255,255,255,.90)!important;
+  backdrop-filter:blur(18px) saturate(135%);
+  -webkit-backdrop-filter:blur(18px) saturate(135%);
+}
+.live-scores-panel > summary{
+  color:#405875!important;
+  background:linear-gradient(100deg,rgba(91,204,235,.08),rgba(112,158,234,.08),rgba(157,144,242,.08),rgba(166,224,198,.10));
+  border-bottom:1px solid transparent;
+}
+.live-scores-panel[open] > summary{border-bottom-color:rgba(120,158,214,.13)}
+.live-score-grid{gap:11px!important}
+
+.live-score-card{
+  position:relative;
+  overflow:hidden;
+  padding:11px 12px!important;
+  border:1px solid rgba(114,153,211,.20)!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.70),rgba(246,250,255,.53) 58%,rgba(242,249,247,.52))!important;
+  box-shadow:0 8px 23px rgba(73,105,150,.06),inset 0 1px 0 rgba(255,255,255,.96)!important;
+  backdrop-filter:blur(13px) saturate(128%);
+  -webkit-backdrop-filter:blur(13px) saturate(128%);
+}
+.live-score-card::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,rgba(91,195,234,.72),rgba(119,157,232,.70),rgba(154,145,239,.68));
+}
+.live-score-card.leading,.live-score-card.trailing,.live-score-card.tied{
+  border-color:rgba(114,153,211,.22)!important;
+  box-shadow:0 8px 23px rgba(73,105,150,.06),inset 0 1px 0 rgba(255,255,255,.96)!important;
+}
+.live-score-card.leading::before{background:linear-gradient(90deg,rgba(84,194,214,.82),rgba(113,210,170,.88))}
+.live-score-card.trailing::before{background:linear-gradient(90deg,rgba(134,151,226,.80),rgba(218,118,137,.78))}
+.live-score-card.tied::before{background:linear-gradient(90deg,rgba(91,195,234,.82),rgba(132,156,234,.84))}
+
+.live-league-header{
+  margin-bottom:6px;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(118,155,208,.12);
+}
+.live-league-name{color:#354861!important;font-weight:1000!important}
+.live-week-badge{
+  background:linear-gradient(115deg,rgba(93,194,231,.11),rgba(149,142,237,.10),rgba(165,222,197,.13))!important;
+  border-color:rgba(116,156,216,.22)!important;
+  color:#6c80a1!important;
+}
+
+.live-team-row{
+  position:relative;
+  margin:3px -4px;
+  padding:7px 6px!important;
+  border-radius:10px;
+  border:1px solid transparent;
+}
+.live-team-row + .live-team-row{border-top:1px solid transparent!important}
+.live-team-row.is-user-team{
+  background:linear-gradient(110deg,rgba(91,190,233,.10),rgba(111,156,232,.075),rgba(166,225,199,.085));
+  border-color:rgba(106,155,219,.14);
+}
+.live-team-row.is-opponent-team{
+  background:rgba(255,255,255,.24);
+  border-color:rgba(125,150,188,.08);
+}
+.live-team-row.is-user-team::after{
+  content:"YOU";
+  position:absolute;
+  right:6px;top:4px;
+  color:#7890b2;
+  font-size:.43rem;
+  font-weight:1000;
+  letter-spacing:.07em;
+  opacity:.72;
+}
+.live-team-avatar{
+  border:1px solid rgba(111,151,210,.22)!important;
+  background:linear-gradient(135deg,rgba(225,239,255,.92),rgba(229,248,239,.92))!important;
+  color:#5e7598!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85)!important;
+}
+.live-team-name{color:#3a4960!important}
+.live-team-meta{color:#7a8799!important}
+
+/* Scores stay neutral. Lead/trail belongs in the labeled status pills. */
+.live-team-score,.live-team-score.winning,.live-team-score.losing,.live-team-score.neutral{
+  color:#33465f!important;
+  font-weight:1000!important;
+}
+.live-team-projection,.live-team-projection.winning,.live-team-projection.losing,.live-team-projection.neutral{
+  color:#7b89a0!important;
+}
+.live-score-footer{border-top-color:rgba(118,155,208,.12)!important;gap:7px!important}
+.live-result-pill{
+  border-color:rgba(111,151,210,.18)!important;
+  background:linear-gradient(115deg,rgba(255,255,255,.49),rgba(238,246,255,.42))!important;
+  color:#6a7e9d!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.76);
+}
+.live-result-pill.leading,.live-result-pill.projected-winning{
+  color:#3f806d!important;
+  border-color:rgba(92,181,148,.25)!important;
+  background:linear-gradient(115deg,rgba(123,215,180,.13),rgba(241,252,247,.48))!important;
+}
+.live-result-pill.trailing,.live-result-pill.projected-losing{
+  color:#a15366!important;
+  border-color:rgba(206,105,127,.22)!important;
+  background:linear-gradient(115deg,rgba(226,129,149,.10),rgba(255,247,249,.48))!important;
+}
+.live-result-pill.tied,.live-result-pill.projected-tied,.live-result-pill.projected-unavailable{
+  color:#617fa7!important;
+  border-color:rgba(103,151,214,.22)!important;
+  background:linear-gradient(115deg,rgba(102,173,222,.10),rgba(245,249,255,.48))!important;
+}
+
+html[data-theme="dark"] .live-scores-panel{
+  background:
+    radial-gradient(circle at 8% 0%,rgba(54,158,205,.12),transparent 32%),
+    radial-gradient(circle at 85% 0%,rgba(116,94,209,.13),transparent 35%),
+    linear-gradient(135deg,rgba(24,38,73,.89),rgba(17,29,56,.93) 58%,rgba(20,47,52,.87))!important;
+  border-color:rgba(101,145,218,.28)!important;
+  box-shadow:0 15px 36px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+html[data-theme="dark"] .live-scores-panel > summary{color:#c7d5ea!important}
+html[data-theme="dark"] .live-score-card{
+  background:linear-gradient(145deg,rgba(31,47,86,.72),rgba(23,36,67,.67))!important;
+  border-color:rgba(102,145,217,.19)!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+html[data-theme="dark"] .live-league-name{color:#dbe5f5!important}
+html[data-theme="dark"] .live-team-row.is-user-team{
+  background:linear-gradient(110deg,rgba(55,134,190,.13),rgba(83,105,196,.10),rgba(70,165,136,.10));
+  border-color:rgba(91,139,206,.15);
+}
+html[data-theme="dark"] .live-team-row.is-opponent-team{background:rgba(15,25,48,.18);border-color:rgba(110,140,185,.07)}
+html[data-theme="dark"] .live-team-name{color:#d5deed!important}
+html[data-theme="dark"] .live-team-meta{color:#9cabc1!important}
+html[data-theme="dark"] .live-team-score,
+html[data-theme="dark"] .live-team-score.winning,
+html[data-theme="dark"] .live-team-score.losing,
+html[data-theme="dark"] .live-team-score.neutral{color:#e0e8f6!important}
+html[data-theme="dark"] .live-team-projection,
+html[data-theme="dark"] .live-team-projection.winning,
+html[data-theme="dark"] .live-team-projection.losing,
+html[data-theme="dark"] .live-team-projection.neutral{color:#9eacc2!important}
+html[data-theme="dark"] .live-result-pill{
+  background:linear-gradient(115deg,rgba(34,50,88,.66),rgba(25,39,71,.61))!important;
+  border-color:rgba(100,143,214,.18)!important;
+  color:#a6b6ce!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+html[data-theme="dark"] .live-result-pill.leading,
+html[data-theme="dark"] .live-result-pill.projected-winning{color:#9ad7bd!important;border-color:rgba(97,191,157,.24)!important;background:linear-gradient(115deg,rgba(61,133,111,.20),rgba(27,55,57,.55))!important}
+html[data-theme="dark"] .live-result-pill.trailing,
+html[data-theme="dark"] .live-result-pill.projected-losing{color:#e6a0af!important;border-color:rgba(215,110,132,.21)!important;background:linear-gradient(115deg,rgba(119,52,70,.18),rgba(57,31,53,.53))!important}
