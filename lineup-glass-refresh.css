@@ -170,10 +170,84 @@ html[data-theme="dark"] .watch-count.starred {
   color:#ffd269!important;
 }
 
+/* -------------------------------------------------------------------------
+   LIGHT MODE: restrained semantic glow
+   Use the glow only on high-signal status elements so it feels intentional.
+   ------------------------------------------------------------------------- */
+
+html:not([data-theme="dark"]) .lineup-pulse-pill {
+  backdrop-filter:blur(12px) saturate(132%);
+  -webkit-backdrop-filter:blur(12px) saturate(132%);
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+
+/* Fix now: soft red glass with a small halo, not a neon button. */
+html:not([data-theme="dark"]) .lineup-pulse-pill.critical {
+  background:linear-gradient(135deg,rgba(255,91,113,.18),rgba(255,255,255,.60))!important;
+  border-color:rgba(211,59,82,.42)!important;
+  color:#bd3349!important;
+  box-shadow:
+    0 0 14px rgba(226,61,86,.14),
+    0 7px 18px rgba(167,44,64,.07),
+    inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+html:not([data-theme="dark"]) .lineup-pulse-pill.critical strong{color:#bd3349!important}
+
+/* Questionable: warm gold glass with the same restrained halo. */
+html:not([data-theme="dark"]) .lineup-pulse-pill.warn {
+  background:linear-gradient(135deg,rgba(255,205,75,.21),rgba(255,255,255,.62))!important;
+  border-color:rgba(190,139,23,.39)!important;
+  color:#876313!important;
+  box-shadow:
+    0 0 14px rgba(222,165,31,.13),
+    0 7px 18px rgba(150,108,18,.06),
+    inset 0 1px 0 rgba(255,255,255,.96)!important;
+}
+html:not([data-theme="dark"]) .lineup-pulse-pill.warn strong{color:#876313!important}
+
+/* Neutral timing stays glassy but deliberately does not glow. */
+html:not([data-theme="dark"]) .lineup-pulse-pill.timing {
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.92)!important;
+}
+
+/* Sprinkle the effect elsewhere only where color already carries meaning. */
+html:not([data-theme="dark"]) .lineup-issue.critical,
+html:not([data-theme="dark"]) .alert.critical {
+  box-shadow:
+    0 8px 22px rgba(211,59,82,.075),
+    inset 4px 0 0 var(--app-danger),
+    inset 0 1px 0 rgba(255,255,255,.88)!important;
+}
+
+html:not([data-theme="dark"]) .lineup-issue.warn,
+html:not([data-theme="dark"]) .alert.warn {
+  box-shadow:
+    0 8px 22px rgba(190,139,23,.07),
+    inset 3px 0 0 var(--app-warning-edge),
+    inset 0 1px 0 rgba(255,255,255,.92)!important;
+}
+
+/* Starred/favorite cues get only a trace of gold so they read as special. */
+html:not([data-theme="dark"]) .priority-badge,
+html:not([data-theme="dark"]) .favorite-watch,
+html:not([data-theme="dark"]) .watch-count.starred {
+  box-shadow:
+    0 0 10px rgba(207,153,28,.075),
+    inset 0 1px 0 rgba(255,255,255,.90)!important;
+}
+
+/* Strong watch recommendations get a tiny cool halo; ordinary cards do not. */
+html:not([data-theme="dark"]) .watch-tier.must,
+html:not([data-theme="dark"]) .watch-tier.watch {
+  box-shadow:0 0 11px rgba(75,131,243,.08)!important;
+}
+
 @media (hover:hover) {
   html[data-theme="dark"] .lineup-pulse-pill.critical:hover,
   html[data-theme="dark"] .lineup-pulse-pill.warn:hover,
-  html[data-theme="dark"] .lineup-pulse-pill.timing:hover {
+  html[data-theme="dark"] .lineup-pulse-pill.timing:hover,
+  html:not([data-theme="dark"]) .lineup-pulse-pill.critical:hover,
+  html:not([data-theme="dark"]) .lineup-pulse-pill.warn:hover {
     transform:translateY(-1px);
   }
 }
