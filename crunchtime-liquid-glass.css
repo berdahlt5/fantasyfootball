@@ -1,0 +1,192 @@
+/* Liquid-glass finishing layer inspired by iOS 26: translucent cores, bright rims, soft chromatic refraction. */
+
+/* Shared material */
+body.crunch-planner-ready .ct-matchup-card,
+body.crunch-planner-ready .ct-points-planner,
+body.crunch-planner-ready .ct-plan-player,
+body.crunch-planner-ready .ct-team-scoreboard,
+body.crunch-planner-ready .ct-plan-mode,
+body.crunch-planner-ready .ct-plan-reset,
+body.crunch-collapse-ready .ct-collapse-chevron,
+body.crunch-collapse-ready .ct-status-pill{
+  -webkit-backdrop-filter:blur(30px) saturate(1.42) brightness(1.03);
+  backdrop-filter:blur(30px) saturate(1.42) brightness(1.03)
+}
+
+/* Expanded matchup shell: a clearer, more dimensional sheet of glass. */
+body.crunch-planner-ready .ct-matchup-card.is-expanded,
+body.crunch-planner-ready .ct-matchup-card:not(.is-collapsed){
+  background:
+    radial-gradient(circle at 8% 0%,rgba(79,203,242,.13),transparent 31%),
+    radial-gradient(circle at 96% 8%,rgba(205,115,231,.09),transparent 30%),
+    radial-gradient(circle at 78% 100%,rgba(111,225,181,.09),transparent 33%),
+    linear-gradient(135deg,rgba(255,255,255,.48),rgba(238,246,255,.29) 52%,rgba(247,239,255,.25));
+  border:1px solid rgba(255,255,255,.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.94),
+    inset 1px 0 0 rgba(255,255,255,.42),
+    inset 0 -1px 0 rgba(91,128,184,.09),
+    0 0 0 1px rgba(116,157,215,.09),
+    0 18px 46px rgba(51,84,133,.12),
+    0 0 34px rgba(101,157,229,.07)
+}
+
+body.crunch-planner-ready .ct-points-planner{
+  background:
+    radial-gradient(circle at 2% 0%,rgba(60,205,235,.1),transparent 31%),
+    radial-gradient(circle at 97% 3%,rgba(177,105,231,.08),transparent 30%),
+    linear-gradient(135deg,rgba(255,255,255,.4),rgba(235,246,255,.25) 50%,rgba(243,238,255,.21));
+  border-color:rgba(255,255,255,.52);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 -1px 0 rgba(76,118,176,.075),
+    0 0 0 1px rgba(115,157,215,.07),
+    0 14px 35px rgba(55,88,134,.095)
+}
+
+/* Scoreboard: darker translucent pane inside the outer glass, like nested Liquid Glass controls. */
+body.crunch-planner-ready .ct-team-scoreboard{
+  background:
+    radial-gradient(circle at 18% 0%,rgba(77,214,230,.11),transparent 32%),
+    radial-gradient(circle at 88% 0%,rgba(175,104,229,.1),transparent 31%),
+    linear-gradient(135deg,rgba(244,250,255,.36),rgba(225,239,250,.24) 52%,rgba(239,231,251,.23));
+  border-color:rgba(255,255,255,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -1px 0 rgba(74,110,165,.08),
+    0 0 0 1px rgba(105,148,209,.075),
+    0 10px 30px rgba(50,79,124,.09)
+}
+body.crunch-planner-ready .ct-scoreboard-head{
+  background:linear-gradient(90deg,rgba(255,255,255,.27),rgba(218,241,252,.22),rgba(239,224,252,.21));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5)
+}
+body.crunch-planner-ready .ct-scoreboard-row.scenario{
+  background:
+    radial-gradient(circle at 16% 50%,rgba(60,211,230,.13),transparent 34%),
+    radial-gradient(circle at 84% 50%,rgba(164,117,232,.12),transparent 36%),
+    linear-gradient(100deg,rgba(220,247,252,.24),rgba(221,233,255,.31) 50%,rgba(238,226,255,.27))
+}
+
+/* Player panels: clearer edge lighting and a slightly deeper center. */
+body.crunch-planner-ready .ct-plan-player{
+  background:
+    radial-gradient(circle at 4% 0%,rgba(75,205,234,.08),transparent 34%),
+    radial-gradient(circle at 97% 0%,rgba(171,112,229,.06),transparent 32%),
+    linear-gradient(135deg,rgba(255,255,255,.33),rgba(235,244,255,.2) 56%,rgba(244,239,253,.17));
+  border-color:rgba(255,255,255,.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    inset 0 -1px 0 rgba(82,117,166,.055),
+    0 0 0 1px rgba(112,153,207,.055),
+    0 8px 22px rgba(49,81,127,.065)
+}
+body.crunch-planner-ready .ct-plan-photo{
+  border:1px solid rgba(255,255,255,.62);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 5px 16px rgba(51,85,132,.11)
+}
+
+/* Segmented controls get the glossy capsule treatment. */
+body.crunch-planner-ready .ct-plan-mode{
+  border-color:rgba(255,255,255,.52);
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.42),rgba(225,240,251,.27) 52%,rgba(240,229,250,.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.88),
+    inset 0 -1px 0 rgba(79,117,171,.07),
+    0 6px 18px rgba(56,92,139,.08)
+}
+body.crunch-planner-ready .ct-plan-mode button.active{
+  background:
+    radial-gradient(circle at 12% 0%,rgba(65,222,235,.32),transparent 55%),
+    linear-gradient(110deg,rgba(71,206,230,.32),rgba(104,145,241,.34) 54%,rgba(161,113,225,.23));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 0 18px rgba(83,147,237,.18)
+}
+body.crunch-planner-ready .ct-plan-reset{
+  border-color:rgba(255,255,255,.48)!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(230,241,252,.24))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 5px 14px rgba(58,91,137,.07)
+}
+
+/* Sliders: brighter glass tube and luminous thumb, still restrained. */
+body.crunch-planner-ready .ct-plan-slider{
+  border-color:rgba(255,255,255,.9)!important;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,1),
+    inset 0 -1px 2px rgba(57,95,151,.11),
+    0 0 0 1px rgba(108,157,224,.055),
+    0 0 22px rgba(90,158,240,.18),
+    0 7px 20px rgba(52,91,145,.1)
+}
+body.crunch-planner-ready .ct-plan-slider::-webkit-slider-thumb{
+  border-color:rgba(255,255,255,.98);
+  background:radial-gradient(circle at 32% 27%,rgba(255,255,255,1) 0 18%,rgba(255,255,255,.78) 38%,rgba(221,237,255,.7) 72%,rgba(198,211,239,.62) 100%);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,1),0 0 0 5px rgba(111,158,231,.08),0 0 20px rgba(91,151,239,.3),0 6px 16px rgba(51,82,129,.22)
+}
+
+/* Collapsed cards: compact pieces of colored glass rather than flat tinted cards. */
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed{
+  background:
+    radial-gradient(circle at 5% 0%,rgba(71,205,238,.15),transparent 33%),
+    radial-gradient(circle at 96% 0%,rgba(186,113,232,.1),transparent 34%),
+    linear-gradient(125deg,rgba(255,255,255,.5),rgba(230,242,253,.31) 55%,rgba(242,234,252,.25));
+  border-color:rgba(255,255,255,.56);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.94),
+    inset 1px 0 0 rgba(255,255,255,.38),
+    inset 0 -1px 0 rgba(76,112,165,.075),
+    0 0 0 1px rgba(112,153,211,.07),
+    0 10px 28px rgba(50,83,131,.1)
+}
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.hot{
+  background:radial-gradient(circle at 88% 0%,rgba(246,194,66,.2),transparent 37%),radial-gradient(circle at 5% 0%,rgba(81,199,237,.1),transparent 31%),linear-gradient(125deg,rgba(255,255,255,.51),rgba(247,239,211,.31),rgba(237,239,252,.24))
+}
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.good{
+  background:radial-gradient(circle at 88% 0%,rgba(83,222,164,.2),transparent 37%),radial-gradient(circle at 5% 0%,rgba(72,203,235,.1),transparent 31%),linear-gradient(125deg,rgba(255,255,255,.5),rgba(222,248,238,.32),rgba(232,241,252,.24))
+}
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.bad{
+  background:radial-gradient(circle at 88% 0%,rgba(231,105,146,.17),transparent 37%),radial-gradient(circle at 5% 0%,rgba(86,189,233,.08),transparent 31%),linear-gradient(125deg,rgba(255,255,255,.5),rgba(250,226,237,.3),rgba(236,239,252,.23))
+}
+body.crunch-collapse-ready .ct-matchup-card.is-collapsed.watch{
+  background:radial-gradient(circle at 88% 0%,rgba(137,113,233,.16),transparent 37%),radial-gradient(circle at 5% 0%,rgba(71,204,238,.11),transparent 31%),linear-gradient(125deg,rgba(255,255,255,.5),rgba(230,237,253,.31),rgba(241,232,252,.24))
+}
+body.crunch-collapse-ready .ct-collapse-chevron{
+  border-color:rgba(255,255,255,.5);
+  background:linear-gradient(135deg,rgba(255,255,255,.43),rgba(222,239,253,.25),rgba(240,228,250,.2));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 4px 12px rgba(54,86,132,.08)
+}
+body.crunch-collapse-ready .ct-status-pill{
+  border-color:rgba(255,255,255,.48);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.68),0 4px 13px rgba(48,80,123,.06)
+}
+
+/* Free-mode win: keep the existing mint outcome, but make it feel like illuminated glass. */
+body.crunch-planner-ready .ct-points-planner[data-plan-mode="free"]:has(.ct-scoreboard-row.scenario.win){
+  background:
+    radial-gradient(circle at 84% 4%,rgba(91,235,173,.25),transparent 38%),
+    radial-gradient(circle at 8% 0%,rgba(74,211,232,.11),transparent 31%),
+    linear-gradient(135deg,rgba(242,255,249,.55),rgba(219,248,237,.37) 50%,rgba(232,241,253,.28));
+  border-color:rgba(255,255,255,.58);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(56,139,108,.07),0 0 0 1px rgba(73,191,147,.08),0 16px 38px rgba(43,126,98,.1),0 0 34px rgba(83,211,162,.16)
+}
+
+/* Dark mode: deeper glass, brighter rims, restrained chromatic bloom. */
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card.is-expanded,
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card:not(.is-collapsed),
+html[data-theme="dark"] body.crunch-planner-ready .ct-points-planner,
+html[data-theme="dark"] body.crunch-planner-ready .ct-plan-player,
+html[data-theme="dark"] body.crunch-planner-ready .ct-team-scoreboard{
+  border-color:rgba(255,255,255,.1);
+  -webkit-backdrop-filter:blur(32px) saturate(1.5) brightness(.94);
+  backdrop-filter:blur(32px) saturate(1.5) brightness(.94)
+}
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card.is-expanded,
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card:not(.is-collapsed){
+  background:radial-gradient(circle at 8% 0%,rgba(57,180,224,.13),transparent 32%),radial-gradient(circle at 96% 8%,rgba(181,82,207,.1),transparent 31%),radial-gradient(circle at 78% 100%,rgba(61,184,133,.08),transparent 34%),linear-gradient(135deg,rgba(16,29,51,.69),rgba(25,39,67,.55) 52%,rgba(42,28,63,.43));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.095),inset 1px 0 0 rgba(255,255,255,.035),inset 0 -1px 0 rgba(0,0,0,.18),0 18px 48px rgba(0,0,0,.28),0 0 34px rgba(70,133,215,.08)
+}
+html[data-theme="dark"] body.crunch-planner-ready .ct-points-planner{background:radial-gradient(circle at 2% 0%,rgba(53,178,219,.09),transparent 32%),radial-gradient(circle at 97% 3%,rgba(161,75,201,.08),transparent 31%),linear-gradient(135deg,rgba(18,33,57,.6),rgba(26,43,69,.47) 52%,rgba(39,30,66,.37));box-shadow:inset 0 1px 0 rgba(255,255,255,.075),0 14px 36px rgba(0,0,0,.2)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-plan-player{background:radial-gradient(circle at 4% 0%,rgba(49,164,207,.08),transparent 34%),radial-gradient(circle at 97% 0%,rgba(151,73,196,.055),transparent 32%),linear-gradient(135deg,rgba(17,31,53,.48),rgba(24,40,66,.37) 58%,rgba(39,29,62,.28));box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 9px 24px rgba(0,0,0,.15)}
+html[data-theme="dark"] body.crunch-collapse-ready .ct-matchup-card.is-collapsed{border-color:rgba(255,255,255,.09);background:radial-gradient(circle at 5% 0%,rgba(54,172,215,.13),transparent 34%),radial-gradient(circle at 96% 0%,rgba(164,75,204,.09),transparent 35%),linear-gradient(125deg,rgba(16,30,52,.72),rgba(24,42,68,.56) 55%,rgba(40,29,62,.43));box-shadow:inset 0 1px 0 rgba(255,255,255,.085),inset 0 -1px 0 rgba(0,0,0,.17),0 11px 30px rgba(0,0,0,.23)}
+html[data-theme="dark"] body.crunch-collapse-ready .ct-collapse-chevron{border-color:rgba(255,255,255,.09);background:linear-gradient(135deg,rgba(63,82,116,.46),rgba(30,49,77,.35),rgba(60,38,80,.29));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 4px 13px rgba(0,0,0,.17)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-points-planner[data-plan-mode="free"]:has(.ct-scoreboard-row.scenario.win){background:radial-gradient(circle at 84% 4%,rgba(62,196,135,.18),transparent 39%),radial-gradient(circle at 8% 0%,rgba(54,170,205,.08),transparent 32%),linear-gradient(135deg,rgba(18,49,46,.61),rgba(19,45,53,.48) 50%,rgba(28,38,64,.42));border-color:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 16px 39px rgba(0,0,0,.22),0 0 34px rgba(56,176,126,.13)}
