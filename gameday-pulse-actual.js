@@ -283,13 +283,13 @@
     const link = document.createElement("link");
     link.id = "gameDayPulseLeagueBreakdownStyles";
     link.rel = "stylesheet";
-    link.href = "./gameday-pulse-league-breakdown.css?v=20260913a";
+    link.href = "./gameday-pulse-league-breakdown.css?v=20260913b";
     document.head.appendChild(link);
   }
   if (!document.getElementById("gameDayPulseLeagueBreakdownScript")){
     const script = document.createElement("script");
     script.id = "gameDayPulseLeagueBreakdownScript";
-    script.src = "./gameday-pulse-league-breakdown.js?v=20260913a";
+    script.src = "./gameday-pulse-league-breakdown.js?v=20260913b";
     script.async = false;
     document.head.appendChild(script);
   }
