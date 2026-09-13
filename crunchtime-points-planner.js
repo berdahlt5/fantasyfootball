@@ -23,6 +23,56 @@
     return TEAM_ALIASES[team] || team;
   };
 
+  function ensureScoreboardStyles(){
+    if (document.getElementById("crunchTimeTeamScoreboardStyles")) return;
+    const style = document.createElement("style");
+    style.id = "crunchTimeTeamScoreboardStyles";
+    style.textContent = `
+      .ct-team-scoreboard{margin-top:10px;overflow:hidden;border:1px solid rgba(134,171,218,.17);border-radius:14px;background:linear-gradient(135deg,rgba(255,255,255,.34),rgba(239,247,255,.24),rgba(239,251,247,.2));box-shadow:inset 0 1px 0 rgba(255,255,255,.64),0 8px 24px rgba(63,91,132,.055);-webkit-backdrop-filter:blur(20px) saturate(1.16);backdrop-filter:blur(20px) saturate(1.16)}
+      .ct-scoreboard-head,.ct-scoreboard-row{display:grid;grid-template-columns:minmax(84px,.72fr) minmax(0,1fr) minmax(0,1fr);align-items:stretch}
+      .ct-scoreboard-head{border-bottom:1px solid rgba(130,169,217,.12);background:rgba(245,249,255,.2)}
+      .ct-scoreboard-head>span{min-width:0}
+      .ct-scoreboard-team{min-width:0;padding:8px 9px;text-align:center;border-left:1px solid rgba(130,169,217,.1)}
+      .ct-scoreboard-team small{display:block;margin-bottom:2px;color:#8998ab;font-size:.38rem;font-weight:1000;text-transform:uppercase;letter-spacing:.055em}
+      .ct-scoreboard-team strong{display:block;overflow:hidden;color:#395474;font-size:.55rem;font-weight:1000;line-height:1.15;text-overflow:ellipsis;white-space:nowrap}
+      .ct-scoreboard-team.you strong{color:#32687e}
+      .ct-scoreboard-row{border-bottom:1px solid rgba(130,169,217,.1)}
+      .ct-scoreboard-row:last-child{border-bottom:0}
+      .ct-scoreboard-label{display:grid;align-content:center;gap:2px;padding:8px 9px}
+      .ct-scoreboard-label>strong{color:#6f829c;font-size:.45rem;font-weight:1000;text-transform:uppercase;letter-spacing:.05em}
+      .ct-scoreboard-label>small{color:#9aa6b5;font-size:.36rem;line-height:1.15}
+      .ct-scoreboard-row>strong{display:grid;place-items:center;min-width:0;padding:8px 7px;border-left:1px solid rgba(130,169,217,.1);color:#3e5775;font-size:.76rem;line-height:1;font-weight:1000;font-variant-numeric:tabular-nums}
+      .ct-scoreboard-row.current>strong{color:#405a79}
+      .ct-scoreboard-row.projected>strong{color:#667ab0}
+      .ct-scoreboard-row.scenario>strong:first-of-type{color:#335f7e}
+      .ct-scoreboard-result{display:inline-flex;width:max-content;max-width:100%;margin-top:2px;padding:3px 6px;border:1px solid transparent;border-radius:999px;font-size:.37rem;font-weight:1000;line-height:1;letter-spacing:.025em}
+      .ct-scoreboard-row.scenario.win{background:linear-gradient(90deg,rgba(70,185,152,.055),rgba(255,255,255,.02))}
+      .ct-scoreboard-row.scenario.win .ct-scoreboard-result{color:#39836f;background:rgba(75,187,154,.1);border-color:rgba(75,187,154,.16)}
+      .ct-scoreboard-row.scenario.tie{background:linear-gradient(90deg,rgba(224,177,68,.06),rgba(255,255,255,.02))}
+      .ct-scoreboard-row.scenario.tie .ct-scoreboard-result{color:#9d741f;background:rgba(224,177,68,.1);border-color:rgba(224,177,68,.18)}
+      .ct-scoreboard-row.scenario.loss{background:linear-gradient(90deg,rgba(208,112,137,.055),rgba(255,255,255,.02))}
+      .ct-scoreboard-row.scenario.loss .ct-scoreboard-result{color:#a65468;background:rgba(208,112,137,.09);border-color:rgba(208,112,137,.16)}
+      .ct-team-scoreboard-note{margin:4px 2px 0;color:#98a5b5;font-size:.38rem;text-align:right}
+      html[data-theme="dark"] .ct-team-scoreboard{background:linear-gradient(135deg,rgba(20,34,58,.44),rgba(25,42,68,.3),rgba(22,50,55,.24));border-color:rgba(116,156,215,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 8px 24px rgba(0,0,0,.12)}
+      html[data-theme="dark"] .ct-scoreboard-head{background:rgba(26,42,68,.23);border-color:rgba(116,156,215,.12)}
+      html[data-theme="dark"] .ct-scoreboard-team,html[data-theme="dark"] .ct-scoreboard-row>strong{border-color:rgba(116,156,215,.11)}
+      html[data-theme="dark"] .ct-scoreboard-team small,html[data-theme="dark"] .ct-scoreboard-label>small,html[data-theme="dark"] .ct-team-scoreboard-note{color:#73849b}
+      html[data-theme="dark"] .ct-scoreboard-team strong{color:#c2d3e8}
+      html[data-theme="dark"] .ct-scoreboard-team.you strong{color:#a9d6e3}
+      html[data-theme="dark"] .ct-scoreboard-label>strong{color:#8799b1}
+      html[data-theme="dark"] .ct-scoreboard-row>strong{color:#c3d4e8}
+      html[data-theme="dark"] .ct-scoreboard-row.projected>strong{color:#aaa9de}
+      html[data-theme="dark"] .ct-scoreboard-row.scenario>strong:first-of-type{color:#b5d9e8}
+      @media(max-width:560px){
+        .ct-scoreboard-head,.ct-scoreboard-row{grid-template-columns:74px minmax(0,1fr) minmax(0,1fr)}
+        .ct-scoreboard-team{padding:7px 6px}.ct-scoreboard-team strong{font-size:.5rem}
+        .ct-scoreboard-label{padding:7px 6px}.ct-scoreboard-label>strong{font-size:.4rem}.ct-scoreboard-label>small{font-size:.33rem}
+        .ct-scoreboard-row>strong{padding:7px 5px;font-size:.69rem}.ct-scoreboard-result{font-size:.34rem;padding:3px 5px}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   async function json(url,cache="force-cache"){
     const response = await fetch(url,{cache});
     if (!response.ok) throw new Error(`Request failed (${response.status})`);
@@ -294,12 +344,31 @@
 
   function scoreboardMarkup(data,plan){
     const scenario = scenarioValues(data,plan);
-    const opponentBasis = data.theirs.length ? "opponent projected finish" : "opponent final score";
-    return `<div class="ct-plan-scoreboard">
-      <div class="ct-plan-score-cell current"><span>Current</span><strong>${f(data.myScore)} <em>–</em> ${f(data.oppScore)}</strong><small>actual now</small></div>
-      <div class="ct-plan-score-cell projected"><span>Projected</span><strong>${f(data.myProjectedFinal)} <em>–</em> ${f(data.oppProjectedFinal)}</strong><small>current projections</small></div>
-      <div class="ct-plan-score-cell scenario ${scenario.result}"><span>Your scenario</span><strong data-ct-scenario-score>${f(scenario.mine)} <em>–</em> ${f(scenario.opp)}</strong><b data-ct-scenario-result>${esc(resultLabel(scenario))}</b></div>
-    </div><div class="ct-plan-score-note">Scenario uses ${esc(opponentBasis)}.</div>`;
+    const myName = data.view?.myName || "Your team";
+    const oppName = data.view?.oppName || "Opponent";
+    const opponentBasis = data.theirs.length ? "Opponent scenario stays at projected finish." : "Opponent score is final.";
+    return `<div class="ct-team-scoreboard">
+      <div class="ct-scoreboard-head">
+        <span></span>
+        <div class="ct-scoreboard-team you"><small>You</small><strong title="${esc(myName)}">${esc(myName)}</strong></div>
+        <div class="ct-scoreboard-team opp"><small>Opponent</small><strong title="${esc(oppName)}">${esc(oppName)}</strong></div>
+      </div>
+      <div class="ct-scoreboard-row current">
+        <div class="ct-scoreboard-label"><strong>Current</strong><small>actual now</small></div>
+        <strong>${f(data.myScore)}</strong>
+        <strong>${f(data.oppScore)}</strong>
+      </div>
+      <div class="ct-scoreboard-row projected">
+        <div class="ct-scoreboard-label"><strong>Projected</strong><small>live projection</small></div>
+        <strong>${f(data.myProjectedFinal)}</strong>
+        <strong>${f(data.oppProjectedFinal)}</strong>
+      </div>
+      <div class="ct-scoreboard-row scenario ${scenario.result}">
+        <div class="ct-scoreboard-label"><strong>Your scenario</strong><span class="ct-scoreboard-result" data-ct-scenario-result>${esc(resultLabel(scenario))}</span></div>
+        <strong data-ct-scenario-mine>${f(scenario.mine)}</strong>
+        <strong data-ct-scenario-opp>${f(scenario.opp)}</strong>
+      </div>
+    </div><div class="ct-team-scoreboard-note">${esc(opponentBasis)}</div>`;
   }
 
   function allocationEquation(data,plan){
@@ -349,14 +418,16 @@
 
   function updateScenarioSummary(card,data,plan){
     const values = scenarioValues(data,plan);
-    const score = card.querySelector("[data-ct-scenario-score]");
+    const mine = card.querySelector("[data-ct-scenario-mine]");
+    const opp = card.querySelector("[data-ct-scenario-opp]");
     const result = card.querySelector("[data-ct-scenario-result]");
-    const cell = card.querySelector(".ct-plan-score-cell.scenario");
-    if (score) score.innerHTML = `${f(values.mine)} <em>–</em> ${f(values.opp)}`;
+    const row = card.querySelector(".ct-scoreboard-row.scenario");
+    if (mine) mine.textContent = f(values.mine);
+    if (opp) opp.textContent = f(values.opp);
     if (result) result.textContent = resultLabel(values);
-    if (cell){
-      cell.classList.remove("win","tie","loss");
-      cell.classList.add(values.result);
+    if (row){
+      row.classList.remove("win","tie","loss");
+      row.classList.add(values.result);
     }
   }
 
@@ -436,6 +507,8 @@
   }
 
   function init(){
+    ensureScoreboardStyles();
+
     document.addEventListener("input",event=>{
       const slider = event.target.closest?.("[data-ct-plan-slider]");
       if (!slider) return;
