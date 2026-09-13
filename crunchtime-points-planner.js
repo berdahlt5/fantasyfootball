@@ -209,21 +209,34 @@
     return "long";
   }
 
+  function sliderScale(row,target){
+    const actual = Math.max(0,n(row.actual));
+    const projectedFinal = actual + Math.max(0,n(row.expectedRemaining));
+    const scenarioCeiling = actual + Math.max(.1,n(target));
+    return Math.max(1,Math.ceil(Math.max(scenarioCeiling,projectedFinal*1.18)*10)/10);
+  }
+
   function playerRow(row,target,plan){
     const allocation = n(plan.allocations.get(row.id));
-    const pct = target>0 ? Math.min(100,Math.max(0,(allocation/target)*100)) : 0;
-    const projPct = target>0 ? Math.min(100,Math.max(0,(row.expectedRemaining/target)*100)) : 0;
+    const actual = Math.max(0,n(row.actual));
+    const projectedFinal = actual + Math.max(0,n(row.expectedRemaining));
+    const scenarioFinal = actual + allocation;
+    const axisMax = sliderScale(row,target);
+    const pct = Math.min(100,Math.max(0,(scenarioFinal/axisMax)*100));
+    const currentPct = Math.min(100,Math.max(0,(actual/axisMax)*100));
+    const projPct = Math.min(100,Math.max(0,(projectedFinal/axisMax)*100));
     const status = row.live ? "Live" : "Upcoming";
     const playerTone = tone(allocation,row.expectedRemaining);
     return `<div class="ct-plan-player ${playerTone}" data-player-id="${esc(row.id)}">
       <div class="ct-plan-player-head">
         ${avatar(row)}
         <div class="ct-plan-player-copy"><strong>${esc(row.name)}</strong><span>${esc(row.position)} · ${esc(row.team)} · ${status}</span></div>
-        <div class="ct-plan-value-wrap"><small>Need</small><strong class="ct-plan-value" data-ct-assigned>${f(allocation)}</strong></div>
+        <div class="ct-plan-value-wrap"><small>Scenario</small><strong class="ct-plan-value" data-ct-assigned>${f(scenarioFinal)}</strong></div>
       </div>
-      <div class="ct-plan-slider-wrap" style="--proj:${projPct}%">
-        <input class="ct-plan-slider" type="range" min="0" max="${Math.max(.1,target)}" step="0.1" value="${allocation}" style="--fill:${pct}%" data-ct-plan-slider data-player-id="${esc(row.id)}" aria-label="Points needed from ${esc(row.name)}">
-        <span class="ct-plan-proj-marker" aria-hidden="true"><i></i><b>Proj ${f(row.expectedRemaining)}</b></span>
+      <div class="ct-plan-slider-wrap" style="--current:${currentPct}%;--proj:${projPct}%">
+        <input class="ct-plan-slider" type="range" min="0" max="${axisMax}" step="0.1" value="${scenarioFinal}" style="--fill:${pct}%" data-ct-plan-slider data-player-id="${esc(row.id)}" aria-label="Final point scenario for ${esc(row.name)}">
+        <span class="ct-plan-current-marker" aria-hidden="true"><i></i><b>Current ${f(actual)}</b></span>
+        <span class="ct-plan-proj-marker" aria-hidden="true"><i></i><b>Proj ${f(projectedFinal)}</b></span>
       </div>
     </div>`;
   }
@@ -239,7 +252,7 @@
   }
 
   function allocationEquation(data,plan){
-    return data.mine.map(row=>f(plan.allocations.get(row.id))).join(" + ");
+    return data.mine.map(row=>`+${f(plan.allocations.get(row.id))}`).join(" + ");
   }
 
   function plannerMarkup(data,plan){
@@ -263,23 +276,26 @@
         <button type="button" data-ct-plan-reset>Reset</button>
       </div>
       <div class="ct-plan-players">${data.mine.map(row=>playerRow(row,data.target,plan)).join("")}</div>
-      <div class="ct-plan-equation"><span data-ct-plan-equation>${esc(allocationEquation(data,plan))}</span><strong>= ${f(data.target)}</strong></div>
+      <div class="ct-plan-equation"><small>From here</small><span data-ct-plan-equation>${esc(allocationEquation(data,plan))}</span><strong>= ${f(data.target)} more</strong></div>
     </section>`;
   }
 
   function updateInteractive(card,data,plan){
     for (const row of data.mine){
       const allocation = n(plan.allocations.get(row.id));
+      const actual = Math.max(0,n(row.actual));
+      const scenarioFinal = actual + allocation;
       const player = card.querySelector(`.ct-plan-player[data-player-id="${CSS.escape(row.id)}"]`);
       if (!player) continue;
       const value = player.querySelector("[data-ct-assigned]");
-      if (value) value.textContent = f(allocation);
+      if (value) value.textContent = f(scenarioFinal);
       player.classList.remove("neutral","normal","stretch","long");
       player.classList.add(tone(allocation,row.expectedRemaining));
       const slider = player.querySelector("[data-ct-plan-slider]");
       if (slider){
-        slider.value = String(allocation);
-        const pct = data.target>0 ? Math.min(100,Math.max(0,(allocation/data.target)*100)) : 0;
+        const axisMax = Math.max(.1,n(slider.max));
+        slider.value = String(scenarioFinal);
+        const pct = Math.min(100,Math.max(0,(scenarioFinal/axisMax)*100));
         slider.style.setProperty("--fill",`${pct}%`);
       }
     }
@@ -341,7 +357,12 @@
       const data = card?.__ctPlannerData;
       const plan = card?.__ctPlannerState;
       if (!card || !data || !plan) return;
-      distribute(data,plan,String(slider.dataset.playerId),slider.value);
+      const id = String(slider.dataset.playerId);
+      const row = data.mine.find(item=>String(item.id)===id);
+      if (!row) return;
+      const finalScenario = Math.max(n(row.actual),n(slider.value));
+      const additional = Math.max(0,roundTenth(finalScenario-n(row.actual)));
+      distribute(data,plan,id,additional);
       updateInteractive(card,data,plan);
     });
 
