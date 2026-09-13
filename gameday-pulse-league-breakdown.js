@@ -109,14 +109,10 @@
     return 0;
   }
 
-  function ensurePlayer(map,id){
-    if (!map.has(id)) map.set(id,{owned:[],against:[]});
-    return map.get(id);
-  }
-
   function addLeagueRow(map,id,side,league,projected,actual){
-    const item = ensurePlayer(map,String(id));
-    item[side].push({
+    const key = String(id);
+    if (!map.has(key)) map.set(key,{owned:[],against:[]});
+    map.get(key)[side].push({
       leagueId:String(league?.league_id || ""),
       leagueName:String(league?.name || "Fantasy League"),
       projected:Number.isFinite(Number(projected)) ? Number(projected) : 0,
@@ -143,7 +139,6 @@
           json(`${API}/league/${encodeURIComponent(league.league_id)}/rosters`),
           json(`${API}/league/${encodeURIComponent(league.league_id)}/matchups/${ctx.week}`,"no-store")
         ]);
-
         const mine = (rosters || []).find(roster=>isMine(roster,user.user_id));
         if (!mine) return;
         const myMatchup = (matchups || []).find(matchup=>Number(matchup?.roster_id)===Number(mine.roster_id));
@@ -154,25 +149,16 @@
         );
         if (!opponentMatchup) return;
         const opponentRoster = (rosters || []).find(roster=>Number(roster?.roster_id)===Number(opponentMatchup.roster_id));
-
         const myStarters = starters(myMatchup,mine);
         const oppStarters = starters(opponentMatchup,opponentRoster);
         const myActual = myMatchup?.players_points || {};
         const oppActual = opponentMatchup?.players_points || {};
 
         for (const id of myStarters){
-          addLeagueRow(
-            breakdowns,id,"owned",league,
-            projectionPoints(projections.get(String(id)),league),
-            myActual?.[id] ?? 0
-          );
+          addLeagueRow(breakdowns,id,"owned",league,projectionPoints(projections.get(String(id)),league),myActual?.[id] ?? 0);
         }
         for (const id of oppStarters){
-          addLeagueRow(
-            breakdowns,id,"against",league,
-            projectionPoints(projections.get(String(id)),league),
-            oppActual?.[id] ?? 0
-          );
+          addLeagueRow(breakdowns,id,"against",league,projectionPoints(projections.get(String(id)),league),oppActual?.[id] ?? 0);
         }
       } catch (_) {}
     }));
@@ -193,24 +179,58 @@
     return String(value ?? "").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
   }
 
+  function rowMarkup(row){
+    return `<div class="game-day-pulse-league-row">
+      <span class="game-day-pulse-league-name">${escapeHtml(row.leagueName)}</span>
+      <span class="game-day-pulse-league-proj"><small>P</small><strong>${row.projected.toFixed(1)}</strong></span>
+      <span class="game-day-pulse-league-actual"><small>A</small><strong>${row.actual.toFixed(1)}</strong></span>
+    </div>`;
+  }
+
   function renderRows(card,rows){
-    let host = card.querySelector(".game-day-pulse-league-breakdown");
-    if (!host){
-      host = document.createElement("div");
-      host.className = "game-day-pulse-league-breakdown";
-      card.appendChild(host);
+    const ordered = [...rows].sort((a,b)=>b.projected-a.projected || a.leagueName.localeCompare(b.leagueName));
+    const leagueLine = card.querySelector(".game-day-pulse-leagues");
+    let details = card.querySelector(".game-day-pulse-league-details");
+
+    if (!ordered.length){
+      details?.remove();
+      if (leagueLine) leagueLine.hidden = false;
+      return;
     }
 
-    const ordered = [...rows].sort((a,b)=>b.projected-a.projected || a.leagueName.localeCompare(b.leagueName));
-    const html = ordered.map(row=>`
-      <div class="game-day-pulse-league-row">
-        <span class="game-day-pulse-league-name">${escapeHtml(row.leagueName)}</span>
-        <span class="game-day-pulse-league-proj"><small>Proj</small><strong>${row.projected.toFixed(1)}</strong></span>
-        <span class="game-day-pulse-league-actual"><small>Actual</small><strong>${row.actual.toFixed(1)}</strong></span>
-      </div>`).join("");
+    if (ordered.length === 1){
+      details?.remove();
+      if (leagueLine){
+        leagueLine.hidden = false;
+        leagueLine.textContent = ordered[0].leagueName;
+        leagueLine.title = `Proj ${ordered[0].projected.toFixed(1)} · Actual ${ordered[0].actual.toFixed(1)}`;
+      }
+      return;
+    }
 
-    if (host.innerHTML !== html) host.innerHTML = html;
-    host.hidden = ordered.length===0;
+    if (leagueLine){
+      leagueLine.hidden = true;
+      leagueLine.title = ordered.map(row=>row.leagueName).join(" · ");
+    }
+
+    const wasOpen = Boolean(details?.open);
+    if (!details){
+      details = document.createElement("details");
+      details.className = "game-day-pulse-league-details";
+      card.appendChild(details);
+    }
+
+    const html = `<summary>
+      <span class="game-day-pulse-league-summary-count">${ordered.length} leagues</span>
+      <span class="game-day-pulse-league-summary-label">breakdown</span>
+      <span class="game-day-pulse-league-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div class="game-day-pulse-league-breakdown">${ordered.map(rowMarkup).join("")}</div>`;
+
+    if (details.innerHTML !== html){
+      details.innerHTML = html;
+      details.open = wasOpen;
+    }
   }
 
   async function applyBreakdowns(){
@@ -259,7 +279,6 @@
 
   function init(){
     refresh(true);
-
     const observer = new MutationObserver(mutations=>{
       if (mutations.some(m=>m.addedNodes.length || m.removedNodes.length)) queueApply();
     });
@@ -278,8 +297,6 @@
       }
     });
 
-    /* Actual points move during live games. Refresh the league rows alongside
-       the existing total actual-points refresh. */
     setInterval(()=>{
       latestKey = "";
       refresh(true);
