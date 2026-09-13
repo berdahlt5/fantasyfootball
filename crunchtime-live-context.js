@@ -9,7 +9,8 @@
   const n = value => Number.isFinite(Number(value)) ? Number(value) : 0;
   const f = value => n(value).toFixed(1);
   const roundTenth = value => Math.round(n(value) * 10) / 10;
-  const clampPct = value => Math.min(100, Math.max(0, value));
+  const clamp = (value,min,max) => Math.min(max,Math.max(min,value));
+  const clampPct = value => clamp(value,0,100);
 
   function ensurePolishStyles(){
     if (document.getElementById("crunchTimeSliderSnapStyles")) return;
@@ -42,6 +43,30 @@
     return data.mine.find(item => String(item.id) === id) || null;
   }
 
+  function thumbSize(){
+    try {
+      return window.CSS?.supports?.("-webkit-touch-callout","none") ? 24 : 22;
+    } catch (_) { return 22; }
+  }
+
+  function markerLeft(slider,value,min,max){
+    const width = slider.getBoundingClientRect().width || slider.clientWidth || 0;
+    if (!width) return null;
+    const thumb = thumbSize();
+    const half = thumb / 2;
+    const ratio = clamp((value-min)/Math.max(.1,max-min),0,1);
+    return half + ratio * Math.max(0,width-thumb);
+  }
+
+  function positionMarkers(player,slider,actual,projectedFinal,min,max){
+    const current = player.querySelector(".ct-plan-current-marker");
+    const projected = player.querySelector(".ct-plan-proj-marker");
+    const currentLeft = markerLeft(slider,actual,min,max);
+    const projectedLeft = markerLeft(slider,projectedFinal,min,max);
+    if (current && currentLeft != null) current.style.left = `${currentLeft}px`;
+    if (projected && projectedLeft != null) projected.style.left = `${projectedLeft}px`;
+  }
+
   function scaleSlider(player,row,card){
     const slider = player?.querySelector?.("[data-ct-plan-slider]");
     const wrap = player?.querySelector?.(".ct-plan-slider-wrap");
@@ -56,19 +81,27 @@
 
     if (!slider.dataset.ctBaseMax) slider.dataset.ctBaseMax = String(slider.max || 1);
 
-    let min = 0;
-    let max = Math.max(1,n(slider.dataset.ctBaseMax));
+    let min;
+    let max;
 
-    if (row.live){
-      min = actual;
-      const zoomSpan = Math.max(
-        3,
-        projectedLeft * 2.6,
-        allocation * 1.35,
-        scenarioFinal > projectedFinal ? (scenarioFinal - actual) * 1.25 : 0
-      );
-      max = Math.max(actual + zoomSpan, projectedFinal + .7, scenarioFinal + .6);
-      max = Math.ceil(max * 10) / 10;
+    if (slider.dataset.ctLockedMin != null && slider.dataset.ctLockedMax != null){
+      min = n(slider.dataset.ctLockedMin);
+      max = n(slider.dataset.ctLockedMax);
+    } else if (row.live){
+      /* Zoom the live range once, then keep it fixed while the user drags. */
+      const leftBuffer = Math.max(.8,Math.min(2.2,projectedLeft * 1.2));
+      min = Math.max(0,actual-leftBuffer);
+      const zoomSpan = Math.max(3,projectedLeft*2.6,allocation*1.35);
+      max = Math.max(actual+zoomSpan,projectedFinal+.7,scenarioFinal+.6);
+      max = Math.ceil(max*10)/10;
+      min = Math.floor(min*10)/10;
+      slider.dataset.ctLockedMin = String(min);
+      slider.dataset.ctLockedMax = String(max);
+    } else {
+      min = 0;
+      max = Math.max(1,n(slider.dataset.ctBaseMax));
+      slider.dataset.ctLockedMin = String(min);
+      slider.dataset.ctLockedMax = String(max);
     }
 
     if (max <= min) max = min + 1;
@@ -82,6 +115,10 @@
     slider.style.setProperty("--fill",`${pct(scenarioFinal)}%`);
     slider.dataset.ctScaleMin = String(min);
     slider.dataset.ctScaleMax = String(max);
+
+    /* Native range thumbs travel inside half-thumb insets. Put the fixed
+       markers on that exact same path so a snapped thumb centers on the line. */
+    positionMarkers(player,slider,actual,projectedFinal,min,max);
   }
 
   function decoratePlayer(player,row,card){
@@ -175,18 +212,19 @@
         flashSnap(player);
         slider.dispatchEvent(new Event("input",{bubbles:true}));
         delete slider.dataset.ctSnapDispatch;
-        queue();
+        scaleSlider(player,row,card);
         return;
       }
 
       if (Math.abs(n(slider.value)-projectedFinal) <= .051) flashSnap(player);
-      queue();
+      scaleSlider(player,row,card);
     });
 
     const observer = new MutationObserver(mutations=>{
       if (mutations.some(m=>m.addedNodes.length || m.removedNodes.length || m.type === "characterData")) queue();
     });
     observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    window.addEventListener("resize",queue,{passive:true});
     queue();
   }
 
