@@ -20,14 +20,14 @@
     const opponentActive = Array.isArray(data.theirs) && data.theirs.length > 0;
     if (opponentActive){
       const projectedFinal = n(data.oppScore) + n(data.oppProjectedLeft);
-      label.textContent = "Projected target";
-      title.textContent = `Need ${f(data.target)} pts to beat projected final`;
-      detail.textContent = `Opponent: ${f(data.oppScore)} now + ${f(data.oppProjectedLeft)} projected = ${f(projectedFinal)} projected final`;
+      label.textContent = "Projected target · from here";
+      title.textContent = `Need ${f(data.target)} more to beat projected final`;
+      detail.textContent = `Opponent: ${f(data.oppScore)} now + ${f(data.oppProjectedLeft)} projected left = ${f(projectedFinal)} projected final`;
       head.closest(".ct-points-planner")?.setAttribute("data-target-basis","projected");
     } else {
-      label.textContent = "Win target";
-      title.textContent = `Need ${f(data.target)} pts to win`;
-      detail.textContent = `Opponent is finished at ${f(data.oppScore)}.`;
+      label.textContent = "Win target · from here";
+      title.textContent = `Need ${f(data.target)} more to win`;
+      detail.textContent = `Opponent is finished at ${f(data.oppScore)}. Your current score already includes points scored so far.`;
       head.closest(".ct-points-planner")?.setAttribute("data-target-basis","final");
     }
   }
