@@ -226,6 +226,7 @@
   loadStyle("lineupGlassRefreshStyles","./lineup-glass-refresh.css?v=20260913e");
   loadStyle("uiPolishStyles","./ui-polish.css?v=20260912b");
   loadStyle("appHotfixStyles","./app-hotfix.css?v=20260914c");
+  loadStyle("navLayerFixStyles","./nav-layer-fix.css?v=20260914a");
 
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "schedule-tool.html") {
@@ -234,6 +235,7 @@
     loadStyle("gameDayPulseActualStyles","./gameday-pulse-actual.css?v=20260913a");
     loadStyle("gameDayScoreboardGlassStyles","./gameday-scoreboard-glass.css?v=20260913a");
     loadStyle("gameDayMatchupFootprintStyles","./gameday-matchup-footprint.css?v=20260913a");
+    loadStyle("gameDayPulseDesktopFixStyles","./gameday-pulse-desktop-fix.css?v=20260914a");
 
     loadScript("gameDayPlayerPulseScript","./gameday-player-pulse-windowed.js?v=20260914a");
     loadScript("gameDayPulsePolishScript","./gameday-pulse-polish.js?v=20260913b");
