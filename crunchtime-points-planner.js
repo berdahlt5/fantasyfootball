@@ -212,15 +212,19 @@
   function playerRow(row,target,plan){
     const allocation = n(plan.allocations.get(row.id));
     const pct = target>0 ? Math.min(100,Math.max(0,(allocation/target)*100)) : 0;
+    const projPct = target>0 ? Math.min(100,Math.max(0,(row.expectedRemaining/target)*100)) : 0;
     const status = row.live ? "Live" : "Upcoming";
     const playerTone = tone(allocation,row.expectedRemaining);
     return `<div class="ct-plan-player ${playerTone}" data-player-id="${esc(row.id)}">
       <div class="ct-plan-player-head">
         ${avatar(row)}
-        <div class="ct-plan-player-copy"><strong>${esc(row.name)}</strong><span>${esc(row.position)} · ${esc(row.team)} · ${status} · proj ${f(row.expectedRemaining)}</span></div>
-        <strong class="ct-plan-value" data-ct-assigned>${f(allocation)}</strong>
+        <div class="ct-plan-player-copy"><strong>${esc(row.name)}</strong><span>${esc(row.position)} · ${esc(row.team)} · ${status}</span></div>
+        <div class="ct-plan-value-wrap"><small>Need</small><strong class="ct-plan-value" data-ct-assigned>${f(allocation)}</strong></div>
       </div>
-      <input class="ct-plan-slider" type="range" min="0" max="${Math.max(.1,target)}" step="0.1" value="${allocation}" style="--fill:${pct}%" data-ct-plan-slider data-player-id="${esc(row.id)}" aria-label="Allocate points to ${esc(row.name)}">
+      <div class="ct-plan-slider-wrap" style="--proj:${projPct}%">
+        <input class="ct-plan-slider" type="range" min="0" max="${Math.max(.1,target)}" step="0.1" value="${allocation}" style="--fill:${pct}%" data-ct-plan-slider data-player-id="${esc(row.id)}" aria-label="Points needed from ${esc(row.name)}">
+        <span class="ct-plan-proj-marker" aria-hidden="true"><i></i><b>Proj ${f(row.expectedRemaining)}</b></span>
+      </div>
     </div>`;
   }
 
