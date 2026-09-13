@@ -250,6 +250,6 @@
     loadStyle("crunchTimeLiveContextStyles","./crunchtime-live-context.css?v=20260914d");
     loadScript("crunchTimeCommandCenterScript","./crunchtime-command-center.js?v=20260913a");
     loadScript("crunchTimePointsPlannerScript","./crunchtime-points-planner.js?v=20260914d");
-    loadScript("crunchTimeLiveContextScript","./crunchtime-live-context.js?v=20260914c");
+    loadScript("crunchTimeLiveContextScript","./crunchtime-live-context.js?v=20260914d");
   }
 })();
