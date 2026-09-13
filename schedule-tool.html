@@ -1893,6 +1893,11 @@
       return `<div class="impact-player"><div class="impact-player-main"><span>${escapeHtml(player.name)}</span><span class="impact-pos">${escapeHtml(player.position || "")}</span>${impact.projection > 0 ? `<span class="impact-proj">proj ~${impact.projection.toFixed(1)}</span>` : ""}</div><div class="impact-lines">${impact.helps.length ? `<span class="impact-help">↑ Helps: ${escapeHtml(scheduleLeagueTagList(impact.helps))}</span>` : ""}${impact.hurts.length ? `<span class="impact-hurt">↓ Hurts: ${escapeHtml(scheduleLeagueTagList(impact.hurts))}</span>` : ""}</div></div>`;
     }
 
+    function scheduleOpponentPlayerMarkup(player) {
+      const projection = schedulePlayerProjection(player.playerId);
+      return `<div class="impact-player"><div class="impact-player-main"><span>${escapeHtml(player.name)}</span><span class="impact-pos">${escapeHtml(player.position || "")}</span>${projection > 0 ? `<span class="impact-proj">proj ~${projection.toFixed(1)}</span>` : ""}</div></div>`;
+    }
+
 
     const WATCH_SKILL_POSITIONS = new Set(["QB", "RB", "WR", "TE"]);
 
@@ -2281,7 +2286,7 @@
         ? `<div><div class="impact-section-title">Your players</div><div class="impact-player-list">${analysis.myAll.map(scheduleImpactPlayerMarkup).join("")}</div></div>`
         : `<div><div class="impact-section-title">Your players</div><div class="impact-none">No starters from your teams in this game.</div></div>`;
       const oppMarkup = analysis.oppAll.length
-        ? `<div><div class="impact-section-title">Opponent players</div><div class="impact-player-list">${analysis.oppAll.map(scheduleImpactPlayerMarkup).join("")}</div></div>`
+        ? `<div><div class="impact-section-title">Opponent players</div><div class="impact-player-list">${analysis.oppAll.map(scheduleOpponentPlayerMarkup).join("")}</div></div>`
         : `<div><div class="impact-section-title">Opponent players</div><div class="impact-none">No opponent starters in this game.</div></div>`;
 
       return `<article class="game-card watch-card ${displayTier === "must" ? "priority-game" : ""} ${isPast ? "past-game final-card" : ""}">
