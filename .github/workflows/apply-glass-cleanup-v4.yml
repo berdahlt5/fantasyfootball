@@ -1,0 +1,43 @@
+name: Apply glass cleanup v4
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-glass-cleanup-v4.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply glass cleanup
+        run: python tools/apply-glass-cleanup-v4.py
+      - name: Validate syntax and cleanup
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          schedule = Path('schedule-tool.html').read_text()
+          css = Path('app-shell.css').read_text()
+          assert 'schedulePlayerProjection(' not in schedule
+          assert 'scheduleImpactForPlayer(player.playerId).projection' in schedule
+          assert '/* glass-polish-v4 */' in css
+          assert '.lineup-pulse-pill.warn' in css
+          assert '.team-detail-row td' in css
+          assert '.recent-games' in css
+          assert '.availability' in css
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', schedule, re.S)
+          for i, body in enumerate(scripts):
+              Path(f'/tmp/schedule-inline-{i}.js').write_text(body)
+          print(f'validated markers; wrote {len(scripts)} inline scripts')
+          PY
+          for f in /tmp/schedule-inline-*.js; do node --check "$f"; done
+      - name: Commit changes
+        run: |
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add schedule-tool.html app-shell.css
+          git diff --cached --quiet && exit 0
+          git commit -m "Soften warning glass and remove dark light-mode remnants"
+          git push
