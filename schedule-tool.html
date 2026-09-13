@@ -2403,7 +2403,10 @@
                 else if (analysis.opponentCount > 0) context = { tier: "radar", label: "Opponent only" };
                 else context = { tier: "skip", label: "Low priority" };
               }
-              return `<div class="window-ranked-game">${single ? "" : `<div class="window-rank">#${index + 1} this window${index < capacity ? " · recommended" : ""}</div>`}${renderGame(game,kickoffMode,kickoffColorMap,context)}</div>`;
+              const mustWatch = analysis.crunch.some(item => item.must) || analysis.favorite;
+              const recommendedGame = !single && (mustWatch || index < capacity);
+              const rowClass = `window-ranked-game${recommendedGame ? " recommended" : ""}${mustWatch ? " must-watch" : ""}`;
+              return `<div class="${rowClass}">${single ? "" : `<div class="window-rank">#${index + 1} this window${index < capacity || mustWatch ? " · recommended" : ""}</div>`}${renderGame(game,kickoffMode,kickoffColorMap,context)}</div>`;
             }).join("")}</div>
           </section>`;
         }).join("");
