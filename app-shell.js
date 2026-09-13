@@ -112,18 +112,18 @@
     const status = actions.querySelector(".status-pill");
     if (status) status.remove();
     const current = currentPage();
-    const moreActive = ["lineup-assistant.html","crunchtime.html"].includes(current);
+    const moreActive = ["lineup-assistant.html","waiver-wire-agent.html"].includes(current);
     actions.innerHTML = `
       <nav class="app-nav" aria-label="Primary">
         ${link("index.html","Owner Dashboard","index.html",current)}
         ${link("schedule-tool.html","Game Day Hub","schedule-tool.html",current)}
         ${link("team-rankings.html","Rankings","team-rankings.html",current)}
-        ${link("waiver-wire-agent.html","Waivers","waiver-wire-agent.html",current)}
+        ${link("crunchtime.html","Crunch Time","crunchtime.html",current)}
         <details class="app-more">
           <summary class="${moreActive?"active":""}">More</summary>
           <div class="app-more-menu">
+            <a href="./waiver-wire-agent.html">Waivers</a>
             <a href="./lineup-assistant.html">Lineup Check</a>
-            <a href="./crunchtime.html">Crunchtime</a>
           </div>
         </details>
         <button class="app-nav-button app-settings-button" type="button" data-open-app-settings>Settings</button>
@@ -229,7 +229,7 @@
 
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "schedule-tool.html") {
-    loadStyle("gameDayPulsePolishStyles","./gameday-pulse-polish.css?v=20260913b");
+    loadStyle("gameDayPulsePolishStyles","./gameday-pulse-polish.css?v=20260914c");
     loadStyle("gameDayPulseWindowStyles","./gameday-pulse-windows.css?v=20260913a");
     loadStyle("gameDayPulseActualStyles","./gameday-pulse-actual.css?v=20260913a");
     loadStyle("gameDayScoreboardGlassStyles","./gameday-scoreboard-glass.css?v=20260913a");
