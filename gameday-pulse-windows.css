@@ -1,0 +1,89 @@
+/* Player Pulse time-window selector. Loaded after the main pulse polish. */
+.game-day-pulse-window-tabs{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin:0 0 13px;
+  padding:4px;
+  border:1px solid rgba(119,158,218,.22);
+  border-radius:999px;
+  background:linear-gradient(115deg,rgba(255,255,255,.48),rgba(235,245,255,.40),rgba(235,249,242,.44));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.90),0 5px 15px rgba(77,111,160,.055);
+  backdrop-filter:blur(13px) saturate(130%);
+  -webkit-backdrop-filter:blur(13px) saturate(130%);
+}
+
+.game-day-pulse-window{
+  appearance:none;
+  border:1px solid transparent;
+  border-radius:999px;
+  min-height:29px;
+  padding:6px 11px;
+  background:transparent;
+  color:#71809a;
+  font:inherit;
+  font-size:.61rem;
+  font-weight:1000;
+  letter-spacing:.025em;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+
+.game-day-pulse-window:hover{
+  color:#536b8c;
+  background:rgba(255,255,255,.42);
+}
+
+.game-day-pulse-window.active{
+  color:#43667d;
+  border-color:rgba(105,163,207,.24);
+  background:linear-gradient(105deg,rgba(89,203,234,.17),rgba(121,155,234,.14),rgba(166,226,200,.18));
+  box-shadow:0 4px 12px rgba(93,138,192,.08),inset 0 1px 0 rgba(255,255,255,.94);
+}
+
+.game-day-pulse-window:focus-visible{
+  outline:2px solid rgba(101,156,223,.58);
+  outline-offset:2px;
+}
+
+#gameDayPlayerPulse.is-collapsed .game-day-pulse-window-tabs{
+  display:none!important;
+}
+
+html[data-theme="dark"] .game-day-pulse-window-tabs{
+  border-color:rgba(103,148,219,.20);
+  background:linear-gradient(115deg,rgba(35,52,91,.60),rgba(26,42,76,.58),rgba(28,65,63,.48));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 6px 16px rgba(0,0,0,.10);
+}
+
+html[data-theme="dark"] .game-day-pulse-window{
+  color:#9fafc8;
+}
+
+html[data-theme="dark"] .game-day-pulse-window:hover{
+  color:#c0d0e8;
+  background:rgba(48,68,111,.43);
+}
+
+html[data-theme="dark"] .game-day-pulse-window.active{
+  color:#b8d9df;
+  border-color:rgba(100,157,211,.25);
+  background:linear-gradient(105deg,rgba(66,164,202,.18),rgba(104,117,211,.18),rgba(73,173,139,.18));
+  box-shadow:0 5px 14px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+@media(max-width:560px){
+  .game-day-pulse-window-tabs{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    width:100%;
+    border-radius:13px;
+  }
+  .game-day-pulse-window{
+    width:100%;
+    padding:6px 7px;
+    white-space:normal;
+    line-height:1.15;
+  }
+}
