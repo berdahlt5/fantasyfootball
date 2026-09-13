@@ -246,8 +246,8 @@
 
   if (page === "crunchtime.html") {
     loadStyle("crunchTimeCommandCenterStyles","./crunchtime-command-center.css?v=20260913a");
-    loadStyle("crunchTimePointsPlannerStyles","./crunchtime-points-planner.css?v=20260913b");
+    loadStyle("crunchTimePointsPlannerStyles","./crunchtime-points-planner.css?v=20260913c");
     loadScript("crunchTimeCommandCenterScript","./crunchtime-command-center.js?v=20260913a");
-    loadScript("crunchTimePointsPlannerScript","./crunchtime-points-planner.js?v=20260913b");
+    loadScript("crunchTimePointsPlannerScript","./crunchtime-points-planner.js?v=20260913c");
   }
 })();
