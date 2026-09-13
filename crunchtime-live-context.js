@@ -5,13 +5,65 @@
   if (page !== "crunchtime.html") return;
 
   let queued = false;
+  const snapTimers = new WeakMap();
   const n = value => Number.isFinite(Number(value)) ? Number(value) : 0;
   const f = value => n(value).toFixed(1);
+  const roundTenth = value => Math.round(n(value) * 10) / 10;
+  const clampPct = value => Math.min(100, Math.max(0, value));
 
-  function decoratePlayer(player,row){
+  function rowForPlayer(card, player){
+    const data = card?.__ctPlannerData;
+    const id = String(player?.dataset?.playerId || "");
+    if (!data || !id || !Array.isArray(data.mine)) return null;
+    return data.mine.find(item => String(item.id) === id) || null;
+  }
+
+  function scaleSlider(player,row,card){
+    const slider = player?.querySelector?.("[data-ct-plan-slider]");
+    const wrap = player?.querySelector?.(".ct-plan-slider-wrap");
+    const plan = card?.__ctPlannerState;
+    if (!slider || !wrap || !plan) return;
+
+    const actual = Math.max(0,n(row.actual));
+    const projectedLeft = Math.max(0,n(row.expectedRemaining));
+    const projectedFinal = actual + projectedLeft;
+    const allocation = Math.max(0,n(plan.allocations?.get?.(row.id)));
+    const scenarioFinal = actual + allocation;
+
+    if (!slider.dataset.ctBaseMax) slider.dataset.ctBaseMax = String(slider.max || 1);
+
+    let min = 0;
+    let max = Math.max(1,n(slider.dataset.ctBaseMax));
+
+    if (row.live){
+      min = actual;
+      const zoomSpan = Math.max(
+        3,
+        projectedLeft * 2.6,
+        allocation * 1.35,
+        scenarioFinal > projectedFinal ? (scenarioFinal - actual) * 1.25 : 0
+      );
+      max = Math.max(actual + zoomSpan, projectedFinal + .7, scenarioFinal + .6);
+      max = Math.ceil(max * 10) / 10;
+    }
+
+    if (max <= min) max = min + 1;
+    slider.min = String(roundTenth(min));
+    slider.max = String(roundTenth(max));
+
+    const span = Math.max(.1,max-min);
+    const pct = value => clampPct(((value-min)/span)*100);
+    wrap.style.setProperty("--current",`${pct(actual)}%`);
+    wrap.style.setProperty("--proj",`${pct(projectedFinal)}%`);
+    slider.style.setProperty("--fill",`${pct(scenarioFinal)}%`);
+    slider.dataset.ctScaleMin = String(min);
+    slider.dataset.ctScaleMax = String(max);
+  }
+
+  function decoratePlayer(player,row,card){
     if (!player || !row) return;
 
-    const actual = n(row.actual);
+    const actual = Math.max(0,n(row.actual));
     const projectedLeft = Math.max(0,n(row.expectedRemaining));
     const projectedFinal = actual + projectedLeft;
 
@@ -23,7 +75,7 @@
         metrics.className = "ct-plan-live-metrics";
         copy.appendChild(metrics);
       }
-      metrics.innerHTML = `<span><b>Actual</b> ${f(actual)}</span><i>·</i><span><b>${row.live?"Live proj":"Projection"}</b> ${f(projectedFinal)}</span>`;
+      metrics.innerHTML = `<span class="actual"><strong>${f(actual)}</strong> actual</span><i>·</i><span class="projected"><strong>${f(projectedFinal)}</strong> projected</span>`;
     }
 
     const slider = player.querySelector("[data-ct-plan-slider]");
@@ -33,6 +85,8 @@
       slider.dataset.ctProjectedFinal = f(projectedFinal);
       slider.dataset.ctProjectedLeft = f(projectedLeft);
     }
+
+    scaleSlider(player,row,card);
   }
 
   function decorateCard(card){
@@ -45,7 +99,7 @@
       let player = null;
       try { player = card.querySelector(`.ct-plan-player[data-player-id="${CSS.escape(id)}"]`); }
       catch (_) { player = card.querySelector(`.ct-plan-player[data-player-id="${id.replace(/"/g,"\\\"")}"]`); }
-      decoratePlayer(player,row);
+      decoratePlayer(player,row,card);
     }
 
     const equation = card.querySelector("[data-ct-plan-equation]");
@@ -66,7 +120,43 @@
     requestAnimationFrame(apply);
   }
 
+  function flashSnap(player){
+    if (!player) return;
+    player.classList.add("is-proj-snapped");
+    clearTimeout(snapTimers.get(player));
+    const timer = setTimeout(()=>player.classList.remove("is-proj-snapped"),420);
+    snapTimers.set(player,timer);
+  }
+
   function init(){
+    document.addEventListener("input",event=>{
+      const slider = event.target.closest?.("[data-ct-plan-slider]");
+      if (!slider) return;
+      const player = slider.closest(".ct-plan-player");
+      const card = slider.closest(".ct-matchup-card");
+      const row = rowForPlayer(card,player);
+      if (!player || !card || !row) return;
+
+      const projectedFinal = Math.max(0,n(row.actual)) + Math.max(0,n(row.expectedRemaining));
+      const min = n(slider.min);
+      const max = Math.max(min+.1,n(slider.max));
+      const tolerance = Math.max(.5,(max-min)*.02);
+      const raw = n(slider.value);
+
+      if (slider.dataset.ctSnapDispatch !== "1" && Math.abs(raw-projectedFinal) <= tolerance && Math.abs(raw-projectedFinal) > .049){
+        slider.value = String(roundTenth(projectedFinal));
+        slider.dataset.ctSnapDispatch = "1";
+        flashSnap(player);
+        slider.dispatchEvent(new Event("input",{bubbles:true}));
+        delete slider.dataset.ctSnapDispatch;
+        queue();
+        return;
+      }
+
+      if (Math.abs(n(slider.value)-projectedFinal) <= .051) flashSnap(player);
+      queue();
+    });
+
     const observer = new MutationObserver(mutations=>{
       if (mutations.some(m=>m.addedNodes.length || m.removedNodes.length || m.type === "characterData")) queue();
     });
