@@ -1,0 +1,21 @@
+/* Compact live scoring context for the Crunch Time allocation sliders. */
+.ct-plan-player-copy{align-content:center}
+.ct-plan-live-metrics{display:flex;align-items:center;gap:4px;margin-top:3px;min-width:0;color:#8190a5;font-size:.43rem;line-height:1.15;white-space:nowrap}
+.ct-plan-live-metrics span{margin:0!important;overflow:visible!important;text-overflow:clip!important;color:#8190a5!important}
+.ct-plan-live-metrics b{color:#536f91;font-weight:1000}
+.ct-plan-live-metrics span:first-child b{color:#3f806f}
+.ct-plan-live-metrics i{font-style:normal;color:#aab4c1}
+.ct-plan-value-wrap small{white-space:nowrap}
+
+/* The slider always represents additional points from this moment forward. */
+.ct-plan-proj-marker b{letter-spacing:.005em}
+
+html[data-theme="dark"] .ct-plan-live-metrics,
+html[data-theme="dark"] .ct-plan-live-metrics span{color:#91a2b8!important}
+html[data-theme="dark"] .ct-plan-live-metrics b{color:#a9c3e2}
+html[data-theme="dark"] .ct-plan-live-metrics span:first-child b{color:#7bc5ad}
+html[data-theme="dark"] .ct-plan-live-metrics i{color:#64768f}
+
+@media(max-width:560px){
+  .ct-plan-live-metrics{gap:3px;font-size:.41rem}
+}
