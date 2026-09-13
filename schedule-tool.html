@@ -1205,6 +1205,7 @@
             myPlayers: (item.roster.players || []).map(String),
             myReserve: (item.roster.reserve || []).map(String),
             myTaxi: (item.roster.taxi || []).map(String),
+            rosters: item.rosters || [],
             rosterMeta
           };
         });
@@ -1443,8 +1444,20 @@
               && String(matchup.roster_id) !== String(myMatchup.roster_id)
             ) || null;
 
+            const opponentRoster = opponent
+              ? (league.rosters || []).find(roster => String(roster.roster_id) === String(opponent.roster_id)) || null
+              : null;
+            const matchupOpponentStarters = (opponent?.starters || []).map(String).filter(id => id && id !== "0");
+            const rosterOpponentStarters = (opponentRoster?.starters || []).map(String).filter(id => id && id !== "0");
+            const resolvedOpponentStarters = matchupOpponentStarters.length ? matchupOpponentStarters : rosterOpponentStarters;
+            const matchupOpponentPlayers = (opponent?.players || []).map(String).filter(id => id && id !== "0");
+            const rosterOpponentPlayers = (opponentRoster?.players || []).map(String).filter(id => id && id !== "0");
+            const resolvedOpponentPlayers = league.isBestBall
+              ? (matchupOpponentPlayers.length ? matchupOpponentPlayers : rosterOpponentPlayers)
+              : resolvedOpponentStarters;
+
             const myProjection = projectedLineupScore(myMatchup.starters, projectionMap, league);
-            const opponentProjection = projectedLineupScore(opponent?.starters, projectionMap, league);
+            const opponentProjection = projectedLineupScore(resolvedOpponentStarters, projectionMap, league);
             const hasProjections = myProjection.matchedStarters > 0 && opponentProjection.matchedStarters > 0;
 
             return {
@@ -1457,10 +1470,8 @@
               opponentScore: scoreValue(opponent),
               myProjection: hasProjections ? myProjection.total : null,
               opponentProjection: hasProjections ? opponentProjection.total : null,
-              opponentPlayerIds: opponent
-                ? (league.isBestBall ? (opponent.players || []) : (opponent.starters || []))
-                : [],
-              opponentStarterIds: opponent?.starters || [],
+              opponentPlayerIds: resolvedOpponentPlayers,
+              opponentStarterIds: resolvedOpponentStarters,
               error: opponent ? "" : "No opponent is assigned to this matchup."
             };
           })
@@ -1479,7 +1490,7 @@
         state.opponentExposures = [];
         for (const live of state.liveScores) {
           const league = state.leagues.find(item => String(item.league_id) === String(live.leagueId));
-          if (!league || !live.opponentRosterId) continue;
+          if (!league || live.opponentRosterId === null || live.opponentRosterId === undefined) continue;
 
           const opponentMeta = league.rosterMeta?.[String(live.opponentRosterId)] || {};
           const starterIds = new Set((live.opponentStarterIds || []).map(String));
@@ -1487,14 +1498,15 @@
             const playerId = String(rawPlayerId || "");
             if (!playerId || playerId === "0") continue;
             const player = getPlayer(playerId);
+            const projectionRow = state.weeklyProjections instanceof Map ? state.weeklyProjections.get(playerId) : null;
             state.opponentExposures.push({
               leagueId: league.league_id,
               leagueName: `${league.name}: ${opponentMeta.name || "Opponent"}`,
               opponentName: opponentMeta.name || "Opponent",
               playerId,
               name: playerName(player),
-              position: player.position || "—",
-              team: normalizeTeam(player.team),
+              position: player.position || projectionRow?.player?.position || "—",
+              team: normalizeTeam(player.team || projectionRow?.team || projectionRow?.player?.team),
               bucket: starterIds.has(playerId) ? "starter" : "bench",
               isBestBall: league.isBestBall
             });
@@ -1861,7 +1873,8 @@
     function scheduleGameStarterExposures(game, opponent = false) {
       const teams = new Set([game.away?.abbreviation, game.home?.abbreviation].map(normalizeTeam).filter(Boolean));
       const source = opponent ? (state.opponentExposures || []) : (state.rosterExposures || []);
-      return source.filter(item => state.selectedLeagueIds.has(item.leagueId) && (item.bucket === "starter" || item.isBestBall) && teams.has(normalizeTeam(item.team)));
+      const selectedLeagueIds = new Set([...state.selectedLeagueIds].map(String));
+      return source.filter(item => selectedLeagueIds.has(String(item.leagueId)) && (item.bucket === "starter" || item.isBestBall) && teams.has(normalizeTeam(item.team)));
     }
 
     function scheduleProjectionForExposure(exposure) {
@@ -1874,8 +1887,9 @@
     }
 
     function scheduleImpactForPlayer(playerId) {
-      const relevantMine = (state.rosterExposures || []).filter(item => String(item.playerId) === String(playerId) && state.selectedLeagueIds.has(item.leagueId) && (item.bucket === "starter" || item.isBestBall));
-      const relevantOpp = (state.opponentExposures || []).filter(item => String(item.playerId) === String(playerId) && state.selectedLeagueIds.has(item.leagueId) && (item.bucket === "starter" || item.isBestBall));
+      const selectedLeagueIds = new Set([...state.selectedLeagueIds].map(String));
+      const relevantMine = (state.rosterExposures || []).filter(item => String(item.playerId) === String(playerId) && selectedLeagueIds.has(String(item.leagueId)) && (item.bucket === "starter" || item.isBestBall));
+      const relevantOpp = (state.opponentExposures || []).filter(item => String(item.playerId) === String(playerId) && selectedLeagueIds.has(String(item.leagueId)) && (item.bucket === "starter" || item.isBestBall));
       const uniqueNames = items => [...new Set(items.map(item => scheduleBaseLeagueName(item.leagueName)).filter(Boolean))].sort((a,b) => Number(isPriorityLeagueName(b)) - Number(isPriorityLeagueName(a)) || a.localeCompare(b));
       const helps = uniqueNames(relevantMine);
       const hurts = uniqueNames(relevantOpp);
@@ -2084,8 +2098,9 @@
 
     function aggregateData() {
       const exposures = selectedExposures();
+      const selectedLeagueIds = new Set([...state.selectedLeagueIds].map(String));
       const opponentExposures = (state.opponentExposures || []).filter(
-        exposure => state.selectedLeagueIds.has(exposure.leagueId)
+        exposure => selectedLeagueIds.has(String(exposure.leagueId))
       );
       const teamToGame = new Map();
 
