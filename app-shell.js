@@ -225,7 +225,7 @@
 
   loadStyle("lineupGlassRefreshStyles","./lineup-glass-refresh.css?v=20260913e");
   loadStyle("uiPolishStyles","./ui-polish.css?v=20260912b");
-  loadStyle("appHotfixStyles","./app-hotfix.css?v=20260913a");
+  loadStyle("appHotfixStyles","./app-hotfix.css?v=20260914c");
 
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "schedule-tool.html") {
