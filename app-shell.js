@@ -201,3 +201,13 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once:true });
   else init();
 })();
+
+(() => {
+  "use strict";
+  if (document.getElementById("lineupGlassRefreshStyles")) return;
+  const link = document.createElement("link");
+  link.id = "lineupGlassRefreshStyles";
+  link.rel = "stylesheet";
+  link.href = "./lineup-glass-refresh.css?v=20260912";
+  document.head.appendChild(link);
+})();
