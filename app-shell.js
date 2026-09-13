@@ -208,7 +208,7 @@
     const link = document.createElement("link");
     link.id = "lineupGlassRefreshStyles";
     link.rel = "stylesheet";
-    link.href = "./lineup-glass-refresh.css?v=20260912d";
+    link.href = "./lineup-glass-refresh.css?v=20260913e";
     document.head.appendChild(link);
   }
   if (!document.getElementById("uiPolishStyles")) {
@@ -218,19 +218,27 @@
     link.href = "./ui-polish.css?v=20260912b";
     document.head.appendChild(link);
   }
+  if (!document.getElementById("appHotfixStyles")) {
+    const link = document.createElement("link");
+    link.id = "appHotfixStyles";
+    link.rel = "stylesheet";
+    link.href = "./app-hotfix.css?v=20260913a";
+    document.head.appendChild(link);
+  }
+
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "schedule-tool.html") {
-    if (!document.getElementById("weeklyPulseBootstrapScript")) {
-      const bootstrap = document.createElement("script");
-      bootstrap.id = "weeklyPulseBootstrapScript";
-      bootstrap.src = "./weekly-pulse-bootstrap.js?v=20260913a";
-      bootstrap.async = false;
-      document.head.appendChild(bootstrap);
+    if (!document.getElementById("gameDayPlayerPulseScript")) {
+      const pulse = document.createElement("script");
+      pulse.id = "gameDayPlayerPulseScript";
+      pulse.src = "./gameday-player-pulse.js?v=20260913a";
+      pulse.async = false;
+      document.head.appendChild(pulse);
     }
     if (!document.getElementById("gameDayEnhancementsScript")) {
       const script = document.createElement("script");
       script.id = "gameDayEnhancementsScript";
-      script.src = "./game-day-enhancements.js?v=20260913b";
+      script.src = "./game-day-enhancements.js?v=20260913c";
       script.async = false;
       document.head.appendChild(script);
     }
