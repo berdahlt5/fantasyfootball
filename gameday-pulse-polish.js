@@ -17,20 +17,27 @@
     catch (_) {}
   }
 
+  function setText(node,value){
+    if (node && node.textContent !== value) node.textContent = value;
+  }
+
   function weekFromHost(host){
     const title = host.querySelector(".game-day-pulse-title")?.textContent || "";
     const match = title.match(/week\s+(\d+)/i);
     return match ? match[1] : "";
   }
 
-  function applyCollapsedState(host, button){
+  function applyCollapsedState(host,button){
     const collapsed = readCollapsed();
-    host.classList.toggle("is-collapsed", collapsed);
-    button.setAttribute("aria-expanded", collapsed ? "false" : "true");
-    button.setAttribute("aria-label", collapsed ? "Expand player pulse" : "Minimize player pulse");
-    button.innerHTML = collapsed
+    host.classList.toggle("is-collapsed",collapsed);
+    const expanded = collapsed ? "false" : "true";
+    const label = collapsed ? "Expand player pulse" : "Minimize player pulse";
+    if (button.getAttribute("aria-expanded") !== expanded) button.setAttribute("aria-expanded",expanded);
+    if (button.getAttribute("aria-label") !== label) button.setAttribute("aria-label",label);
+    const html = collapsed
       ? `<span class="pulse-collapse-icon" aria-hidden="true">＋</span><span>Expand</span>`
       : `<span class="pulse-collapse-icon" aria-hidden="true">−</span><span>Minimize</span>`;
+    if (button.innerHTML !== html) button.innerHTML = html;
   }
 
   function ensureHeader(host){
@@ -38,11 +45,8 @@
     if (!head) return;
 
     const week = weekFromHost(host);
-    const title = head.querySelector(".game-day-pulse-title");
-    if (title && week) title.textContent = `Week ${week} Player Pulse`;
-
-    const eyebrow = head.querySelector(".game-day-pulse-eyebrow");
-    if (eyebrow) eyebrow.textContent = "Your cross-league gameday edge";
+    if (week) setText(head.querySelector(".game-day-pulse-title"),`Week ${week} Player Pulse`);
+    setText(head.querySelector(".game-day-pulse-eyebrow"),"Your cross-league gameday edge");
 
     let actions = head.querySelector(".game-day-pulse-head-actions");
     if (!actions){
@@ -58,28 +62,19 @@
       button = document.createElement("button");
       button.type = "button";
       button.className = "game-day-pulse-collapse";
-      button.addEventListener("click", () => {
-        const next = !host.classList.contains("is-collapsed");
-        writeCollapsed(next);
-        applyCollapsedState(host, button);
+      button.addEventListener("click",()=>{
+        writeCollapsed(!host.classList.contains("is-collapsed"));
+        applyCollapsedState(host,button);
       });
       actions.appendChild(button);
     }
-
-    applyCollapsedState(host, button);
-  }
-
-  function projectionFromCard(card){
-    const small = card.querySelector(".game-day-pulse-score small");
-    if (!small) return null;
-    const match = String(small.textContent || "").match(/(?:For|Against)\s+([0-9]+(?:\.[0-9]+)?)/i);
-    return match ? Number(match[1]) : null;
+    applyCollapsedState(host,button);
   }
 
   function leagueCount(card){
     const line = String(card.querySelector(".game-day-pulse-leagues")?.textContent || "").trim();
     if (!line || /^cross-league$/i.test(line)) return 1;
-    return line.split("·").map(value => value.trim()).filter(Boolean).length || 1;
+    return line.split("·").map(value=>value.trim()).filter(Boolean).length || 1;
   }
 
   function convertScores(host){
@@ -88,15 +83,17 @@
       const strong = score?.querySelector("strong");
       const label = score?.querySelector("span");
       const small = score?.querySelector("small");
-      if (!score || !strong || !label || !small) continue;
+      if (!score || !strong || !label || !small || score.dataset.display === "projection") continue;
 
-      const projection = projectionFromCard(card);
-      if (projection === null || !Number.isFinite(projection)) continue;
+      const match = String(small.textContent || "").match(/(?:For|Against)\s+([0-9]+(?:\.[0-9]+)?)/i);
+      if (!match) continue;
+      const projection = Number(match[1]);
+      if (!Number.isFinite(projection)) continue;
 
-      strong.textContent = projection.toFixed(1);
-      label.textContent = "Proj. pts";
+      setText(strong,projection.toFixed(1));
+      setText(label,"Proj. pts");
       const count = leagueCount(card);
-      small.textContent = count > 1 ? `Across ${count} leagues` : "Projected this week";
+      setText(small,count>1?`Across ${count} leagues`:"Projected this week");
       score.dataset.display = "projection";
     }
   }
@@ -117,10 +114,12 @@
 
   function init(){
     scheduleEnhance();
-    const observer = new MutationObserver(scheduleEnhance);
-    observer.observe(document.body, {childList:true, subtree:true});
+    const observer = new MutationObserver(mutations=>{
+      if (mutations.some(m=>m.addedNodes.length || m.removedNodes.length)) scheduleEnhance();
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
   }
 
   if (document.body) init();
-  else document.addEventListener("DOMContentLoaded", init, {once:true});
+  else document.addEventListener("DOMContentLoaded",init,{once:true});
 })();
