@@ -80,10 +80,10 @@
     }
 
     for (const exposure of fp.mine.filter(isSpecial)){
-      score += (1 + safeProjection(exposure)*.12 + (priorityLeague(exposure)?.5:0))*(exposure?.isBestBall?.3:1);
+      score += (1 + safeProjection(exposure)*.12 + (priorityLeague(exposure)?.5:0))*(exposure?.isBestBall ? .3 : 1);
     }
     for (const exposure of fp.opponents.filter(isSpecial)){
-      score += (.2 + safeProjection(exposure)*.04)*(exposure?.isBestBall?.3:1);
+      score += (.2 + safeProjection(exposure)*.04)*(exposure?.isBestBall ? .3 : 1);
     }
 
     /* Breadth and repeat exposure both matter, but are smaller than the actual
