@@ -208,6 +208,6 @@
   const link = document.createElement("link");
   link.id = "lineupGlassRefreshStyles";
   link.rel = "stylesheet";
-  link.href = "./lineup-glass-refresh.css?v=20260912";
+  link.href = "./lineup-glass-refresh.css?v=20260912b";
   document.head.appendChild(link);
 })();
