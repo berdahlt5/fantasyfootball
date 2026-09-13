@@ -204,10 +204,26 @@
 
 (() => {
   "use strict";
-  if (document.getElementById("lineupGlassRefreshStyles")) return;
-  const link = document.createElement("link");
-  link.id = "lineupGlassRefreshStyles";
-  link.rel = "stylesheet";
-  link.href = "./lineup-glass-refresh.css?v=20260912c";
-  document.head.appendChild(link);
+  if (!document.getElementById("lineupGlassRefreshStyles")) {
+    const link = document.createElement("link");
+    link.id = "lineupGlassRefreshStyles";
+    link.rel = "stylesheet";
+    link.href = "./lineup-glass-refresh.css?v=20260912d";
+    document.head.appendChild(link);
+  }
+  if (!document.getElementById("uiPolishStyles")) {
+    const link = document.createElement("link");
+    link.id = "uiPolishStyles";
+    link.rel = "stylesheet";
+    link.href = "./ui-polish.css?v=20260912a";
+    document.head.appendChild(link);
+  }
+  const page = (location.pathname.split("/").pop() || "").toLowerCase();
+  if (page === "schedule-tool.html" && !document.getElementById("gameDayEnhancementsScript")) {
+    const script = document.createElement("script");
+    script.id = "gameDayEnhancementsScript";
+    script.src = "./game-day-enhancements.js?v=20260912a";
+    script.defer = true;
+    document.head.appendChild(script);
+  }
 })();
