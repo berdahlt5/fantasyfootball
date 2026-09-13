@@ -84,6 +84,8 @@ html:not([data-theme="dark"]) .roster-position-head {
 
 /* -------------------------------------------------------------------------
    GAME DAY HUB: player identity treatment for matchup-context cards.
+   Player subtitle shows the fantasy league(s) where that player is your
+   opponent this week, not the player's NFL team.
    ------------------------------------------------------------------------- */
 .impact-player.gameday-enhanced-player {
   position:relative!important;
@@ -123,30 +125,32 @@ html[data-theme="dark"] .gameday-player-photo {
   object-fit:cover;
   object-position:center top;
 }
-.gameday-player-team {
+.gameday-player-leagues {
   display:flex;
-  align-items:center;
-  gap:5px;
+  align-items:baseline;
+  gap:6px;
   flex-wrap:wrap;
-  margin-top:3px;
-  color:var(--app-muted);
+  margin-top:4px;
+  min-width:0;
   font-size:.62rem;
   line-height:1.25;
-  font-weight:750;
 }
-.gameday-player-team .gameday-team-name {
-  color:var(--app-accent-strong);
-  font-weight:850;
-}
-html[data-theme="dark"] .gameday-player-team .gameday-team-name { color:#a9c9ff; }
-.gameday-player-team .gameday-player-position::before {
-  content:"•";
-  margin-right:5px;
+.gameday-league-label {
   color:var(--app-muted);
+  font-weight:700;
+  white-space:nowrap;
 }
+.gameday-league-name {
+  min-width:0;
+  color:var(--app-accent-strong);
+  font-weight:900;
+  overflow-wrap:anywhere;
+}
+html[data-theme="dark"] .gameday-league-name { color:#a9c9ff; }
 
 @media(max-width:620px){
   .impact-player.gameday-enhanced-player{min-height:54px;padding-left:52px!important}
   .gameday-player-photo{left:8px;width:34px;height:34px;border-radius:10px}
-  .gameday-player-team{font-size:.58rem}
+  .gameday-player-leagues{display:grid;gap:1px;font-size:.58rem;margin-top:3px}
+  .gameday-league-label{font-size:.54rem}
 }
