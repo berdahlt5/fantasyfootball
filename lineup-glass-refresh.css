@@ -285,6 +285,19 @@ html:not([data-theme="dark"]) .loading-line.show {
   opacity:1!important;
 }
 
+/* Dashboard metric actions should read like text links, not a filled bar. */
+.metric-action {
+  display:inline-flex!important;
+  width:auto!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  border-radius:0!important;
+}
+html[data-theme="dark"] .metric-action{color:#a9c8ff!important}
+html:not([data-theme="dark"]) .metric-action{color:var(--app-accent-strong)!important}
+
 @media (hover:hover) {
   html[data-theme="dark"] .lineup-pulse-pill.critical:hover,
   html[data-theme="dark"] .lineup-pulse-pill.warn:hover,
