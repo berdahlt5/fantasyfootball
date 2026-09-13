@@ -197,8 +197,6 @@
     const cards = [...document.querySelectorAll("#gameDayPlayerPulse .game-day-pulse-card")];
     if (!cards.length) return;
 
-    /* The visible ordering now follows the same projected-points number shown
-       on each card for every Player Pulse window. */
     sortPulseLists();
 
     const directory = await getDirectory();
@@ -272,4 +270,27 @@
 
   if (document.body) init();
   else document.addEventListener("DOMContentLoaded",init,{once:true});
+})();
+
+/* The per-league breakdown is loaded from the live actual-points module so it
+   follows the same cache and Game Day Hub lifecycle as the totals above. */
+(() => {
+  "use strict";
+  const page = (location.pathname.split("/").pop() || "").toLowerCase();
+  if (page !== "schedule-tool.html") return;
+
+  if (!document.getElementById("gameDayPulseLeagueBreakdownStyles")){
+    const link = document.createElement("link");
+    link.id = "gameDayPulseLeagueBreakdownStyles";
+    link.rel = "stylesheet";
+    link.href = "./gameday-pulse-league-breakdown.css?v=20260913a";
+    document.head.appendChild(link);
+  }
+  if (!document.getElementById("gameDayPulseLeagueBreakdownScript")){
+    const script = document.createElement("script");
+    script.id = "gameDayPulseLeagueBreakdownScript";
+    script.src = "./gameday-pulse-league-breakdown.js?v=20260913a";
+    script.async = false;
+    document.head.appendChild(script);
+  }
 })();
