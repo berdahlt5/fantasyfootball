@@ -5,22 +5,10 @@
   if (page !== "schedule-tool.html") return;
 
   const HUB_NAME = "Game Day Hub";
-  const TEAM_NAMES = {
-    ARI:"Arizona Cardinals",ATL:"Atlanta Falcons",BAL:"Baltimore Ravens",BUF:"Buffalo Bills",
-    CAR:"Carolina Panthers",CHI:"Chicago Bears",CIN:"Cincinnati Bengals",CLE:"Cleveland Browns",
-    DAL:"Dallas Cowboys",DEN:"Denver Broncos",DET:"Detroit Lions",GB:"Green Bay Packers",
-    HOU:"Houston Texans",IND:"Indianapolis Colts",JAX:"Jacksonville Jaguars",JAC:"Jacksonville Jaguars",
-    KC:"Kansas City Chiefs",LV:"Las Vegas Raiders",LAC:"Los Angeles Chargers",LAR:"Los Angeles Rams",
-    MIA:"Miami Dolphins",MIN:"Minnesota Vikings",NE:"New England Patriots",NO:"New Orleans Saints",
-    NYG:"New York Giants",NYJ:"New York Jets",PHI:"Philadelphia Eagles",PIT:"Pittsburgh Steelers",
-    SEA:"Seattle Seahawks",SF:"San Francisco 49ers",TB:"Tampa Bay Buccaneers",TEN:"Tennessee Titans",
-    WAS:"Washington Commanders",WSH:"Washington Commanders"
-  };
-  const TEAM_CODES = Object.keys(TEAM_NAMES).sort((a,b)=>b.length-a.length);
 
   function renamePage(){
     const heading = document.querySelector(".brand h1, .topbar h1, h1");
-    if (heading && /watch planner|schedule tool/i.test(heading.textContent || "")) heading.textContent = HUB_NAME;
+    if (heading && /watch planner|schedule tool|game day hub/i.test(heading.textContent || "")) heading.textContent = HUB_NAME;
     document.title = `Fantasy Assistant · ${HUB_NAME}`;
   }
 
@@ -49,17 +37,6 @@
     return attrs.find(Boolean) || "";
   }
 
-  function extractTeamCode(card){
-    const direct = card.dataset.team || card.getAttribute("data-team") || card.querySelector("[data-team]")?.getAttribute("data-team");
-    if (direct && TEAM_NAMES[String(direct).toUpperCase()]) return String(direct).toUpperCase();
-    const text = ` ${card.textContent || ""} `;
-    for (const code of TEAM_CODES){
-      const re = new RegExp(`(?:^|[^A-Z])${code}(?:$|[^A-Z])`, "i");
-      if (re.test(text)) return code;
-    }
-    return "";
-  }
-
   function candidateTexts(card){
     const nodes = [
       card.querySelector(".impact-player-main"),
@@ -72,28 +49,37 @@
     const parts = [];
     for (const value of raw){
       for (const bit of String(value).split(/\n|·|•|\|| — | – | - /)){
-        const clean = bit.replace(/\b(QB|RB|WR|TE|K|DEF|DST)\b.*$/i, "").replace(/\b\d+(?:\.\d+)?\s*(?:pts?|points?)\b.*$/i, "").trim();
+        const clean = bit
+          .replace(/\b(QB|RB|WR|TE|K|DEF|DST)\b.*$/i, "")
+          .replace(/\b\d+(?:\.\d+)?\s*(?:pts?|points?)\b.*$/i, "")
+          .trim();
         if (clean && clean.split(/\s+/).length >= 2 && clean.length <= 45) parts.push(clean);
       }
     }
     return [...new Set(parts)];
   }
 
+  async function sleeperJSON(url){
+    const response = await fetch(url, {cache:"force-cache"});
+    if (!response.ok) throw new Error(`Sleeper request ${response.status}`);
+    return response.json();
+  }
+
   let directoryPromise = null;
   function getDirectory(){
     if (directoryPromise) return directoryPromise;
-    directoryPromise = fetch("https://api.sleeper.app/v1/players/nfl", {cache:"force-cache"})
-      .then(r=>{ if(!r.ok) throw new Error(`Sleeper players ${r.status}`); return r.json(); })
+    directoryPromise = sleeperJSON("https://api.sleeper.app/v1/players/nfl")
       .then(data=>{
         const byName = new Map();
         const byId = new Map();
         for (const [id,p] of Object.entries(data || {})){
           if (!p) continue;
-          byId.set(String(id), p);
+          const record = {...p, player_id:String(id)};
+          byId.set(String(id), record);
           const names = [p.full_name, [p.first_name,p.last_name].filter(Boolean).join(" ")];
           for (const name of names){
             const key = normalizeName(name);
-            if (key && !byName.has(key)) byName.set(key, {...p,player_id:String(id)});
+            if (key && !byName.has(key)) byName.set(key, record);
           }
         }
         return {byName,byId};
@@ -104,12 +90,110 @@
 
   function findRecord(card, directory){
     const id = directPlayerId(card);
-    if (id && directory.byId.has(String(id))) return {...directory.byId.get(String(id)),player_id:String(id)};
+    if (id && directory.byId.has(String(id))) return directory.byId.get(String(id));
     for (const candidate of candidateTexts(card)){
       const key = normalizeName(candidate);
       if (directory.byName.has(key)) return directory.byName.get(key);
     }
     return null;
+  }
+
+  function fieldValue(selectors){
+    for (const selector of selectors){
+      const node = document.querySelector(selector);
+      if (!node) continue;
+      const value = "value" in node ? node.value : node.textContent;
+      if (String(value || "").trim()) return String(value).trim();
+    }
+    return "";
+  }
+
+  function currentContext(){
+    const username = fieldValue(["#username","#sleeperUsername","input[name='username']"]);
+    const seasonRaw = fieldValue(["#season","#seasonSelect","select[name='season']"]);
+    const weekRaw = fieldValue(["#week","#weekSelect","#week-selector","select[name='week']"]);
+    const season = /^\d{4}$/.test(seasonRaw) ? seasonRaw : String(new Date().getFullYear());
+    const weekMatch = weekRaw.match(/\d+/);
+    const week = weekMatch ? Math.max(1, Math.min(18, Number(weekMatch[0]))) : 1;
+    return {username,season,week};
+  }
+
+  const opponentLeagueCache = new Map();
+  async function getOpponentLeagueContext(){
+    const ctx = currentContext();
+    if (!ctx.username) return {playerLeagues:new Map(), leagueNames:[]};
+    const key = `${ctx.username.toLowerCase()}|${ctx.season}|${ctx.week}`;
+    if (opponentLeagueCache.has(key)) return opponentLeagueCache.get(key);
+
+    const promise = (async()=>{
+      try {
+        const user = await sleeperJSON(`https://api.sleeper.app/v1/user/${encodeURIComponent(ctx.username)}`);
+        if (!user?.user_id) return {playerLeagues:new Map(), leagueNames:[]};
+        const leagues = await sleeperJSON(`https://api.sleeper.app/v1/user/${encodeURIComponent(user.user_id)}/leagues/nfl/${encodeURIComponent(ctx.season)}`);
+        const playerLeagues = new Map();
+        const leagueNames = (leagues || []).map(l=>String(l?.name || "").trim()).filter(Boolean);
+
+        await Promise.all((leagues || []).map(async league=>{
+          if (!league?.league_id) return;
+          try {
+            const [rosters,matchups] = await Promise.all([
+              sleeperJSON(`https://api.sleeper.app/v1/league/${encodeURIComponent(league.league_id)}/rosters`),
+              sleeperJSON(`https://api.sleeper.app/v1/league/${encodeURIComponent(league.league_id)}/matchups/${ctx.week}`)
+            ]);
+            const mine = (rosters || []).find(r=>String(r?.owner_id) === String(user.user_id));
+            if (!mine) return;
+            const myMatchup = (matchups || []).find(m=>Number(m?.roster_id) === Number(mine.roster_id));
+            if (!myMatchup || myMatchup.matchup_id == null) return;
+            const opponent = (matchups || []).find(m=>
+              Number(m?.matchup_id) === Number(myMatchup.matchup_id) &&
+              Number(m?.roster_id) !== Number(mine.roster_id)
+            );
+            if (!opponent) return;
+            const leagueName = String(league.name || "Fantasy League").trim();
+            const ids = new Set([...(opponent.players || []), ...(opponent.starters || [])].map(String));
+            for (const id of ids){
+              if (!playerLeagues.has(id)) playerLeagues.set(id, []);
+              const names = playerLeagues.get(id);
+              if (!names.includes(leagueName)) names.push(leagueName);
+            }
+          } catch (_) {}
+        }));
+
+        return {playerLeagues,leagueNames};
+      } catch (_) {
+        return {playerLeagues:new Map(),leagueNames:[]};
+      }
+    })();
+
+    opponentLeagueCache.set(key,promise);
+    return promise;
+  }
+
+  function leagueNamesFromDom(card, knownNames){
+    const found = [];
+    const add = value=>{
+      const clean = String(value || "").trim();
+      if (clean && !found.includes(clean)) found.push(clean);
+    };
+
+    const direct = [
+      card.getAttribute("data-league-name"),
+      card.dataset.leagueName,
+      card.closest("[data-league-name]")?.getAttribute("data-league-name")
+    ];
+    direct.forEach(add);
+
+    const scope = card.closest(".league-card,.watch-card,.game-card,.window-ranked-game,.watch-window") || card.parentElement;
+    if (scope){
+      for (const node of scope.querySelectorAll(".league-title,.league-name,.live-league-name,[data-league-name]")){
+        add(node.getAttribute("data-league-name") || node.textContent);
+      }
+      const text = String(scope.textContent || "").toLowerCase();
+      for (const name of knownNames || []){
+        if (name && text.includes(String(name).toLowerCase())) add(name);
+      }
+    }
+    return found.slice(0,3);
   }
 
   function ensurePhoto(card, record, displayName){
@@ -132,40 +216,42 @@
     card.prepend(wrap);
   }
 
-  function ensureTeamLine(card, record, fallbackTeam){
-    if (card.querySelector(".gameday-player-team")) return;
-    const teamCode = String(record?.team || fallbackTeam || "").toUpperCase();
-    const teamName = TEAM_NAMES[teamCode] || (teamCode ? teamCode : "NFL");
-    const pos = String(record?.position || "").toUpperCase();
+  function ensureLeagueLine(card, leagueNames){
+    card.querySelectorAll(".gameday-player-team,.gameday-player-leagues").forEach(node=>node.remove());
+    if (!leagueNames?.length) return;
     const line = document.createElement("div");
-    line.className = "gameday-player-team";
-    const team = document.createElement("span");
-    team.className = "gameday-team-name";
-    team.textContent = teamName;
-    line.appendChild(team);
-    if (pos){
-      const position = document.createElement("span");
-      position.className = "gameday-player-position";
-      position.textContent = pos;
-      line.appendChild(position);
-    }
+    line.className = "gameday-player-leagues";
+
+    const label = document.createElement("span");
+    label.className = "gameday-league-label";
+    label.textContent = leagueNames.length > 1 ? "Fantasy leagues" : "Fantasy league";
+    line.appendChild(label);
+
+    const names = document.createElement("span");
+    names.className = "gameday-league-name";
+    names.textContent = leagueNames.join(" · ");
+    line.appendChild(names);
     card.appendChild(line);
   }
 
   async function enhancePlayers(){
-    const cards = [...document.querySelectorAll(".impact-player:not([data-gameday-enhanced])")];
+    const cards = [...document.querySelectorAll(".impact-player:not([data-gameday-enhanced='processing'])")];
     if (!cards.length) return;
     cards.forEach(card=>card.dataset.gamedayEnhanced = "processing");
-    const directory = await getDirectory();
+
+    const [directory,leagueContext] = await Promise.all([getDirectory(),getOpponentLeagueContext()]);
     for (const card of cards){
       if (!card.isConnected) continue;
       const record = findRecord(card,directory);
       const displayName = candidateTexts(card)[0] || record?.full_name || "NFL Player";
-      const fallbackTeam = extractTeamCode(card);
-      if (record || fallbackTeam){
+      const playerId = String(record?.player_id || directPlayerId(card) || "");
+      let leagueNames = playerId ? [...(leagueContext.playerLeagues.get(playerId) || [])] : [];
+      if (!leagueNames.length) leagueNames = leagueNamesFromDom(card,leagueContext.leagueNames);
+
+      if (record || leagueNames.length){
         card.classList.add("gameday-enhanced-player");
         ensurePhoto(card,record,displayName);
-        ensureTeamLine(card,record,fallbackTeam);
+        ensureLeagueLine(card,leagueNames);
         card.dataset.gamedayEnhanced = "1";
       } else {
         card.dataset.gamedayEnhanced = "unmatched";
@@ -178,8 +264,9 @@
     clearTimeout(timer);
     timer = setTimeout(()=>{
       renamePage();
+      document.querySelectorAll(".impact-player[data-gameday-enhanced='unmatched']").forEach(card=>card.removeAttribute("data-gameday-enhanced"));
       enhancePlayers();
-    },80);
+    },100);
   }
 
   function init(){
@@ -187,6 +274,12 @@
     enhancePlayers();
     const observer = new MutationObserver(scheduleEnhance);
     observer.observe(document.body,{childList:true,subtree:true});
+    document.addEventListener("change", event=>{
+      if (event.target?.matches?.("#week,#weekSelect,#week-selector,#season,#seasonSelect,#username,#sleeperUsername")){
+        document.querySelectorAll(".impact-player").forEach(card=>card.removeAttribute("data-gameday-enhanced"));
+        scheduleEnhance();
+      }
+    });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded",init,{once:true});
