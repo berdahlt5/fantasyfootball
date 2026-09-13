@@ -1,0 +1,215 @@
+/* Opponent remaining players — compact threat view inside expanded Crunchtime cards. */
+.ct-opponent-remaining{
+  margin-top:12px;
+  padding:11px;
+  border:1px solid rgba(204,100,126,.18);
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 0% 12%,rgba(216,95,124,.09),transparent 34%),
+    radial-gradient(circle at 100% 0%,rgba(155,130,231,.08),transparent 34%),
+    linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,244,248,.19),rgba(245,241,255,.16));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.70),0 9px 22px rgba(109,77,102,.045);
+  -webkit-backdrop-filter:blur(22px) saturate(1.35);
+  backdrop-filter:blur(22px) saturate(1.35);
+}
+.ct-opp-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+  padding:0 2px 8px;
+  border-bottom:1px solid rgba(201,100,125,.10);
+}
+.ct-opp-head>div:first-child span{
+  display:block;
+  color:#a05d70;
+  font-size:.43rem;
+  font-weight:1000;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+.ct-opp-head>div:first-child strong{
+  display:block;
+  margin-top:2px;
+  color:#394d67;
+  font-size:.68rem;
+  line-height:1.15;
+  font-weight:1000;
+}
+.ct-opp-total{
+  min-width:0;
+  text-align:right;
+}
+.ct-opp-total small{
+  display:block;
+  color:#8996a7;
+  font-size:.38rem;
+  line-height:1.1;
+}
+.ct-opp-total strong{
+  display:block;
+  margin-top:2px;
+  color:#a14e65;
+  font-size:.56rem;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.ct-opp-list{
+  display:grid;
+  gap:7px;
+}
+.ct-opp-player{
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+  padding:8px 9px;
+  border:1px solid rgba(199,105,129,.13);
+  border-radius:11px;
+  background:linear-gradient(135deg,rgba(255,255,255,.34),rgba(255,246,249,.23),rgba(245,243,255,.19));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72);
+}
+.ct-opp-player.is-live{
+  border-color:rgba(216,95,124,.22);
+  box-shadow:inset 3px 0 0 rgba(216,95,124,.40),inset 0 1px 0 rgba(255,255,255,.72);
+}
+.ct-opp-photo{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  overflow:hidden;
+  border:1px solid rgba(199,105,129,.16);
+  border-radius:11px;
+  background:linear-gradient(135deg,rgba(216,95,124,.12),rgba(103,153,238,.10),rgba(155,130,231,.10));
+  color:#8f5870;
+  font-size:.47rem;
+  font-weight:1000;
+}
+.ct-opp-photo img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+  z-index:1;
+}
+.ct-opp-copy{
+  min-width:0;
+}
+.ct-opp-copy strong{
+  display:block;
+  overflow:hidden;
+  color:#35485f;
+  font-size:.63rem;
+  line-height:1.15;
+  font-weight:1000;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ct-opp-copy span{
+  display:block;
+  margin-top:2px;
+  overflow:hidden;
+  color:#8795a7;
+  font-size:.44rem;
+  line-height:1.15;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ct-opp-player.is-live .ct-opp-copy span{
+  color:#a15b70;
+}
+.ct-opp-metrics{
+  display:grid;
+  grid-template-columns:repeat(3,auto);
+  gap:8px;
+  align-items:center;
+  justify-content:end;
+}
+.ct-opp-metrics>span{
+  min-width:44px;
+  text-align:right;
+}
+.ct-opp-metrics small{
+  display:block;
+  color:#96a2b1;
+  font-size:.34rem;
+  font-weight:1000;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.ct-opp-metrics strong{
+  display:block;
+  margin-top:1px;
+  color:#40546d;
+  font-size:.59rem;
+  line-height:1;
+  font-weight:1000;
+  font-variant-numeric:tabular-nums;
+}
+.ct-opp-metrics .projected strong{color:#716bad}
+.ct-opp-metrics .left strong{color:#a34d64}
+
+html[data-theme="dark"] .ct-opponent-remaining{
+  border-color:rgba(219,111,135,.17);
+  background:
+    radial-gradient(circle at 0% 12%,rgba(174,67,98,.10),transparent 35%),
+    radial-gradient(circle at 100% 0%,rgba(119,81,190,.09),transparent 35%),
+    linear-gradient(135deg,rgba(42,33,59,.42),rgba(53,29,46,.30),rgba(37,34,65,.25));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 9px 24px rgba(0,0,0,.13);
+}
+html[data-theme="dark"] .ct-opp-head{border-bottom-color:rgba(219,111,135,.12)}
+html[data-theme="dark"] .ct-opp-head>div:first-child span{color:#d991a4}
+html[data-theme="dark"] .ct-opp-head>div:first-child strong{color:#e2eafa}
+html[data-theme="dark"] .ct-opp-total small{color:#8190a6}
+html[data-theme="dark"] .ct-opp-total strong{color:#eca1b4}
+html[data-theme="dark"] .ct-opp-player{
+  border-color:rgba(219,111,135,.14);
+  background:linear-gradient(135deg,rgba(46,40,70,.44),rgba(65,31,49,.31),rgba(43,38,73,.29));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+html[data-theme="dark"] .ct-opp-player.is-live{
+  border-color:rgba(229,118,144,.22);
+  box-shadow:inset 3px 0 0 rgba(229,118,144,.44),inset 0 1px 0 rgba(255,255,255,.05);
+}
+html[data-theme="dark"] .ct-opp-photo{
+  border-color:rgba(219,111,135,.19);
+  color:#d6a3b0;
+  background:linear-gradient(135deg,rgba(174,67,98,.16),rgba(76,118,218,.12),rgba(139,79,198,.11));
+}
+html[data-theme="dark"] .ct-opp-copy strong{color:#e0e8f7}
+html[data-theme="dark"] .ct-opp-copy span{color:#8f9db2}
+html[data-theme="dark"] .ct-opp-player.is-live .ct-opp-copy span{color:#d590a3}
+html[data-theme="dark"] .ct-opp-metrics small{color:#7f8da2}
+html[data-theme="dark"] .ct-opp-metrics strong{color:#c9d6e8}
+html[data-theme="dark"] .ct-opp-metrics .projected strong{color:#bbb0ef}
+html[data-theme="dark"] .ct-opp-metrics .left strong{color:#eba0b3}
+
+@media(max-width:620px){
+  .ct-opponent-remaining{padding:9px}
+  .ct-opp-head{align-items:flex-start}
+  .ct-opp-total small{display:none}
+  .ct-opp-player{
+    grid-template-columns:34px minmax(0,1fr);
+    gap:8px;
+    padding:8px;
+  }
+  .ct-opp-photo{width:34px;height:34px;border-radius:10px}
+  .ct-opp-metrics{
+    grid-column:2;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    width:100%;
+    gap:6px;
+    justify-content:stretch;
+    padding-top:3px;
+  }
+  .ct-opp-metrics>span{text-align:left;min-width:0}
+  .ct-opp-metrics small{font-size:.31rem}
+  .ct-opp-metrics strong{font-size:.55rem}
+}
