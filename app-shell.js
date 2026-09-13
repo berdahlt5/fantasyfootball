@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+  const APP_NAME = "Fantasy Assistant";
   const KEYS = {
     theme: "fantasyUiTheme",
     favoriteTeam: "fantasyFavoriteTeam",
@@ -74,6 +75,27 @@
     safeSet(KEYS.theme, next);
   }
 
+  function applyBrand() {
+    const heading = document.querySelector(".brand h1, .topbar h1, h1");
+    const pageName = heading?.textContent?.trim() || "Fantasy Football";
+    document.title = `${APP_NAME} · ${pageName}`;
+
+    const mark = document.querySelector(".brand-mark");
+    if (mark) {
+      mark.textContent = "FA";
+      mark.title = APP_NAME;
+      mark.setAttribute("aria-label", APP_NAME);
+    }
+
+    const brandCopy = heading?.parentElement;
+    if (brandCopy && !brandCopy.querySelector(".app-product-name")) {
+      const label = document.createElement("div");
+      label.className = "app-product-name";
+      label.textContent = APP_NAME;
+      brandCopy.insertBefore(label, heading);
+    }
+  }
+
   function currentPage() {
     const file = (location.pathname.split("/").pop() || "index.html").toLowerCase();
     return file === "home.html" ? "index.html" : file;
@@ -117,7 +139,7 @@
     el.innerHTML = `
       <div class="app-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="appSettingsTitle">
         <div class="app-settings-head">
-          <div><div class="app-settings-title" id="appSettingsTitle">App Settings</div><div class="app-settings-subtitle">Saved on this device and used across the fantasy app.</div></div>
+          <div><div class="app-settings-title" id="appSettingsTitle">Fantasy Assistant Settings</div><div class="app-settings-subtitle">Saved on this device and used across Fantasy Assistant.</div></div>
           <button class="app-settings-close" type="button" aria-label="Close settings">×</button>
         </div>
         <div class="app-settings-body">
@@ -126,7 +148,7 @@
           <div class="app-settings-field"><label for="appWatchCountSetting">Games You Can Watch at Once</label><select id="appWatchCountSetting">${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n} game${n===1?"":"s"}</option>`).join("")}</select><div class="app-settings-help">Controls how many games are recommended in crowded Sunday windows.</div></div>
           <div class="app-settings-field app-settings-wide"><label for="appPriorityLeaguesSetting">Starred Leagues</label><textarea id="appPriorityLeaguesSetting" rows="4" spellcheck="false" placeholder="Gridiron Gurus\nTnT Fantasy"></textarea><div class="app-settings-help">One league name per line. Starred Leagues get extra weight in Watch and are highlighted across the app.</div></div>
         </div>
-        <div class="app-settings-actions"><button class="app-settings-cancel" type="button">Cancel</button><button class="app-settings-save" type="button">Save settings</button></div>
+        <div class="app-settings-actions"><button class="app-settings-cancel" type="button">Cancel</button><button class="app-settings-save" type="button">Save Settings</button></div>
       </div>`;
     document.body.appendChild(el);
 
@@ -164,6 +186,7 @@
 
   function init() {
     applyTheme(readSettings().theme);
+    applyBrand();
     buildNav();
     ensureSettingsDialog();
     document.addEventListener("click", event => {
