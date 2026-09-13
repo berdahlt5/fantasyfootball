@@ -249,5 +249,6 @@
     loadStyle("crunchTimePointsPlannerStyles","./crunchtime-points-planner.css?v=20260913c");
     loadScript("crunchTimeCommandCenterScript","./crunchtime-command-center.js?v=20260913a");
     loadScript("crunchTimePointsPlannerScript","./crunchtime-points-planner.js?v=20260913c");
+    loadScript("crunchTimeTargetClarityScript","./crunchtime-target-clarity.js?v=20260913a");
   }
 })();
