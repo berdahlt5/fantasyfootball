@@ -95,6 +95,10 @@
       }
 
       sorted.forEach((card,index)=>{
+        /* Keep the full candidate pool in the DOM so a finished player's
+           Actual can move them into or out of the true top five. */
+        card.style.display = index < 5 ? "" : "none";
+        card.setAttribute("aria-hidden", index < 5 ? "false" : "true");
         const rank = card.querySelector(".game-day-pulse-rank");
         const next = String(index + 1);
         if (rank && rank.textContent !== next) rank.textContent = next;
