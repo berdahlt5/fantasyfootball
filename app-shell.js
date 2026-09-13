@@ -228,12 +228,26 @@
 
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "schedule-tool.html") {
+    if (!document.getElementById("gameDayPulsePolishStyles")) {
+      const polishStyles = document.createElement("link");
+      polishStyles.id = "gameDayPulsePolishStyles";
+      polishStyles.rel = "stylesheet";
+      polishStyles.href = "./gameday-pulse-polish.css?v=20260913a";
+      document.head.appendChild(polishStyles);
+    }
     if (!document.getElementById("gameDayPlayerPulseScript")) {
       const pulse = document.createElement("script");
       pulse.id = "gameDayPlayerPulseScript";
       pulse.src = "./gameday-player-pulse.js?v=20260913a";
       pulse.async = false;
       document.head.appendChild(pulse);
+    }
+    if (!document.getElementById("gameDayPulsePolishScript")) {
+      const polish = document.createElement("script");
+      polish.id = "gameDayPulsePolishScript";
+      polish.src = "./gameday-pulse-polish.js?v=20260913a";
+      polish.async = false;
+      document.head.appendChild(polish);
     }
     if (!document.getElementById("gameDayEnhancementsScript")) {
       const script = document.createElement("script");
