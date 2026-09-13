@@ -1,0 +1,38 @@
+name: Apply glass dashboard cleanup
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-glass-dashboard-cleanup.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply cleanup
+        run: python tools/apply-glass-dashboard-cleanup.py
+      - name: Validate cleanup
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          rankings = Path('team-rankings.html').read_text()
+          css = Path('app-shell.css').read_text()
+          banned = ['weeks modeled','actual results preserved','future weeks with projection data','K / D-ST excluded']
+          for phrase in banned:
+              assert phrase not in rankings, phrase
+          assert 'els.teamMetric.textContent' not in rankings
+          assert '/* glass-polish-v2 */' in css
+          assert 'team-detail-row td' in css
+          assert '--app-glass:' in css
+          print('validation passed')
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "berdahlt5"
+          git config user.email "berdahlt5@gmail.com"
+          git add team-rankings.html app-shell.css
+          git diff --cached --quiet && exit 0
+          git commit -m "Simplify rankings and polish glass UI"
+          git push
