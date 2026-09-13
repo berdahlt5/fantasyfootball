@@ -1,0 +1,59 @@
+/* Live actual points for Player Pulse cards. */
+.game-day-pulse-score{
+  min-width:78px;
+}
+
+.game-day-pulse-actual{
+  display:flex;
+  align-items:baseline;
+  justify-content:flex-end;
+  gap:5px;
+  margin-top:6px;
+  padding-top:5px;
+  border-top:1px solid rgba(112,153,211,.14);
+  white-space:nowrap;
+}
+
+.game-day-pulse-actual span{
+  margin:0!important;
+  color:#7a899e!important;
+  font-size:.47rem!important;
+  font-weight:1000!important;
+  text-transform:uppercase;
+  letter-spacing:.065em!important;
+}
+
+.game-day-pulse-actual strong{
+  display:inline!important;
+  color:#397f77!important;
+  font-size:.75rem!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.015em!important;
+}
+
+.game-day-pulse-card.villain .game-day-pulse-actual strong{
+  color:#a45668!important;
+}
+
+html[data-theme="dark"] .game-day-pulse-actual{
+  border-top-color:rgba(105,146,215,.15);
+}
+
+html[data-theme="dark"] .game-day-pulse-actual span{
+  color:#8f9eb7!important;
+}
+
+html[data-theme="dark"] .game-day-pulse-actual strong{
+  color:#91d7c1!important;
+}
+
+html[data-theme="dark"] .game-day-pulse-card.villain .game-day-pulse-actual strong{
+  color:#e5a0b0!important;
+}
+
+@media(max-width:500px){
+  .game-day-pulse-actual{
+    justify-content:flex-start;
+  }
+}
