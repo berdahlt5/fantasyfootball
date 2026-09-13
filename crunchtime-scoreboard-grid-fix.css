@@ -1,55 +1,130 @@
-/* Keep every Crunchtime scoreboard header and value row on the exact same grid. */
+/* Crunchtime scoreboard hard grid + Free-mode outcome slider colors. */
+
 body.crunch-planner-ready .ct-team-scoreboard{
   --ct-score-label-col:112px;
 }
+
+/* Header and every score row use the exact same three tracks. */
 body.crunch-planner-ready .ct-scoreboard-head,
 body.crunch-planner-ready .ct-scoreboard-row{
   display:grid!important;
-  grid-template-columns:var(--ct-score-label-col) repeat(2,minmax(0,1fr))!important;
-  width:100%;
-  align-items:stretch;
+  grid-template-columns:var(--ct-score-label-col) minmax(0,1fr) minmax(0,1fr)!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  column-gap:0!important;
+  align-items:stretch!important;
+  box-sizing:border-box!important;
 }
+
+body.crunch-planner-ready .ct-scoreboard-head{
+  grid-template-areas:"blank mine opp";
+}
+body.crunch-planner-ready .ct-scoreboard-row{
+  grid-template-areas:"label mine opp";
+}
+
 body.crunch-planner-ready .ct-scoreboard-head>span{
-  grid-column:1;
-  width:auto;
-  min-width:0;
-  border-right:1px solid rgba(125,164,215,.12);
+  grid-area:blank!important;
+  min-width:0!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+  border-right:1px solid rgba(125,164,215,.12)!important;
 }
-body.crunch-planner-ready .ct-scoreboard-head>.ct-scoreboard-team.you{grid-column:2}
-body.crunch-planner-ready .ct-scoreboard-head>.ct-scoreboard-team.opp{grid-column:3}
+body.crunch-planner-ready .ct-scoreboard-head>.ct-scoreboard-team.you{
+  grid-area:mine!important;
+}
+body.crunch-planner-ready .ct-scoreboard-head>.ct-scoreboard-team.opp{
+  grid-area:opp!important;
+}
 body.crunch-planner-ready .ct-scoreboard-row>.ct-scoreboard-label{
-  grid-column:1;
-  min-width:0;
-  border-right:1px solid rgba(125,164,215,.12);
+  grid-area:label!important;
+  min-width:0!important;
+  width:100%!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  border-right:1px solid rgba(125,164,215,.12)!important;
 }
-body.crunch-planner-ready .ct-scoreboard-row>strong:nth-of-type(1){grid-column:2}
-body.crunch-planner-ready .ct-scoreboard-row>strong:nth-of-type(2){grid-column:3}
+body.crunch-planner-ready .ct-scoreboard-row>strong:first-of-type{
+  grid-area:mine!important;
+}
+body.crunch-planner-ready .ct-scoreboard-row>strong:last-of-type{
+  grid-area:opp!important;
+}
+
+/* Normalize the two score columns so header names and numbers share centers. */
 body.crunch-planner-ready .ct-scoreboard-team,
 body.crunch-planner-ready .ct-scoreboard-row>strong{
-  min-width:0;
-  width:100%;
-  margin:0;
-  text-align:center;
-  justify-self:stretch;
+  min-width:0!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  justify-self:stretch!important;
+  align-self:stretch!important;
+  text-align:center!important;
 }
 body.crunch-planner-ready .ct-scoreboard-team{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-left:0!important;
+}
+body.crunch-planner-ready .ct-scoreboard-row>strong{
+  display:grid!important;
+  place-items:center!important;
   border-left:0!important;
 }
 body.crunch-planner-ready .ct-scoreboard-team.opp,
-body.crunch-planner-ready .ct-scoreboard-row>strong+strong{
+body.crunch-planner-ready .ct-scoreboard-row>strong:last-of-type{
   border-left:1px solid rgba(125,164,215,.1)!important;
 }
-body.crunch-planner-ready .ct-scoreboard-row>strong:first-of-type{
-  border-left:0!important;
+
+/* Free mode: the sliders themselves communicate the overall scenario result. */
+body.crunch-planner-ready .ct-points-planner[data-plan-mode="free"]:has(.ct-scoreboard-row.scenario.loss) .ct-plan-slider{
+  background:
+    linear-gradient(90deg,
+      rgba(244,123,143,.94) 0%,
+      rgba(224,91,121,.92) 52%,
+      rgba(190,76,119,.9) 100%) 0/var(--fill) 100% no-repeat,
+    linear-gradient(120deg,rgba(255,247,249,.48),rgba(250,226,234,.32) 55%,rgba(244,235,248,.3))!important;
+  border-color:rgba(255,255,255,.82)!important;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.96),
+    inset 0 -1px 2px rgba(139,48,75,.1),
+    0 0 0 1px rgba(214,94,128,.08),
+    0 0 20px rgba(220,91,126,.22),
+    0 7px 18px rgba(151,70,98,.1)!important;
+}
+body.crunch-planner-ready .ct-points-planner[data-plan-mode="free"]:has(.ct-scoreboard-row.scenario.loss) .ct-plan-slider::-webkit-slider-thumb{
+  box-shadow:0 0 0 5px rgba(222,96,129,.1),0 0 19px rgba(219,83,123,.32),0 6px 16px rgba(111,50,72,.2),inset 0 1px 1px rgba(255,255,255,.98)!important;
+}
+body.crunch-planner-ready .ct-points-planner[data-plan-mode="free"]:has(.ct-scoreboard-row.scenario.loss) .ct-plan-slider::-moz-range-progress{
+  background:linear-gradient(90deg,rgba(244,123,143,.94),rgba(224,91,121,.92) 52%,rgba(190,76,119,.9) 100%)!important;
+  box-shadow:0 0 18px rgba(219,83,123,.24)!important;
+}
+body.crunch-planner-ready .ct-points-planner[data-plan-mode="free"]:has(.ct-scoreboard-row.scenario.loss) .ct-plan-slider::-moz-range-thumb{
+  box-shadow:0 0 0 5px rgba(222,96,129,.1),0 0 19px rgba(219,83,123,.32),0 6px 16px rgba(111,50,72,.2),inset 0 1px 1px rgba(255,255,255,.98)!important;
 }
 
 html[data-theme="dark"] body.crunch-planner-ready .ct-scoreboard-head>span,
 html[data-theme="dark"] body.crunch-planner-ready .ct-scoreboard-row>.ct-scoreboard-label{
-  border-right-color:rgba(116,156,215,.12);
+  border-right-color:rgba(116,156,215,.12)!important;
 }
 html[data-theme="dark"] body.crunch-planner-ready .ct-scoreboard-team.opp,
-html[data-theme="dark"] body.crunch-planner-ready .ct-scoreboard-row>strong+strong{
+html[data-theme="dark"] body.crunch-planner-ready .ct-scoreboard-row>strong:last-of-type{
   border-left-color:rgba(116,156,215,.11)!important;
+}
+html[data-theme="dark"] body.crunch-planner-ready .ct-points-planner[data-plan-mode="free"]:has(.ct-scoreboard-row.scenario.loss) .ct-plan-slider{
+  background:
+    linear-gradient(90deg,rgba(236,105,134,.9),rgba(205,75,112,.88) 54%,rgba(171,62,108,.85)) 0/var(--fill) 100% no-repeat,
+    linear-gradient(120deg,rgba(81,42,57,.55),rgba(60,31,48,.48) 55%,rgba(49,35,61,.46))!important;
+  border-color:rgba(255,255,255,.15)!important;
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.1),inset 0 -1px 2px rgba(0,0,0,.2),0 0 20px rgba(218,77,120,.22),0 6px 18px rgba(0,0,0,.22)!important;
 }
 
 @media(max-width:560px){
