@@ -11,6 +11,30 @@
   const roundTenth = value => Math.round(n(value) * 10) / 10;
   const clampPct = value => Math.min(100, Math.max(0, value));
 
+  function ensurePolishStyles(){
+    if (document.getElementById("crunchTimeSliderSnapStyles")) return;
+    const style = document.createElement("style");
+    style.id = "crunchTimeSliderSnapStyles";
+    style.textContent = `
+      .ct-plan-live-metrics{display:flex;align-items:center;gap:4px;margin-top:3px;font-size:.42rem;line-height:1.15;white-space:nowrap;color:#8b98aa}
+      .ct-plan-live-metrics span{margin:0!important;color:#8b98aa!important;font-weight:700;overflow:visible!important;text-overflow:clip!important}
+      .ct-plan-live-metrics strong{font-weight:950;color:#607896}
+      .ct-plan-live-metrics .actual strong{color:#4a927f}
+      .ct-plan-live-metrics .projected strong{color:#7283b4}
+      .ct-plan-live-metrics i{font-style:normal;color:#a9b3c0}
+      .ct-plan-player.is-proj-snapped .ct-plan-proj-marker b{box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 1px rgba(145,131,235,.12),0 0 18px rgba(136,120,232,.34)!important}
+      .ct-plan-player.is-proj-snapped .ct-plan-proj-marker i{box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 15px rgba(132,117,226,.5)!important}
+      .ct-plan-player.is-proj-snapped .ct-plan-slider::-webkit-slider-thumb{box-shadow:0 0 0 5px rgba(137,122,232,.12),0 0 20px rgba(131,116,230,.36),0 5px 14px rgba(48,84,133,.18),inset 0 1px 1px rgba(255,255,255,.98)!important}
+      .ct-plan-player.is-proj-snapped .ct-plan-slider::-moz-range-thumb{box-shadow:0 0 0 5px rgba(137,122,232,.12),0 0 20px rgba(131,116,230,.36),0 5px 14px rgba(48,84,133,.18),inset 0 1px 1px rgba(255,255,255,.98)!important}
+      html[data-theme="dark"] .ct-plan-live-metrics,html[data-theme="dark"] .ct-plan-live-metrics span{color:#8fa0b5!important}
+      html[data-theme="dark"] .ct-plan-live-metrics strong{color:#a9bdd6}
+      html[data-theme="dark"] .ct-plan-live-metrics .actual strong{color:#7ac3ad}
+      html[data-theme="dark"] .ct-plan-live-metrics .projected strong{color:#aaa9de}
+      @media(max-width:560px){.ct-plan-live-metrics{font-size:.4rem;gap:3px}}
+    `;
+    document.head.appendChild(style);
+  }
+
   function rowForPlayer(card, player){
     const data = card?.__ctPlannerData;
     const id = String(player?.dataset?.playerId || "");
@@ -75,7 +99,7 @@
         metrics.className = "ct-plan-live-metrics";
         copy.appendChild(metrics);
       }
-      metrics.innerHTML = `<span class="actual"><strong>${f(actual)}</strong> actual</span><i>·</i><span class="projected"><strong>${f(projectedFinal)}</strong> projected</span>`;
+      metrics.innerHTML = `<span class="actual"><strong>${f(actual)}</strong> actual</span><i>·</i><span class="projected"><strong>${f(projectedFinal)}</strong> proj</span>`;
     }
 
     const slider = player.querySelector("[data-ct-plan-slider]");
@@ -129,6 +153,8 @@
   }
 
   function init(){
+    ensurePolishStyles();
+
     document.addEventListener("input",event=>{
       const slider = event.target.closest?.("[data-ct-plan-slider]");
       if (!slider) return;
