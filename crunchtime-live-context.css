@@ -1,4 +1,4 @@
-/* Compact live scoring context for the Crunch Time allocation sliders. */
+/* Live-score context + glass finishing layer for Crunch Time. */
 .ct-plan-player-copy{align-content:center}
 .ct-plan-live-metrics{display:flex;align-items:center;gap:4px;margin-top:3px;min-width:0;color:#8190a5;font-size:.43rem;line-height:1.15;white-space:nowrap}
 .ct-plan-live-metrics span{margin:0!important;overflow:visible!important;text-overflow:clip!important;color:#8190a5!important}
@@ -7,15 +7,93 @@
 .ct-plan-live-metrics i{font-style:normal;color:#aab4c1}
 .ct-plan-value-wrap small{white-space:nowrap}
 
-/* The slider always represents additional points from this moment forward. */
-.ct-plan-proj-marker b{letter-spacing:.005em}
+/* More transparent, layered glass rather than flat tinted cards. */
+body.crunch-planner-ready .ct-hero,
+body.crunch-planner-ready .ct-toolbar,
+body.crunch-planner-ready .ct-matchup-card,
+body.crunch-planner-ready .ct-points-planner,
+body.crunch-planner-ready .ct-plan-player{
+  -webkit-backdrop-filter:blur(26px) saturate(1.22);
+  backdrop-filter:blur(26px) saturate(1.22)
+}
+body.crunch-planner-ready .ct-matchup-card{
+  background:linear-gradient(135deg,rgba(255,255,255,.54),rgba(238,246,255,.42) 52%,rgba(238,251,247,.36));
+  border-color:rgba(154,187,230,.24);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(112,150,202,.05),0 18px 42px rgba(57,83,124,.1)
+}
+body.crunch-planner-ready .ct-points-planner{
+  background:linear-gradient(130deg,rgba(255,255,255,.45),rgba(235,245,255,.34) 48%,rgba(239,251,247,.3));
+  border-color:rgba(162,194,231,.2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 14px 34px rgba(67,96,139,.08)
+}
+body.crunch-planner-ready .ct-plan-player{
+  background:linear-gradient(135deg,rgba(255,255,255,.34),rgba(242,248,255,.24) 58%,rgba(242,251,248,.2));
+  border-color:rgba(167,197,231,.17);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.66),0 8px 22px rgba(59,91,136,.055)
+}
+body.crunch-planner-ready .ct-plan-player.stretch{background:linear-gradient(135deg,rgba(255,255,255,.34),rgba(255,248,229,.2),rgba(242,248,255,.22));border-color:rgba(223,183,91,.2)}
+body.crunch-planner-ready .ct-plan-player.long{background:linear-gradient(135deg,rgba(255,255,255,.34),rgba(255,236,243,.19),rgba(242,248,255,.22));border-color:rgba(215,126,148,.19)}
+body.crunch-planner-ready .ct-toolbar{background:rgba(248,251,255,.3);border-color:rgba(151,186,229,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.68),0 10px 26px rgba(56,84,126,.055)}
+body.crunch-planner-ready .ct-filter{background:rgba(235,243,255,.25);border-color:rgba(145,181,226,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.52)}
+body.crunch-planner-ready .ct-filter button.active{background:linear-gradient(105deg,rgba(72,205,231,.24),rgba(111,146,239,.22),rgba(144,221,186,.2));box-shadow:inset 0 1px 0 rgba(255,255,255,.58),0 0 18px rgba(94,158,235,.1)}
 
-html[data-theme="dark"] .ct-plan-live-metrics,
-html[data-theme="dark"] .ct-plan-live-metrics span{color:#91a2b8!important}
+/* Toss-up should feel alive without becoming neon. */
+body.crunch-planner-ready .ct-status-pill.hot{
+  color:#a87518;
+  background:linear-gradient(135deg,rgba(255,230,151,.18),rgba(255,255,255,.16));
+  border-color:rgba(232,183,69,.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.66),0 0 0 1px rgba(232,183,69,.08),0 0 16px rgba(236,181,54,.28),0 0 30px rgba(236,181,54,.1);
+  text-shadow:0 0 10px rgba(236,181,54,.24)
+}
+body.crunch-planner-ready .ct-matchup-card.hot{box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 18px 42px rgba(57,83,124,.09),0 0 28px rgba(226,176,61,.07)}
+body.crunch-planner-ready .ct-matchup-card.hot:before{box-shadow:0 0 12px rgba(229,177,58,.48)}
+
+/* Slider is now a final-score timeline: Current, Projected, and your Scenario thumb. */
+.ct-plan-slider-wrap{--current:0%;--proj:50%;position:relative;margin-top:10px;padding-top:20px;padding-bottom:21px}
+.ct-plan-current-marker,.ct-plan-proj-marker{position:absolute;z-index:5;display:grid;justify-items:center;pointer-events:none}
+.ct-plan-proj-marker{left:var(--proj);top:0;transform:translateX(-50%)}
+.ct-plan-current-marker{left:var(--current);top:34px;transform:translateX(-50%)}
+.ct-plan-current-marker b,.ct-plan-proj-marker b{display:block;padding:2px 6px;border-radius:999px;white-space:nowrap;font-size:.39rem;line-height:1.2;font-weight:1000;letter-spacing:.01em;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.ct-plan-proj-marker b{color:#7484bc;border:1px solid rgba(137,132,221,.24);background:linear-gradient(120deg,rgba(255,255,255,.72),rgba(240,237,255,.63));box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 3px 10px rgba(101,101,177,.1),0 0 10px rgba(135,120,225,.1)}
+.ct-plan-current-marker b{color:#397f78;border:1px solid rgba(82,181,168,.22);background:linear-gradient(120deg,rgba(255,255,255,.72),rgba(231,250,245,.62));box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 3px 10px rgba(66,137,126,.08),0 0 10px rgba(68,188,176,.08)}
+.ct-plan-proj-marker i{position:absolute;top:13px;width:2px;height:21px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(132,117,226,.84));box-shadow:0 0 0 1px rgba(255,255,255,.48),0 0 10px rgba(132,117,226,.28)}
+.ct-plan-current-marker i{position:absolute;bottom:12px;width:2px;height:20px;border-radius:999px;background:linear-gradient(180deg,rgba(77,197,192,.86),rgba(255,255,255,.96));box-shadow:0 0 0 1px rgba(255,255,255,.42),0 0 9px rgba(69,190,183,.24)}
+.ct-plan-value-wrap small{color:#8898ad!important}
+.ct-plan-value{filter:drop-shadow(0 0 8px rgba(93,153,227,.08))}
+.ct-plan-equation{align-items:center;gap:5px}
+.ct-plan-equation small{font-size:.43rem;text-transform:uppercase;letter-spacing:.055em;font-weight:1000;color:#95a1b1}
+
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card{
+  background:linear-gradient(135deg,rgba(18,30,52,.66),rgba(25,39,67,.56) 54%,rgba(21,52,55,.44));
+  border-color:rgba(122,163,222,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),inset 0 -1px 0 rgba(0,0,0,.12),0 18px 44px rgba(0,0,0,.22)
+}
+html[data-theme="dark"] body.crunch-planner-ready .ct-points-planner{background:linear-gradient(130deg,rgba(25,41,69,.54),rgba(21,36,62,.44) 52%,rgba(21,52,54,.35));border-color:rgba(119,162,221,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 14px 36px rgba(0,0,0,.16)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-plan-player{background:linear-gradient(135deg,rgba(20,34,58,.46),rgba(25,42,70,.36) 58%,rgba(22,50,55,.28));border-color:rgba(119,161,218,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 8px 22px rgba(0,0,0,.12)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-plan-player.stretch{background:linear-gradient(135deg,rgba(24,38,61,.45),rgba(75,59,27,.25),rgba(22,49,55,.26));border-color:rgba(220,178,77,.2)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-plan-player.long{background:linear-gradient(135deg,rgba(24,38,61,.45),rgba(78,34,50,.25),rgba(22,49,55,.26));border-color:rgba(210,112,137,.19)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-toolbar{background:rgba(21,35,60,.36);border-color:rgba(119,160,220,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 28px rgba(0,0,0,.14)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-filter{background:rgba(26,42,69,.34);border-color:rgba(115,156,216,.13)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-status-pill.hot{color:#efbf62;background:linear-gradient(135deg,rgba(206,151,41,.16),rgba(62,49,26,.22));border-color:rgba(231,179,67,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(231,179,67,.08),0 0 17px rgba(230,174,55,.3),0 0 34px rgba(230,174,55,.12);text-shadow:0 0 11px rgba(238,187,74,.28)}
+html[data-theme="dark"] body.crunch-planner-ready .ct-matchup-card.hot{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 18px 44px rgba(0,0,0,.21),0 0 30px rgba(227,174,55,.085)}
+html[data-theme="dark"] .ct-plan-live-metrics,html[data-theme="dark"] .ct-plan-live-metrics span{color:#91a2b8!important}
 html[data-theme="dark"] .ct-plan-live-metrics b{color:#a9c3e2}
 html[data-theme="dark"] .ct-plan-live-metrics span:first-child b{color:#7bc5ad}
 html[data-theme="dark"] .ct-plan-live-metrics i{color:#64768f}
+html[data-theme="dark"] .ct-plan-proj-marker b{background:linear-gradient(120deg,rgba(31,44,73,.9),rgba(53,45,88,.78));border-color:rgba(149,136,231,.25);color:#b7afe9;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 12px rgba(0,0,0,.2),0 0 11px rgba(130,115,224,.13)}
+html[data-theme="dark"] .ct-plan-current-marker b{background:linear-gradient(120deg,rgba(28,45,68,.9),rgba(29,68,67,.75));border-color:rgba(82,191,178,.22);color:#8ed0c7;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 12px rgba(0,0,0,.18),0 0 11px rgba(64,188,176,.1)}
+html[data-theme="dark"] .ct-plan-current-marker i{background:linear-gradient(180deg,rgba(77,198,190,.82),rgba(205,242,238,.86));box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 10px rgba(68,190,181,.25)}
+html[data-theme="dark"] .ct-plan-proj-marker i{background:linear-gradient(180deg,rgba(223,218,255,.9),rgba(134,118,228,.8));box-shadow:0 0 0 1px rgba(255,255,255,.1),0 0 11px rgba(133,117,228,.28)}
+html[data-theme="dark"] .ct-plan-equation small{color:#71839d}
+
+@supports (-webkit-touch-callout:none){
+  .ct-plan-slider-wrap{padding-top:20px;padding-bottom:24px}
+  .ct-plan-current-marker{top:43px}
+  .ct-plan-current-marker i{bottom:12px;height:21px}
+  .ct-plan-proj-marker{top:3px}
+}
 
 @media(max-width:560px){
   .ct-plan-live-metrics{gap:3px;font-size:.41rem}
+  .ct-plan-current-marker b,.ct-plan-proj-marker b{font-size:.37rem;padding:2px 5px}
 }
