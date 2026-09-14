@@ -230,6 +230,7 @@
 
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "schedule-tool.html") {
+    loadStyle("gameDayPulseLayoutStyles","./gameday-pulse-layout.css?v=20260914a");
     loadStyle("gameDayPulsePolishStyles","./gameday-pulse-polish.css?v=20260914c");
     loadStyle("gameDayPulseWindowStyles","./gameday-pulse-windows.css?v=20260913a");
     loadStyle("gameDayPulseActualStyles","./gameday-pulse-actual.css?v=20260913a");
