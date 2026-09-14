@@ -1,0 +1,296 @@
+/* Structural layout for Game Day Hub Player Pulse.
+   Kept separate from the shared theme so global glass changes cannot break it. */
+
+#gameDayPlayerPulse{
+  width:100%;
+  min-width:0;
+}
+
+.game-day-pulse-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  min-width:0;
+}
+
+.game-day-pulse-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  min-width:0;
+}
+
+.game-day-pulse-column{
+  min-width:0;
+  padding:10px;
+  border-radius:14px;
+}
+
+.game-day-pulse-column-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-width:0;
+  font-size:.67rem;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+
+.game-day-pulse-column-head span,
+.game-day-pulse-column-head small{
+  min-width:0;
+}
+
+.game-day-pulse-column-head small{
+  flex:0 0 auto;
+  font-size:.55rem;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+
+.game-day-pulse-list{
+  display:grid;
+  gap:7px;
+  min-width:0;
+}
+
+.game-day-pulse-card{
+  display:grid!important;
+  grid-template-columns:26px 40px minmax(0,1fr) auto;
+  grid-template-rows:auto auto;
+  gap:6px 8px;
+  align-items:center;
+  min-width:0;
+  padding:9px!important;
+  border-radius:11px!important;
+  overflow:hidden;
+}
+
+.game-day-pulse-rank{
+  grid-column:1;
+  grid-row:1;
+  width:26px;
+  height:26px;
+  display:grid;
+  place-items:center;
+  align-self:center;
+  border-radius:8px;
+  font-size:.62rem;
+  line-height:1;
+  font-weight:1000;
+}
+
+.game-day-pulse-photo{
+  position:relative!important;
+  grid-column:2;
+  grid-row:1;
+  width:40px!important;
+  height:40px!important;
+  min-width:40px;
+  min-height:40px;
+  max-width:40px;
+  max-height:40px;
+  display:grid!important;
+  place-items:center;
+  overflow:hidden!important;
+  border-radius:50%!important;
+  flex:none!important;
+}
+
+.game-day-pulse-photo img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  object-fit:cover!important;
+  object-position:center top!important;
+  display:block!important;
+}
+
+.game-day-pulse-photo span{
+  position:relative;
+  z-index:1;
+  font-size:.57rem;
+  font-weight:1000;
+}
+
+.game-day-pulse-copy{
+  grid-column:3;
+  grid-row:1;
+  min-width:0;
+  align-self:center;
+}
+
+.game-day-pulse-name{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:.73rem;
+  line-height:1.15;
+  font-weight:1000;
+}
+
+.game-day-pulse-meta{
+  margin-top:2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:.57rem;
+  line-height:1.25;
+  font-weight:800;
+}
+
+.game-day-pulse-leagues{
+  margin-top:2px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:.55rem;
+  line-height:1.25;
+}
+
+.game-day-pulse-score{
+  grid-column:4;
+  grid-row:1;
+  align-self:center;
+  min-width:76px;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.game-day-pulse-score > strong{
+  display:block;
+  line-height:1;
+  font-weight:1000;
+}
+
+.game-day-pulse-score > span,
+.game-day-pulse-score > small{
+  display:block;
+}
+
+.game-day-pulse-league-details{
+  grid-column:3 / -1!important;
+  grid-row:2;
+  min-width:0;
+  margin-top:0!important;
+}
+
+.game-day-pulse-empty{
+  padding:11px;
+  border-radius:9px;
+  font-size:.65rem;
+  line-height:1.35;
+}
+
+@media(max-width:760px){
+  .game-day-pulse-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:560px){
+  #gameDayPlayerPulse{
+    padding:14px!important;
+  }
+
+  .game-day-pulse-head{
+    flex-direction:column;
+    gap:9px;
+  }
+
+  .game-day-pulse-head-actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .game-day-pulse-column{
+    padding:9px;
+  }
+
+  .game-day-pulse-column-head{
+    align-items:baseline;
+  }
+
+  .game-day-pulse-card{
+    grid-template-columns:24px 38px minmax(0,1fr) 74px;
+    gap:6px 7px;
+    padding:8px!important;
+  }
+
+  .game-day-pulse-rank{
+    width:24px;
+    height:24px;
+    font-size:.59rem;
+  }
+
+  .game-day-pulse-photo{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px;
+    min-height:38px;
+    max-width:38px;
+    max-height:38px;
+  }
+
+  .game-day-pulse-name{
+    font-size:.72rem;
+  }
+
+  .game-day-pulse-meta{
+    font-size:.54rem;
+  }
+
+  .game-day-pulse-leagues{
+    font-size:.52rem;
+  }
+
+  .game-day-pulse-score{
+    min-width:70px!important;
+  }
+
+  .game-day-pulse-score > strong{
+    font-size:.88rem!important;
+  }
+
+  .game-day-pulse-actual{
+    margin-top:4px!important;
+    padding-top:4px!important;
+    justify-content:flex-end!important;
+  }
+
+  .game-day-pulse-league-details{
+    grid-column:3 / -1!important;
+  }
+}
+
+@media(max-width:390px){
+  .game-day-pulse-card{
+    grid-template-columns:22px 36px minmax(0,1fr) 66px;
+    gap:5px 6px;
+  }
+
+  .game-day-pulse-rank{
+    width:22px;
+    height:22px;
+  }
+
+  .game-day-pulse-photo{
+    width:36px!important;
+    height:36px!important;
+    min-width:36px;
+    min-height:36px;
+    max-width:36px;
+    max-height:36px;
+  }
+
+  .game-day-pulse-score{
+    min-width:64px!important;
+  }
+}
