@@ -559,8 +559,8 @@
     if(g.status==="pending")return '<p class="trade-grade-empty">Grade pending: No tracked lineup starts yet. Draft picks remain visible above.</p>';
     const verdict=g.wins==="Close"?"Close trade":g.wins==="Your side"?"Your side leads":"Other side leads";
     const postseason=g.postseason?.length?'<div class="trade-playoff-line"><strong>Playoff context</strong>'+
-      g.postseason.map(p=>'<span>'+safe(p.year)+': You — '+safe(p.yours || "Not yet available")+
-        ' · They — '+safe(p.theirs || "Not yet available")+'</span>').join("")+'</div>':"";
+      g.postseason.map(p=>'<span>'+safe(p.year)+': Your team — '+safe(p.yours || "Not yet available")+
+        ' · Their team — '+safe(p.theirs || "Not yet available")+'</span>').join("")+'</div>':"";
     const pending=g.unresolved?'<p class="trade-grade-disclaimer">Unresolved or re-traded picks are not counted in this grade.</p>':"";
     const caveat=g.status==="provisional"?' <span class="trade-verdict-soft">Provisional</span>':"";
     return '<div class="trade-grade-block"><div class="trade-verdict"><div><span class="trade-verdict-label">Trade review</span>'+
