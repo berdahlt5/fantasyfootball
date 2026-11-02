@@ -361,7 +361,14 @@
     grading = true;
     setNote(plural(trades.length,"completed trade") + " found. Linking draft picks and calculating lineup impact…");
     // Collect relevant franchise seasons once; both sides use the exact same league scoring.
-    const contexts = [...seasonContexts.values()].filter(ctx => trades.some(t => t.currentLeagueId === String(ctx.view.leagueId)));
+    const contexts = [...seasonContexts.values()].filter(ctx => {
+      const related=trades.filter(t=>t.currentLeagueId===String(ctx.view.leagueId));
+      const year=Number(ctx.row.season);
+      const dynasty=String(ctx.view.rawLeague?.settings?.type)==="2";
+      return related.some(t=>year>=Number(t.season) &&
+        (dynasty || year===Number(t.season) ||
+         [...t.received,...t.opponentReturn].some(asset=>asset.type==="pick" && year===Number(asset.pick?.season))));
+    });
     await mapWithConcurrency(contexts,3,async ctx => {
       if (version !== requestVersion) return;
       ctx.weeklyMatchups = await matchupWeeksFor(ctx);
