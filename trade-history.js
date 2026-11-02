@@ -286,6 +286,7 @@
       " → " + drafted + overall +
       (wasUsedByRecipient ? "" : " (later traded)");
     asset.draftedName = drafted;
+    asset.draftedPlayerId = String(p.player_id);
     asset.draftedYear = year;
     asset.draftOverall = slotNumber > 0 ? slotNumber : null;
     asset.resolution = wasUsedByRecipient ? "drafted" : "moved";
@@ -440,7 +441,7 @@
           if(playoff){stats.playoffStarts++;aggregate.playoffStarts++;aggregate.playoffPoints+=value;}
           starts++;points+=value;above+=excess;
         }
-        if(starts){stats.bySeason.push({year:String(year),starts,points,above});}
+        stats.bySeason.push({year:String(year),starts,points,above});
       }
     }
     aggregate.ppg=aggregate.starts ? aggregate.points/aggregate.starts : null;
@@ -471,14 +472,18 @@
       ["pending","unresolved","ambiguous","moved"].includes(item.asset.resolution));
     const futurePicks=picks.some(item=>Number(item.asset.pick.season)>Number(state.nflState?.season));
     const matchupMissing=contexts.some(ctx=>ctx.matchupErrors>0 || !ctx.weeklyMatchups);
-    const provisional=unresolved || futurePicks || matchupMissing || me.missingPoints || them.missingPoints || count<10;
+    const currentSeasonOngoing=contexts.some(ctx=>
+      String(ctx.row.season)===String(state.nflState?.season) &&
+      String(state.nflState?.season_type||"regular")!=="post" &&
+      String(state.nflState?.season_type||"regular")!=="off");
+    const provisional=unresolved || futurePicks || matchupMissing || currentSeasonOngoing || me.missingPoints || them.missingPoints || count<10;
     if(count===0)return {status:"pending",note:"No completed fantasy starts for these players yet.",
       my:me,them,unresolved,confidence:"Pending"};
     const difference=me.weighted-them.weighted;
     // Relative to typical position-specific starters, with a neutral B for similar outcomes.
-    const scale=Math.max(16,2.7*count);
+    const scale=Math.max(16,5*Math.sqrt(count));
     const advantage=difference/scale;
-    const wins=Math.abs(difference)<Math.max(7,0.8*count) ? "Close" :
+    const wins=Math.abs(difference)<Math.max(8,0.32*count) ? "Close" :
       difference>0?"Your side":"Their side";
     const myGrade=letterForAdvantage(advantage);
     const theirGrade=letterForAdvantage(-advantage);
@@ -568,7 +573,7 @@
 
   function playerPicture(asset) {
     if(!asset.playerId && !asset.draftedName)return '<span class="trade-pick-art">'+safe(asset.type==="faab"?"FAAB":"PICK")+'</span>';
-    const id=String(asset.playerId||"");
+    const id=String(asset.playerId||asset.draftedPlayerId||"");
     const name=asset.draftedName || playerName(getPlayer(id),id);
     const position=String(getPlayer(id)?.position||"");
     const fallback=safe((position && position!=="OTHER" ? position : (name.split(/\s+/).map(p=>p[0]).slice(0,2).join("")))||"NFL");
@@ -593,7 +598,8 @@
         asset.type==="pick"?(picked || (asset.resolution==="pending"?"Not drafted yet":"Draft result unavailable")):
         "Waiver budget";
       const years=(asset.performance?.bySeason||[]);
-      const metric=years.length?years.map(y=>y.year+': '+y.starts+' starts · '+fmt(y.points/y.starts)+' PPG').join('  |  '):"";
+      const metric=years.length?years.map(y=>y.year+': '+y.starts+
+        ' fantasy starts'+(y.starts?' · '+fmt(y.points/y.starts)+' PPG':'')).join('  |  '):"";
       return '<li class="trade-asset">'+playerPicture(asset)+
         '<span class="trade-asset-copy"><span class="trade-asset-name">'+safe(name)+'</span>'+
         '<span class="trade-asset-detail">'+safe(info)+'</span>'+
@@ -610,7 +616,7 @@
     const gradeBadge=grade && grade.myGrade?
       '<span class="trade-result-pill">'+safe(grade.status==="provisional"?"Early grade ":"Grade ")+safe(grade.myGrade)+'</span>':"";
     return '<article class="trade-history-item"><div class="trade-history-item-head">'+
-      '<div><div class="trade-history-matchup">'+safe(trade.franchise)+' / '+safe(trade.counterpart)+'</div>'+
+      '<div><div class="trade-history-matchup">Trade with '+safe(trade.counterpart)+'</div>'+
       '<div class="trade-history-date">'+safe(when)+'</div></div>'+gradeBadge+'</div>'+
       '<div class="trade-history-sides">'+
       '<section class="trade-history-side"><h4>You received</h4>'+assetHtml(trade.received)+'</section>'+
@@ -653,7 +659,7 @@
           '<div><div class="trade-history-team-name">' + safe(view.myMeta && view.myMeta.name || "My team") + '</div>' +
           '<div class="trade-history-team-sub">' + safe(view.name) + '</div></div>' +
           '<div class="trade-history-count">' + plural(mine.length,"trade") + '</div>' +
-          '<div class="trade-history-chevron">▶</div></summary>' +
+          '<span class="trade-history-chevron" aria-hidden="true"></span></summary>' +
           '<div class="trade-history-items">' + mine.map(tradeHtml).join("") + '</div></details>';
       }).filter(Boolean);
 
