@@ -380,10 +380,10 @@
       const total=my.points+theirs.points;
       const starts=my.starts+theirs.starts;
       const pending = picks.some(x=>x.asset.resolution==="pending" || x.asset.resolution==="ambiguous" || x.asset.resolution==="unresolved");
-      trade.grade = {my,theirs,
+      trade.grade = {my,theirStats:theirs,
         status:starts === 0 ? "pending" : starts < 8 || pending ? "provisional" : "graded",
         mine:total > 0 ? gradeLetter(my.points/total) : "—",
-        theirs:total > 0 ? gradeLetter(theirs.points/total) : "—",
+        theirGrade:total > 0 ? gradeLetter(theirs.points/total) : "—",
         winner:Math.abs(my.points-theirs.points) < Math.max(5,total*.05) ? "Even" :
           my.points > theirs.points ? "Your side" : "Their side",
         pending
@@ -410,7 +410,7 @@
     return '<div class="trade-grade-block"><div class="trade-grade-heading">'+safe(status)+' <span>'+safe(winner)+'</span></div>'+
       '<div class="trade-grade-grid">'+
       '<div class="trade-grade-team"><div class="trade-grade-top"><span>Your return</span><strong class="trade-grade-letter">'+safe(g.mine)+'</strong></div>'+performanceHtml(g.my)+'</div>'+
-      '<div class="trade-grade-team"><div class="trade-grade-top"><span>Their return</span><strong class="trade-grade-letter">'+safe(g.theirs)+'</strong></div>'+performanceHtml(g.theirs)+'</div></div>'+
+      '<div class="trade-grade-team"><div class="trade-grade-top"><span>Their return</span><strong class="trade-grade-letter">'+safe(g.theirGrade)+'</strong></div>'+performanceHtml(g.theirStats)+'</div></div>'+
       (g.pending?'<div class="trade-grade-caveat">Some draft picks are still pending or could not be linked. Their future value is not graded.</div>':'')+
       '</div>';
   }
