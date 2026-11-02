@@ -144,3 +144,20 @@ html[data-theme="dark"] .trade-history-panel {
   .trade-history-matchup{font-size:.9rem}
   .trade-player-photo,.trade-pick-art{flex-basis:44px;width:44px;height:44px}
 }
+
+/* Optional methodology, kept out of the way of trade cards. */
+.trade-grading-explainer{
+  margin:10px 0 14px;padding:9px 12px;border:1px solid var(--trade-border);
+  border-radius:12px;background:var(--trade-surface);color:var(--trade-muted)
+}
+.trade-grading-explainer>summary{
+  cursor:pointer;list-style:none;color:var(--app-accent-strong);
+  font-size:.77rem;font-weight:800
+}
+.trade-grading-explainer>summary::-webkit-details-marker{display:none}
+.trade-grading-explainer>summary::after{content:"";display:inline-block;width:6px;height:6px;
+  margin:0 0 2px 9px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+  transform:rotate(45deg)
+}
+.trade-grading-explainer[open]>summary::after{transform:rotate(225deg);margin-bottom:0}
+.trade-grading-explainer p{margin:9px 0 0;font-size:.75rem;line-height:1.55;color:var(--trade-muted)}
