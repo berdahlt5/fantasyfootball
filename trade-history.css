@@ -44,3 +44,27 @@
   .trade-history-panel > summary{align-items:flex-start}
   .trade-history-team-name{font-size:.8rem}
 }
+
+
+/* Performance report cards */
+.trade-history-method{margin:12px 1px 8px;color:var(--muted);font-size:.68rem;line-height:1.55}
+.trade-history-method strong{color:var(--mint)}
+.trade-grade-block{border-top:1px solid rgba(132,186,215,.23);padding:11px 12px 12px;background:rgba(25,24,22,.22)}
+.trade-grade-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--gold);font-size:.62rem;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;margin:0 0 9px}
+.trade-grade-heading span{color:var(--sky)}
+.trade-grade-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.trade-grade-team{min-width:0;border:1px solid rgba(132,186,215,.28);border-radius:10px;background:rgba(52,45,39,.88);padding:10px}
+.trade-grade-top{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:8px}
+.trade-grade-top>span{color:var(--mint);font-size:.65rem;font-weight:950}
+.trade-grade-letter{display:grid;place-items:center;border-radius:8px;padding:4px 9px;min-width:34px;background:rgba(216,169,74,.18);border:1px solid rgba(216,169,74,.35);color:var(--gold);font-size:1.05rem;line-height:1.15}
+.trade-grade-metrics{display:flex;flex-wrap:wrap;gap:6px}
+.trade-grade-metrics span{border:1px solid rgba(132,186,215,.15);border-radius:6px;padding:5px 6px;color:var(--muted);font-size:.62rem}
+.trade-grade-metrics strong{color:var(--mint);font-variant-numeric:tabular-nums}
+.trade-grade-empty,.trade-grade-caveat{padding:10px 13px;color:var(--muted);font-size:.66rem;line-height:1.45;border-top:1px solid rgba(132,186,215,.19)}
+.trade-grade-caveat{padding:8px 0 0;margin-top:9px;border:0;color:#F0CA78}
+.trade-asset-stats{display:block;align-self:center;white-space:nowrap;margin-left:auto;color:#557E63;font-size:.58rem;font-weight:850}
+.trade-history-assets li{flex-wrap:wrap}
+@media(max-width:650px){
+  .trade-grade-grid{grid-template-columns:1fr}
+  .trade-asset-stats{flex:1 0 100%;margin-left:20px}
+}
