@@ -548,7 +548,7 @@
   }
   function sideMetricHtml(stats,label) {
     return '<div class="trade-impact-side"><div class="trade-impact-side-title">'+safe(label)+'</div>'+
-      '<div class="trade-impact-main"><strong>'+signed(stats.above)+'</strong><span>points vs similar starters</span></div>'+
+      '<div class="trade-impact-main"><strong>'+signed(stats.above)+'</strong><span>points above a typical starter</span></div>'+
       '<div class="trade-impact-numbers">'+stats.starts+' fantasy starts · '+(stats.ppg==null?"—":fmt(stats.ppg))+' PPG</div>'+
       seasonPerformanceHtml(stats)+'</div>';
   }
@@ -561,14 +561,14 @@
     const postseason=g.postseason?.length?'<div class="trade-playoff-line"><strong>Playoff context</strong>'+
       g.postseason.map(p=>'<span>'+safe(p.year)+': You — '+safe(p.yours || "Not yet available")+
         ' · They — '+safe(p.theirs || "Not yet available")+'</span>').join("")+'</div>':"";
-    const pending=g.unresolved?'<p class="trade-grade-disclaimer">Some draft picks are still unresolved or were traded again. Their future value is not included.</p>':"";
+    const pending=g.unresolved?'<p class="trade-grade-disclaimer">Unresolved or re-traded picks are not counted in this grade.</p>':"";
     const caveat=g.status==="provisional"?' <span class="trade-verdict-soft">Provisional</span>':"";
     return '<div class="trade-grade-block"><div class="trade-verdict"><div><span class="trade-verdict-label">Trade review</span>'+
       '<h4>'+safe(verdict)+caveat+'</h4></div><div class="trade-verdict-grades"><span>You <strong>'+safe(g.myGrade)+'</strong></span>'+
       '<span>Other side <strong>'+safe(g.theirGrade)+'</strong></span></div></div>'+
-      '<div class="trade-impact-grid">'+sideMetricHtml(g.my,"Your players")+sideMetricHtml(g.them,"Their players")+'</div>'+
+      '<div class="trade-impact-grid">'+sideMetricHtml(g.my,"What you received")+sideMetricHtml(g.them,"What they received")+'</div>'+
       postseason+pending+
-      '<p class="trade-grade-disclaimer">Grades use points above the league median starter at each position. Playoff starts count 1.5×, and the current season 1.12×. Team finishes are context, not extra grade points.</p></div>';
+      '</div>';
   }
 
   function playerPicture(asset) {
