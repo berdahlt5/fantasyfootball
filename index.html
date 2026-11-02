@@ -301,6 +301,7 @@
     }
   </style>
   <link rel="stylesheet" href="./app-shell.css" />
+  <link rel="stylesheet" href="./trade-history.css" />
 </head>
 <body>
   <main class="shell">
@@ -378,6 +379,24 @@
           <span class="draft-history-toggle">View drafts</span>
         </summary>
         <div class="draft-history-list" id="draftHistoryList"><div class="empty">Load the dashboard to view draft history.</div></div>
+      </details>
+
+      <details class="panel section trade-history-panel" id="tradeHistoryPanel">
+        <summary>
+          <div>
+            <div class="section-title">Trade History &amp; Grades</div>
+            <div class="section-note" id="tradeHistoryNote">Players, picks, FAAB and post-trade performance from your Sleeper history.</div>
+          </div>
+          <span class="trade-history-toggle">View trades</span>
+        </summary>
+        <div class="trade-history-toolbar">
+          <label>League<select id="tradeLeagueFilter"><option value="all">All leagues</option></select></label>
+          <label>Season<select id="tradeSeasonFilter"><option value="all">All seasons</option></select></label>
+          <label>Search trades<input type="search" id="tradeSearch" placeholder="Player, pick or manager…" autocomplete="off" /></label>
+        </div>
+        <p class="trade-history-method">Grades compare actual lineup points delivered to the teams after each trade. PPG means points per fantasy start; picks are linked to drafted players when identifiable. Future picks and unplayed games aren't assigned speculative value.</p>
+        <div class="trade-history-meta" id="tradeHistoryMeta" aria-live="polite"></div>
+        <div class="trade-history-list" id="tradeHistoryList"><div class="empty">Load the dashboard to view trade history.</div></div>
       </details>
 
       <section class="panel section projections-section">
@@ -1110,6 +1129,7 @@
           optionalJson(`${SLEEPER_DATA_API}/projections/nfl/${season}/${week}?season_type=regular`)
         ]);
         if(!Array.isArray(leagues)||!leagues.length)throw new Error(`No Sleeper leagues were found for ${season}.`);
+        window.dispatchEvent(new Event("fantasy-dashboard-reset"));
         state.user=user;state.rawLeagues=leagues;state.nflState=nflState;state.players=players||{};state.season=season;state.week=week;state.history=[];state.teamHistory=new Map();state.historyLoaded=false;state.draftHistory=new Map();state.draftHistoryLoaded=false;
         els.teamHistoryList.innerHTML='<div class="empty">Loading franchise history…</div>';
         els.draftHistoryList.innerHTML='<div class="empty">Open Draft History to load your picks.</div>';
@@ -1159,6 +1179,7 @@
 
         setLoading(true,"Loading franchise history…");
         await loadOwnerHistory();renderHistory();renderMetrics();renderTeamHistory();renderProjections();
+        window.dispatchEvent(new Event("fantasy-owner-history-ready"));
 
         const params=new URLSearchParams({username,season:String(season)});
         els.scheduleLink.href=`./schedule-tool.html?${params}`;
@@ -1225,5 +1246,6 @@
     initialize();
   </script>
   <script src="./app-shell.js"></script>
+  <script src="./trade-history.js"></script>
 </body>
 </html>
