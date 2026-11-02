@@ -384,8 +384,8 @@
       <details class="panel section trade-history-panel" id="tradeHistoryPanel">
         <summary>
           <div>
-            <div class="section-title">Trade History &amp; Grades</div>
-            <div class="section-note" id="tradeHistoryNote">Players, picks, FAAB and post-trade performance from your Sleeper history.</div>
+            <div class="section-title">Trade History</div>
+            <div class="section-note" id="tradeHistoryNote">See what you traded and how each side has performed.</div>
           </div>
           <span class="trade-history-toggle">View trades</span>
         </summary>
@@ -394,7 +394,11 @@
           <label>Season<select id="tradeSeasonFilter"><option value="all">All seasons</option></select></label>
           <label>Search trades<input type="search" id="tradeSearch" placeholder="Player, pick or manager…" autocomplete="off" /></label>
         </div>
-        <p class="trade-history-method">Grades compare actual lineup points delivered to the teams after each trade. PPG means points per fantasy start; picks are linked to drafted players when identifiable. Future picks and unplayed games aren't assigned speculative value.</p>
+        <details class="trade-grading-explainer">
+          <summary>How are trades graded?</summary>
+          <p>We compare each player's actual fantasy starts with other starters at the same position in that league. Playoff games count more, and recent games have a little extra weight. Draft picks are linked to the players selected when possible. Team playoff results are shown for context, but aren't automatically credited to one player.</p>
+          <p>Grades reflect games already played, not projections. Trades with future picks or an ongoing season receive an early grade that can change.</p>
+        </details>
         <div class="trade-history-meta" id="tradeHistoryMeta" aria-live="polite"></div>
         <div class="trade-history-list" id="tradeHistoryList"><div class="empty">Load the dashboard to view trade history.</div></div>
       </details>
