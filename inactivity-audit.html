@@ -20,7 +20,7 @@ html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,-apple-system
 var API="https://api.sleeper.app/v1";
 var BYES={5:["CAR","KC"],6:["CIN","DET","MIA","MIN"],7:["BUF","JAX","LAC","WAS"],8:["HOU","NO","NYG","SF"],9:["PIT","TEN"],10:["CHI","DEN","PHI","TB"],11:["ATL","CLE","GB","LAR","NE","SEA"],13:["BAL","IND","LV","NYJ"],14:["ARI","DAL"]};
 var KEY="tnt-audit-v4";
-var DEFAULT={leagueId:"1312095646181765120",season:"2026",maxWeek:8,autoWeek:true,lastAttemptAt:null,league:null,users:[],rosters:[],players:{},weeks:{},decisions:{},notes:{},updatedAt:null};
+var DEFAULT={leagueId:"1312095646181765120",season:"2026",maxWeek:8,autoWeek:true,lastAttemptAt:null,league:null,users:[],rosters:[],players:{},weeks:{},decisions:{},notes:{},injuries:[],injuryUpdatedAt:null,updatedAt:null};
 var state;
 try{state=Object.assign({},DEFAULT,JSON.parse(localStorage.getItem(KEY)||"{}"));}catch(e){state=Object.assign({},DEFAULT);}
 var view={tab:"overview",team:"all",week:"all",show:"unresolved",loading:false,message:"",errors:[],progress:0,connected:false};
@@ -41,6 +41,39 @@ function ownerName(r){var u=userForRoster(r);return u.display_name&&u.display_na
 function rosterIds(){var a=new Set();(state.rosters||[]).forEach(function(x){a.add(+x.roster_id)});Object.keys(state.weeks).forEach(function(w){(state.weeks[w]||[]).forEach(function(x){a.add(+x.roster_id)})});if(!a.size)for(var k=1;k<=12;k++)a.add(k);return Array.from(a).sort(function(a,b){return a-b;});}
 function slots(){return state.league&&Array.isArray(state.league.roster_positions)?state.league.roster_positions.filter(function(s){return !["BN","IR","TAXI"].includes(s)}):["QB","RB","RB","WR","WR","TE","FLEX","FLEX"];}
 function eligible(pos,slot){if(!slot)return false;if(slot==="SUPER_FLEX")return ["QB","RB","WR","TE"].some(function(x){return pos.includes(x)});if(slot==="FLEX")return ["RB","WR","TE"].some(function(x){return pos.includes(x)});if(slot==="REC_FLEX")return ["WR","TE"].some(function(x){return pos.includes(x)});return pos.includes(slot);}
+
+var INJURY_URL="https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_";
+function normName(v){return String(v||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/\b(jr|sr|ii|iii|iv)\b\.?/g,"").replace(/[^a-z0-9]/g,"");}
+function injuryLookup(week,id){
+ var p=player(id),name=normName(pn(id)),gsis=toId(p.gsis_id),team=String(pteam(id)||"").toUpperCase();
+ if(!name||name.indexOf("player")===0)return null;
+ var list=(state.injuries||[]).filter(function(x){return +x.week===+week&&String(x.season)===String(state.season)&&((gsis&&gsis!=="undefined"&&gsis===toId(x.gsis_id))||normName(x.full_name)===name);});
+ if(!list.length)return null;
+ var matched=list.filter(function(x){return String(x.team||"").toUpperCase()===team;});
+ if(matched.length)list=matched;
+ else if(new Set(list.map(function(x){return x.team;})).size>1)return null;
+ return list.reduce(function(a,b){var rank=function(x){return /^out$/i.test(x.report_status)?3:/^doubtful$/i.test(x.report_status)?2:/^questionable$/i.test(x.report_status)?1:0;};return rank(b)>rank(a)?b:a;});
+}
+function parseCsv(text){
+ text=String(text||"").replace(/^\uFEFF/,"");
+ var rows=[],row=[],buf="",quoted=false;
+ for(var i=0;i<text.length;i++){var c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){buf+='"';i++;}else quoted=!quoted;}else if(c===","&&!quoted){row.push(buf);buf="";}else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&text[i+1]==="\n")i++;row.push(buf);buf="";if(row.some(function(v){return v!=="";}))rows.push(row);row=[];}else buf+=c;}
+ if(quoted)throw Error("CSV ended inside a quoted field");
+ if(buf||row.length){row.push(buf);rows.push(row);}
+ var names=(rows.shift()||[]).map(function(h){return h.trim().toLowerCase();});
+ if(!["season","week","full_name","report_status"].every(function(k){return names.includes(k);})){throw Error("Not an nflverse injuries CSV");}
+ return rows.map(function(vals){var rec={};names.forEach(function(k,i){rec[k]=vals[i]||"";});return rec;}).filter(function(r){return r.season&&r.week&&r.full_name;});
+}
+async function fetchInjuryCsv(){
+ var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort();},18000);
+ try{
+  var response=await fetch(INJURY_URL+encodeURIComponent(state.season)+".csv",{signal:ctrl.signal,cache:"no-store"});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  var rows=parseCsv(await response.text()).filter(function(x){return String(x.season)===String(state.season)&&(!x.season_type||x.season_type==="REG");});
+  if(!rows.length)throw Error("No matching season injury data");
+  state.injuries=rows;state.injuryUpdatedAt=new Date().toISOString();save();return rows.length;
+ }finally{clearTimeout(timer);}
+}
 function flagsFor(week,roster){
 var data=(state.weeks[week]||[]).find(function(x){return +x.roster_id===+roster});if(!data)return null;
 var starters=data.starters||[];var bench=(data.players||[]).filter(function(id){return !starters.map(toId).includes(toId(id));});
@@ -50,15 +83,17 @@ var empty=!id||toId(id)==="0";
 var pts=Array.isArray(data.starters_points)?n(data.starters_points[i]):n((data.players_points||{})[id]);
 var key=[week,roster,i,toId(id)].join(":");var old=state.decisions[key]||"";
 var bye=String(state.season)==="2026"&&(BYES[week]||[]).includes(pteam(id));
-if(!empty&&pts!==0&&!old)return;
-if(!empty&&!bye&&pts!==0&&old!=="count")return;
+var report=empty?null:injuryLookup(week,id);
+var reportedOut=report&&/^out$/i.test(String(report.report_status||"").trim());
+if(!empty&&pts!==0&&!bye&&!reportedOut&&!old)return;
+if(!empty&&!bye&&!reportedOut&&pts!==0&&old!=="count")return;
 var slot=positions[i]||"FLEX";
 var candidates=bench.filter(function(x){return eligible(ppos(x),slot)&&n((data.players_points||{})[x])>0;});
-var reason=empty?"EMPTY":bye?"BYE":"ZERO";
+var reason=empty?"EMPTY":bye?"BYE":reportedOut?"OUT":"ZERO";
 var automatic=bye&&candidates.length>0;
 var counted=old==="count"||(automatic&&old!=="excuse"&&old!=="review");
 var pending=!counted&&old!=="excuse";
-result.push({week:+week,roster:+roster,slot:slot,index:i,id:toId(id),name:empty?"Empty starting slot":pn(id),pts:pts,reason:reason,automatic:automatic,decision:old,counted:counted,pending:pending,candidates:candidates,key:key,team:pteam(id)});
+result.push({week:+week,roster:+roster,slot:slot,index:i,id:toId(id),name:empty?"Empty starting slot":pn(id),pts:pts,reason:reason,automatic:automatic,decision:old,counted:counted,pending:pending,candidates:candidates,key:key,team:pteam(id),report:report});
 });
 return result;
 }
@@ -100,8 +135,10 @@ out+='<div class="section"><div class="sectionTitle"><h3>Lineup flags</h3><span 
 if(!filtered.length)out+='<div class="empty">'+(wks.length?"No flags match this filter. Try All flags or another week.":"Sync or import matchup data to populate this audit.")+'</div>';
 else out+='<div class="reviewList">'+filtered.map(function(f){
 var sub=f.candidates.length?f.candidates.slice(0,4).map(function(x){return pn(x)+" ("+n((state.weeks[f.week]||[]).find(function(y){return +y.roster_id===f.roster;}).players_points[x]).toFixed(1)+" pts)";}).join(", "):"No scoring bench replacement identified";
-var reason=f.reason==="BYE"?"Bye-week starter":f.reason==="EMPTY"?"Empty lineup slot":"Zero points — verify status";
-return '<div class="reviewItem"><div><div><span class="reviewTag">'+esc(reason)+'</span><span class="small">Week '+f.week+' · '+esc(teamName(f.roster))+' · '+esc(f.slot)+'</span></div><div class="name">'+esc(f.name)+'</div><div class="detail">NFL: '+esc(f.team||"Unknown")+' · '+f.pts+' pts · Bench option: '+esc(sub)+'</div></div><div><select data-decision="'+esc(f.key)+'" aria-label="Review '+esc(f.name)+'"><option value="" '+(!f.decision?"selected":"")+'> '+(f.automatic?"Auto-counted bye":"Needs review")+' </option><option value="count" '+(f.decision==="count"?"selected":"")+'>Count violation</option><option value="excuse" '+(f.decision==="excuse"?"selected":"")+'>Excuse / active</option><option value="review" '+(f.decision==="review"?"selected":"")+'>Keep for review</option></select></div></div>';
+var reason=f.reason==="BYE"?"Bye-week starter":f.reason==="EMPTY"?"Empty lineup slot":f.reason==="OUT"?"Reported OUT":"Zero points — verify status";
+var rep=f.report;var status=rep?rep.report_status||"No game designation":"No matching report";
+var statusBlock='<div class="detail"><strong>Week '+f.week+' designation:</strong> '+esc(f.reason==="BYE"?"BYE":status)+(rep&&rep.report_primary_injury?' · '+esc(rep.report_primary_injury):"")+(rep&&rep.practice_status?' · Practice: '+esc(rep.practice_status):"")+'</div>';
+return '<div class="reviewItem"><div><div><span class="reviewTag">'+esc(reason)+'</span><span class="small">Week '+f.week+' · '+esc(teamName(f.roster))+' · '+esc(f.slot)+'</span></div><div class="name">'+esc(f.name)+'</div><div class="detail">NFL: '+esc(f.team||"Unknown")+' · '+f.pts+' pts · Bench option: '+esc(sub)+'</div>'+statusBlock+'</div><div><select data-decision="'+esc(f.key)+'" aria-label="Review '+esc(f.name)+'"><option value="" '+(!f.decision?"selected":"")+'> '+(f.automatic?"Auto-counted bye":"Needs review")+' </option><option value="count" '+(f.decision==="count"?"selected":"")+'>Count violation</option><option value="excuse" '+(f.decision==="excuse"?"selected":"")+'>Excuse / active</option><option value="review" '+(f.decision==="review"?"selected":"")+'>Keep for review</option></select></div></div>';
 }).join("")+'</div>';
 out+='<p class="footnote">Each team gets at most one violation per week regardless of how many player flags are counted. Decisions are saved locally in this browser.</p></div>';return out;
 }
@@ -144,7 +181,7 @@ var jobs=[];for(var w=1;w<=state.maxWeek;w++)(function(week){jobs.push(function(
 var next=0;async function worker(){while(next<jobs.length){var i=next++;await jobs[i]();}}
 await Promise.all([worker(),worker(),worker()]);
 var knownIds=new Set();Object.keys(state.weeks).forEach(function(w){(state.weeks[w]||[]).forEach(function(x){(x.players||[]).forEach(function(id){knownIds.add(toId(id));});});});
-await item(API+"/players/nfl",function(d){var slim={};knownIds.forEach(function(id){if(d[id]){var p=d[id];slim[id]={full_name:p.full_name,first_name:p.first_name,last_name:p.last_name,position:p.position,fantasy_positions:p.fantasy_positions,team:p.team,espn_id:p.espn_id};}});state.players=Object.assign({},state.players,slim);},"NFL player metadata");
+await item(API+"/players/nfl",function(d){var slim={};knownIds.forEach(function(id){if(d[id]){var p=d[id];slim[id]={full_name:p.full_name,first_name:p.first_name,last_name:p.last_name,position:p.position,fantasy_positions:p.fantasy_positions,team:p.team,espn_id:p.espn_id,gsis_id:p.gsis_id};}});state.players=Object.assign({},state.players,slim);},"NFL player metadata");
 state.updatedAt=new Date().toISOString();save();view.loading=false;view.progress=100;view.message=weeksLoaded().length+" of "+state.maxWeek+" weeks loaded"+(view.errors.length?" · "+view.errors.length+" request(s) failed":" · Successfully synced");render();
 }
 document.addEventListener("click",function(e){var btn=e.target.closest("[data-tab],[data-act]");if(!btn)return;if(btn.dataset.tab){view.tab=btn.dataset.tab;render();return;}var a=btn.dataset.act;
