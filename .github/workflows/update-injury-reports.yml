@@ -1,0 +1,48 @@
+name: Update historical NFL injury reports
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 12 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update-injuries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download and validate nflverse injury report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          curl -fsSL --retry 4 --retry-delay 3 --connect-timeout 15 --max-time 120 \
+            'https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv' \
+            -o data/injuries_2026.csv.tmp
+          python3 - <<'PY'
+          import csv
+          with open('data/injuries_2026.csv.tmp', newline='', encoding='utf-8-sig') as f:
+              reader = csv.DictReader(f)
+              needed = {'season','week','team','full_name','report_status'}
+              if not reader.fieldnames or not needed <= set(reader.fieldnames):
+                  raise SystemExit('Source CSV missing required columns')
+              records = list(reader)
+              if len(records) < 50:
+                  raise SystemExit('Injury data unexpectedly sparse')
+              if not any(row['season']=='2026' for row in records):
+                  raise SystemExit('2026 season not present in CSV')
+          PY
+          mv data/injuries_2026.csv.tmp data/injuries_2026.csv
+      - name: Commit refreshed data
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/injuries_2026.csv
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh nflverse injury reports for 2026'
+            git push
+          fi
