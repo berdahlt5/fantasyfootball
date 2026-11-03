@@ -1,5 +1,8 @@
 name: Update historical NFL injury reports
 on:
+  push:
+    paths:
+      - '.github/workflows/update-injury-reports.yml'
   workflow_dispatch:
   schedule:
     - cron: '17 12 * * *'
