@@ -1,0 +1,101 @@
+/* Top Waiver Adds — compact glass leaderboard */
+.waiver-history-panel{
+  --wh-surface:rgba(255,255,255,.56);
+  --wh-strong:rgba(255,255,255,.76);
+  --wh-border:rgba(85,111,174,.17);
+  --wh-text:var(--app-text,#19223b);
+  --wh-muted:var(--app-muted,#68728d);
+  --wh-shadow:0 12px 32px rgba(55,78,145,.09),inset 0 1px 0 rgba(255,255,255,.83);
+  overflow:hidden;
+}
+html[data-theme="dark"] .waiver-history-panel{
+  --wh-surface:rgba(26,36,62,.62);
+  --wh-strong:rgba(33,44,71,.80);
+  --wh-border:rgba(132,153,215,.19);
+  --wh-text:var(--app-text,#f1f4ff);
+  --wh-muted:var(--app-muted,#acb6d1);
+  --wh-shadow:0 16px 36px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.055);
+}
+.waiver-history-panel > summary{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;list-style:none;
+}
+.waiver-history-panel > summary::-webkit-details-marker{display:none}
+.waiver-history-toggle{
+  display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;
+  padding:8px 12px;border-radius:999px;background:var(--wh-strong);
+  border:1px solid var(--wh-border);box-shadow:var(--wh-shadow);
+  color:var(--app-accent-strong);font-size:.73rem;font-weight:850;
+}
+.waiver-history-toggle::after{content:"";display:block;width:7px;height:7px;border-bottom:2px solid currentColor;border-right:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .18s}
+.waiver-history-panel[open] .waiver-history-toggle::after{transform:translateY(2px) rotate(225deg)}
+.waiver-history-filters{
+  display:grid;grid-template-columns:minmax(130px,1.25fr) minmax(105px,.8fr) minmax(130px,1fr) minmax(135px,1.1fr);
+  gap:10px;margin:16px 0 10px;
+}
+.waiver-history-filters label{display:grid;gap:6px;font-size:.73rem;font-weight:750;color:var(--wh-muted);min-width:0}
+.waiver-history-filters select{
+  width:100%;min-width:0;min-height:43px;border:1px solid var(--wh-border)!important;
+  border-radius:12px!important;background:var(--wh-strong)!important;
+  color:var(--wh-text)!important;padding:8px 10px;font-size:.78rem;
+  box-shadow:var(--wh-shadow)!important;
+}
+.waiver-history-method{color:var(--wh-muted);font-size:.75rem;line-height:1.55;margin:10px 0 13px;max-width:950px}
+.waiver-history-count{color:var(--wh-muted);font-size:.79rem;margin:7px 0 12px}
+.waiver-add-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.waiver-add-card{
+  min-width:0;display:flex;flex-direction:column;gap:0;border:1px solid var(--wh-border);
+  border-radius:17px;padding:14px 14px 11px;background:var(--wh-surface);
+  box-shadow:var(--wh-shadow);backdrop-filter:blur(18px) saturate(135%);
+  -webkit-backdrop-filter:blur(18px) saturate(135%);
+}
+.waiver-add-main{display:flex;align-items:center;gap:11px;min-width:0}
+.waiver-add-rank{width:27px;flex:0 0 27px;color:var(--app-accent-strong);font-size:.84rem;font-weight:950;text-align:center}
+.waiver-headshot{
+  flex:0 0 52px;width:52px;height:56px;position:relative;overflow:hidden;
+  border:1px solid var(--wh-border);border-radius:13px;background:var(--app-gradient-soft,rgba(75,131,243,.12));
+  display:grid;place-items:center;color:var(--app-accent-strong);font-size:.7rem;font-weight:850;
+}
+.waiver-headshot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.waiver-headshot img[hidden]{display:none}
+.waiver-add-info{min-width:0;flex:1}
+.waiver-add-name{color:var(--wh-text);font-size:.91rem;font-weight:900;line-height:1.24;overflow-wrap:anywhere}
+.waiver-add-team{font-size:.73rem;color:var(--wh-muted);margin-top:4px;overflow-wrap:anywhere}
+.waiver-add-acquired{font-size:.69rem;color:var(--wh-muted);margin-top:5px;line-height:1.45}
+.waiver-add-impact{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;max-width:112px;text-align:right}
+.waiver-add-impact strong{font-size:1.32rem;line-height:1.1;letter-spacing:-.045em;font-weight:900;color:var(--app-accent-strong);font-variant-numeric:tabular-nums}
+.waiver-add-impact span{font-size:.62rem;color:var(--wh-muted);line-height:1.2}
+.waiver-add-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.waiver-add-stats span{font-size:.7rem;padding:6px 9px;border:1px solid var(--wh-border);border-radius:9px;background:var(--wh-strong);color:var(--wh-text);font-weight:730}
+.waiver-add-stats .waiver-playoff-stat{color:var(--app-accent-strong)}
+.waiver-add-seasons{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--wh-border)}
+.waiver-year-stat{font-size:.72rem;color:var(--wh-muted);line-height:1.35}
+.waiver-year-stat+.waiver-year-stat::before{content:"·";margin-right:7px;color:var(--wh-muted)}
+.waiver-footnote{margin-top:8px;font-size:.67rem;color:var(--wh-muted);line-height:1.35}
+.waiver-history-empty{grid-column:1/-1;padding:14px 15px;border:1px solid var(--wh-border);border-radius:13px;background:var(--wh-surface);font-size:.79rem;line-height:1.5;color:var(--wh-muted)}
+.waiver-history-more{
+  display:block;margin:13px auto 0;min-width:160px;padding:10px 14px;
+  background:var(--wh-strong);color:var(--app-accent-strong);
+  border:1px solid var(--wh-border);border-radius:12px;
+  box-shadow:var(--wh-shadow);font-size:.77rem;font-weight:850;cursor:pointer;
+}
+.waiver-history-more[hidden]{display:none}
+.waiver-history-more:hover{filter:brightness(1.03)}
+@media(max-width:1080px){.waiver-add-list{grid-template-columns:1fr}}
+@media(max-width:760px){
+  .waiver-history-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .waiver-add-main{gap:8px}
+  .waiver-headshot{flex-basis:48px;width:48px;height:54px}
+  .waiver-add-impact strong{font-size:1.18rem}
+  .waiver-add-card{padding:12px}
+}
+@media(max-width:440px){
+  .waiver-history-panel>summary{align-items:flex-start}
+  .waiver-history-toggle{padding:8px;font-size:.68rem}
+  .waiver-add-rank{width:21px;flex-basis:21px;font-size:.77rem}
+  .waiver-add-impact{max-width:84px}
+  .waiver-add-impact strong{font-size:1.05rem}
+  .waiver-add-impact span{font-size:.59rem}
+  .waiver-add-team,.waiver-add-acquired{font-size:.67rem}
+  .waiver-add-name{font-size:.82rem}
+  .waiver-headshot{flex-basis:42px;width:42px;height:49px}
+}
