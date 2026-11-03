@@ -302,6 +302,7 @@
   </style>
   <link rel="stylesheet" href="./app-shell.css" />
   <link rel="stylesheet" href="./trade-history.css" />
+  <link rel="stylesheet" href="./waiver-history.css" />
 </head>
 <body>
   <main class="shell">
@@ -401,6 +402,46 @@
         </details>
         <div class="trade-history-meta" id="tradeHistoryMeta" aria-live="polite"></div>
         <div class="trade-history-list" id="tradeHistoryList"><div class="empty">Load the dashboard to view trade history.</div></div>
+      </details>
+
+
+      <details class="panel section waiver-history-panel" id="waiverHistoryPanel">
+        <summary>
+          <div>
+            <div class="section-title">Top Waiver Adds</div>
+            <div class="section-note" id="waiverHistoryNote">Find your best waiver claims and free-agent steals across Sleeper seasons.</div>
+          </div>
+          <span class="waiver-history-toggle">View pickups</span>
+        </summary>
+        <div class="waiver-history-filters">
+          <label>League
+            <select id="waiverHistoryLeague"><option value="all">All teams</option></select>
+          </label>
+          <label>Season
+            <select id="waiverHistorySeason"><option value="all">All seasons</option></select>
+          </label>
+          <label>Pickup type
+            <select id="waiverHistoryType">
+              <option value="all">All pickups</option>
+              <option value="waiver">Waiver claims</option>
+              <option value="free_agent">Free agents</option>
+            </select>
+          </label>
+          <label>Rank by
+            <select id="waiverHistorySort">
+              <option value="impact">Lineup impact</option>
+              <option value="points">Total fantasy points</option>
+              <option value="starts">Fantasy starts</option>
+              <option value="ppg">Points per start</option>
+            </select>
+          </label>
+        </div>
+        <p class="waiver-history-method">Ranked by fantasy points above the typical starter at the same position, after you picked up the player. Playoff starts count more, and recent seasons get a small extra weight. Picks that never reached your starting lineup remain searchable under “Show all.”</p>
+        <div class="waiver-history-count" id="waiverHistoryCount" aria-live="polite"></div>
+        <div class="waiver-add-list" id="waiverHistoryList">
+          <div class="waiver-history-empty">Load the dashboard, then open Top Waiver Adds.</div>
+        </div>
+        <button class="waiver-history-more" id="waiverHistoryMore" type="button" hidden>Show all pickups</button>
       </details>
 
       <section class="panel section projections-section">
@@ -1251,5 +1292,6 @@
   </script>
   <script src="./app-shell.js"></script>
   <script src="./trade-history.js"></script>
+  <script src="./waiver-history.js"></script>
 </body>
 </html>
