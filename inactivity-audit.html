@@ -18,7 +18,7 @@ html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,-apple-system
 (function(){
 "use strict";
 var API="https://api.sleeper.app/v1";
-var BYES={5:["CAR","KC"],6:["CIN","DET","MIA","MIN"],7:["BUF","JAX","LAC","WAS"],8:["HOU","NO","NYG","SF"],9:["PIT","TEN"],10:["CHI","DEN","PHI","TB"],11:["ATL","CLE","GB","LAR","NE","SEA"],13:["BAL","IND","LV","NYJ"],14:["ARI","DAL","HOU","MIA"]};
+var BYES={5:["CAR","KC"],6:["CIN","DET","MIA","MIN"],7:["BUF","JAX","LAC","WAS"],8:["HOU","NO","NYG","SF"],9:["PIT","TEN"],10:["CHI","DEN","PHI","TB"],11:["ATL","CLE","GB","LAR","NE","SEA"],13:["BAL","IND","LV","NYJ"],14:["ARI","DAL"]};
 var KEY="tnt-audit-v4";
 var DEFAULT={leagueId:"1312095646181765120",season:"2026",maxWeek:8,league:null,users:[],rosters:[],players:{},weeks:{},decisions:{},notes:{},updatedAt:null};
 var state;
@@ -142,7 +142,7 @@ var jobs=[];for(var w=1;w<=state.maxWeek;w++)(function(week){jobs.push(function(
 var next=0;async function worker(){while(next<jobs.length){var i=next++;await jobs[i]();}}
 await Promise.all([worker(),worker(),worker()]);
 var knownIds=new Set();Object.keys(state.weeks).forEach(function(w){(state.weeks[w]||[]).forEach(function(x){(x.players||[]).forEach(function(id){knownIds.add(toId(id));});});});
-await item(API+"/players/nfl?active=true",function(d){var slim={};knownIds.forEach(function(id){if(d[id]){var p=d[id];slim[id]={full_name:p.full_name,first_name:p.first_name,last_name:p.last_name,position:p.position,fantasy_positions:p.fantasy_positions,team:p.team,espn_id:p.espn_id};}});state.players=Object.assign({},state.players,slim);},"NFL player metadata");
+await item(API+"/players/nfl",function(d){var slim={};knownIds.forEach(function(id){if(d[id]){var p=d[id];slim[id]={full_name:p.full_name,first_name:p.first_name,last_name:p.last_name,position:p.position,fantasy_positions:p.fantasy_positions,team:p.team,espn_id:p.espn_id};}});state.players=Object.assign({},state.players,slim);},"NFL player metadata");
 state.updatedAt=new Date().toISOString();save();view.loading=false;view.progress=100;view.message=weeksLoaded().length+" of "+state.maxWeek+" weeks loaded"+(view.errors.length?" · "+view.errors.length+" request(s) failed":" · Successfully synced");render();
 }
 document.addEventListener("click",function(e){var btn=e.target.closest("[data-tab],[data-act]");if(!btn)return;if(btn.dataset.tab){view.tab=btn.dataset.tab;render();return;}var a=btn.dataset.act;
