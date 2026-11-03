@@ -22,7 +22,6 @@
   const signed=n=>(n>0?"+":"")+fixed(n);
   const errorText=message=>'<div class="waiver-history-empty">'+safe(message)+'</div>';
   const isDynasty=view=>Number(view?.rawLeague?.settings?.type)===2;
-  const sortKey=(a,b)=>Number(a.season)-Number(b.season)||a.week-b.week||a.time-b.time;
 
   function seasonLineage(){
     const result=[];
@@ -76,10 +75,11 @@
 
   function buildPickups(){
     const found=[];
+    const processedViews=new Set();
     for(const {view} of contexts){
-      // Processing all seasons of each franchise together lets later drops/reacquisitions
-      // close the preceding pickup's credit window.
-      if(found.some(a=>a._processedView===String(view.leagueId)))continue;
+      // Process each franchise once, even if its seasons finish loading out of order.
+      if(processedViews.has(String(view.leagueId)))continue;
+      processedViews.add(String(view.leagueId));
       const chain=contexts.filter(ctx=>String(ctx.view.leagueId)===String(view.leagueId))
         .sort((a,b)=>Number(a.row.season)-Number(b.row.season));
       const active=new Map();
@@ -191,7 +191,8 @@
       const view=state.leagues.find(v=>String(v.leagueId)===pickup.franchiseId);
       const seasons=contexts.filter(ctx=>String(ctx.view.leagueId)===pickup.franchiseId)
         .filter(ctx=>Number(ctx.row.season)>=Number(pickup.season))
-        .filter(ctx=>isDynasty(view)||String(ctx.row.season)===pickup.season);
+        .filter(ctx=>isDynasty(view)||String(ctx.row.season)===pickup.season)
+        .sort((a,b)=>Number(a.row.season)-Number(b.row.season));
       const seasonStats=[];
       const seenStarts=new Set();
       for(const ctx of seasons){
