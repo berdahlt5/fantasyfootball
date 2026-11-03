@@ -20,7 +20,7 @@ html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,-apple-system
 var API="https://api.sleeper.app/v1";
 var BYES={5:["CAR","KC"],6:["CIN","DET","MIA","MIN"],7:["BUF","JAX","LAC","WAS"],8:["HOU","NO","NYG","SF"],9:["PIT","TEN"],10:["CHI","DEN","PHI","TB"],11:["ATL","CLE","GB","LAR","NE","SEA"],13:["BAL","IND","LV","NYJ"],14:["ARI","DAL"]};
 var KEY="tnt-audit-v4";
-var DEFAULT={leagueId:"1312095646181765120",season:"2026",maxWeek:8,league:null,users:[],rosters:[],players:{},weeks:{},decisions:{},notes:{},updatedAt:null};
+var DEFAULT={leagueId:"1312095646181765120",season:"2026",maxWeek:8,autoWeek:true,lastAttemptAt:null,league:null,users:[],rosters:[],players:{},weeks:{},decisions:{},notes:{},updatedAt:null};
 var state;
 try{state=Object.assign({},DEFAULT,JSON.parse(localStorage.getItem(KEY)||"{}"));}catch(e){state=Object.assign({},DEFAULT);}
 var view={tab:"overview",team:"all",week:"all",show:"unresolved",loading:false,message:"",errors:[],progress:0,connected:false};
@@ -48,8 +48,8 @@ var result=[];var positions=slots();
 starters.forEach(function(id,i){
 var empty=!id||toId(id)==="0";
 var pts=Array.isArray(data.starters_points)?n(data.starters_points[i]):n((data.players_points||{})[id]);
-var key=[week,roster,i].join(":");var old=state.decisions[key]||"";
-var bye=!!(BYES[week]||[]).includes(pteam(id));
+var key=[week,roster,i,toId(id)].join(":");var old=state.decisions[key]||"";
+var bye=String(state.season)==="2026"&&(BYES[week]||[]).includes(pteam(id));
 if(!empty&&pts!==0&&!old)return;
 if(!empty&&!bye&&pts!==0&&old!=="count")return;
 var slot=positions[i]||"FLEX";
@@ -70,7 +70,7 @@ function stat(label,val,foot,cls){return '<div class="stat"><div class="statLabe
 function renderSide(){document.querySelectorAll("[data-tab]").forEach(function(b){b.classList.toggle("on",b.dataset.tab===view.tab);});var cnt=weeksLoaded().length;var c=document.getElementById("connection");c.innerHTML='<span class="dot '+(cnt?"ok":"warn")+'"></span><span>'+(cnt?cnt+" week"+(cnt===1?"":"s")+" loaded":"No weeks loaded")+"</span>";}
 function overview(){
 var ids=rosterIds();var wks=Array.from({length:state.maxWeek},function(_,i){return i+1;});var stats=allStats();var complete=weeksLoaded().length;
-var out=title("League-wide monitoring","Season overview","Inactive weeks are counted once per matchup, not once per player. Only confirmed violations affect the penalty projection.");
+var out=title("League-wide monitoring","Season-to-date overview","Inactive weeks are counted once per matchup, not once per player. Only confirmed violations affect the penalty projection.");
 out+='<div class="actions" style="margin-bottom:17px"><button class="btn primary" data-act="sync">'+(view.loading?"Connecting…":"Sync Sleeper")+'</button><button class="btn" data-tab="review">Review flags</button><button class="btn" data-act="csv">Export report</button></div>';
 out+='<div class="stats">'+stat("Weeks loaded",complete+"/"+state.maxWeek,"Regular-season weeks scanned","blue")+stat("Violation weeks",stats.violWeeks,"Confirmed or automatic bye violations","rose")+stat("Formal warnings",stats.warnings,"2 or more violating weeks","amber")+stat("Lottery penalties",stats.penalties,"Teams with 3+ violating weeks","green")+'</div>';
 if(!complete)out+='<div class="callout warn"><strong>No matchup data loaded.</strong> Click Sync Sleeper to collect all '+state.maxWeek+' weeks. If the API is blocked, open Connect & import and paste weekly matchup JSON directly.</div>';
@@ -107,7 +107,7 @@ out+='<p class="footnote">Each team gets at most one violation per week regardle
 }
 function data(){
 var out=title("Data management","Connect & import","The app reads Sleeper's public, read-only API directly from your browser. You can also paste matchup JSON when a network request fails.");
-out+='<div class="section"><div class="sectionTitle"><h3>Connect to your league</h3><span class="hint">No API key required</span></div><div class="fields"><div class="field grow"><label>Sleeper League ID</label><input id="leagueInput" type="text" inputmode="numeric" value="'+esc(state.leagueId)+'"></div><div class="field"><label>Season</label><input id="seasonInput" type="number" min="2018" max="2035" value="'+esc(state.season)+'"></div><div class="field"><label>Through week (completed)</label><input id="throughInput" type="number" min="1" max="18" value="'+n(state.maxWeek)+'"></div><button class="btn primary" data-act="sync">Sync all weeks</button></div>';
+out+='<div class="section"><div class="sectionTitle"><h3>Connect to your league</h3><span class="hint">No API key required</span></div><div class="fields"><div class="field grow"><label>Sleeper League ID</label><input id="leagueInput" type="text" inputmode="numeric" value="'+esc(state.leagueId)+'"></div><div class="field"><label>Season</label><input id="seasonInput" type="number" min="2018" max="2035" value="'+esc(state.season)+'"></div><div class="field"><label>Through week (completed)</label><input id="throughInput" type="number" min="1" max="18" value="'+n(state.maxWeek)+'" '+(state.autoWeek?"disabled":"")+'></div><button class="btn primary" data-act="sync">Sync season to date</button></div><div class="fields" style="margin-top:13px"><label class="pill"><input id="autoWeek" type="checkbox" '+(state.autoWeek?"checked":"")+' style="accent-color:var(--mint)"> Automatically detect completed NFL weeks</label></div>';
 out+='<div class="statusline" id="statusline">'+esc(view.message||("Loaded: "+weeksLoaded().join(", ")+(state.updatedAt?" · Last sync "+new Date(state.updatedAt).toLocaleString():"")))+'</div><div class="progress"><div style="width:'+view.progress+'%"></div></div>';
 if(view.errors.length)out+='<p class="footnote rose">'+view.errors.map(esc).join(" · ")+'</p>';
 out+='</div><div class="section"><div class="sectionTitle"><h3>Paste a weekly matchup response</h3><span class="hint">Fallback when API calls are unavailable</span></div><p class="small">Open the Sleeper matchup endpoint in Safari, copy the full JSON array, paste it below, select the week, and import. Accepts an array of 12 matchups or a saved audit export.</p><div class="fields"><div class="field"><label>Week for JSON</label><select id="pasteWeek">';
@@ -131,9 +131,11 @@ async function sync(){
 if(view.loading)return;
 var lid=document.getElementById("leagueInput");if(lid)state.leagueId=lid.value.trim();
 var season=document.getElementById("seasonInput");if(season)state.season=season.value.trim();
-var through=document.getElementById("throughInput");if(through)state.maxWeek=Math.max(1,Math.min(18,+through.value||8));
+var auto=document.getElementById("autoWeek");if(auto)state.autoWeek=auto.checked;
+var through=document.getElementById("throughInput");if(through&&!state.autoWeek)state.maxWeek=Math.max(1,Math.min(18,+through.value||8));
 if(!/^\d{10,}$/.test(state.leagueId)){notice("Enter a valid numeric Sleeper League ID.");return;}
-view.loading=true;view.errors=[];view.progress=2;render();view.message="Connecting to Sleeper…";notice(view.message);
+view.loading=true;view.errors=[];view.progress=2;state.lastAttemptAt=new Date().toISOString();save();render();view.message="Connecting to Sleeper…";notice(view.message);
+if(state.autoWeek){try{var nfl=await fetchJson(API+"/state/nfl");var leg=Number(nfl.leg||nfl.week||0);if(String(nfl.season)===String(state.season)&&leg>0){state.maxWeek=nfl.season_type==="regular"?Math.max(1,Math.min(14,leg-1)):14;}else{view.errors.push("Could not verify current completed week; using Week "+state.maxWeek);}}catch(e){view.errors.push("Auto-week detection: "+e.message+"; using Week "+state.maxWeek);}render();}
 var lid2=state.leagueId;var total=state.maxWeek+4;var done=0;
 async function item(url,action,label){try{var data=await fetchJson(url);action(data);done++;view.progress=Math.round(done/total*100);notice("Loaded "+label+" · "+done+"/"+total+" requests");return true;}catch(e){done++;view.errors.push(label+": "+e.message);view.progress=Math.round(done/total*100);notice("Could not load "+label+" ("+e.message+")");return false;}}
 var prefix=API+"/league/"+lid2;
@@ -154,11 +156,13 @@ if(a==="reset"){if(confirm("Delete cached matchup data and review decisions in t
 if(a==="paste"){var el=document.getElementById("pasteInput");var week=+document.getElementById("pasteWeek").value;try{var msg=importJson(JSON.parse(el.value),week);notice(msg);render();}catch(err){notice("Import error: "+err.message);}return;}
 });
 document.addEventListener("change",function(e){var t=e.target;
+if(t.id==="autoWeek"){state.autoWeek=t.checked;save();render();return;}
 if(t.dataset.decision!==undefined){if(t.value)state.decisions[t.dataset.decision]=t.value;else delete state.decisions[t.dataset.decision];save();render();return;}
 if(t.dataset.change){view[t.dataset.change]=t.value;render();return;}
 if(t.id==="fileUpload"&&t.files[0]){var reader=new FileReader();reader.onload=function(){try{var x=JSON.parse(reader.result);var msg=importJson(x,state.maxWeek);view.message=msg;render();}catch(err){notice("File import error: "+err.message);}};reader.readAsText(t.files[0]);}
 });
 render();
+if(state.autoWeek&&(!state.lastAttemptAt||Date.now()-Date.parse(state.lastAttemptAt)>6*60*60*1000)){sync();}
 })();
 </script>
 </body></html>
