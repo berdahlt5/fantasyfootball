@@ -5,13 +5,13 @@
 :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#2e2823;color:#dbffd6}*{box-sizing:border-box}body{margin:0}.wrap{max-width:850px;margin:38px auto;padding:0 18px}a{color:#84bad7}h1{margin-bottom:8px}p{line-height:1.55;color:#d2dccb}.panel{background:#39322b;border:1px solid #678573;border-radius:16px;padding:22px;margin-top:22px}label{display:block;margin:16px 0 7px;font-weight:700}input{width:100%;max-width:380px;padding:12px;border-radius:9px;border:1px solid #84bad7;background:#ffffed;color:#2e2823;font-size:16px}button{margin-top:18px;background:#dbffd6;border:0;border-radius:10px;padding:13px 20px;font-weight:800;cursor:pointer;color:#2e2823}button:disabled{opacity:.5;cursor:wait}#status{white-space:pre-wrap;margin-top:18px;line-height:1.6}small{color:#c4d5c1}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-</head><body><main class="wrap"><a href="./index.html">← Dashboard</a><h1>Export League Rosters</h1><p>Download one Excel workbook with a separate worksheet for each of your Sleeper leagues. Includes every manager's players, taxi/IR status, and future draft picks (including traded picks).</p>
-<section class="panel"><label for="username">Sleeper username</label><input id="username" value="tommyberdahl" autocomplete="username"><label for="season">Season</label><input id="season" type="number" min="2020" max="2100" step="1"><div><button id="export">Download Excel Workbook</button></div><div id="status" role="status" aria-live="polite"></div><small>Requires an internet connection to Sleeper and the Excel library. All data is processed in your browser.</small></section></main>
+</head><body><main class="wrap"><a href="./index.html">← Dashboard</a><h1>Export League Rosters</h1><p>Download one Excel workbook with a separate worksheet for each league and season. Choose one season or export all available seasons (2017 onward). Includes every manager's players, taxi/IR status, and future draft picks (including traded picks).</p>
+<section class="panel"><label for="username">Sleeper username</label><input id="username" value="tommyberdahl" autocomplete="username"><label for="season">Season (single-season export)</label><input id="season" type="number" min="2017" max="2100" step="1"><label style="font-weight:500"><input id="allYears" type="checkbox" checked style="width:auto;margin-right:8px">Export all years (2017–current)</label><div><button id="export">Download Excel Workbook</button></div><div id="status" role="status" aria-live="polite"></div><small>Requires an internet connection to Sleeper and the Excel library. All data is processed in your browser.</small></section></main>
 <script>
 (()=>{'use strict';
-const api='https://api.sleeper.app/v1',username=document.querySelector('#username'),season=document.querySelector('#season'),button=document.querySelector('#export'),status=document.querySelector('#status');
+const api='https://api.sleeper.app/v1',username=document.querySelector('#username'),season=document.querySelector('#season'),allYears=document.querySelector('#allYears'),button=document.querySelector('#export'),status=document.querySelector('#status');
 const params=new URLSearchParams(location.search);username.value=params.get('username')||username.value;season.value=params.get('season')||new Date().getFullYear();
-const say=s=>{status.textContent=s};
+const say=s=>{status.textContent=s};allYears.addEventListener('change',()=>{season.disabled=allYears.checked});season.disabled=allYears.checked;
 async function get(path){const res=await fetch(api+path);if(!res.ok)throw Error('Sleeper request failed ('+res.status+'): '+path);return res.json()}
 function safeName(name,used){const base=String(name||'League').replace(/[\\/?*\[\]:]/g,' ').trim().slice(0,31)||'League';let value=base,n=2;while(used.has(value.toLowerCase())){const suffix=' '+n++;value=base.slice(0,31-suffix.length)+suffix}used.add(value.toLowerCase());return value}
 function fullName(p,id){return p?([p.first_name,p.last_name].filter(Boolean).join(' ')||p.full_name||id):id}
@@ -36,21 +36,23 @@ button.addEventListener('click',async()=>{button.disabled=true;try{
  if(!window.XLSX)throw Error('Excel library could not load. Check your connection or content blocker.');
  const userName=username.value.trim(),year=Number(season.value);if(!userName||!Number.isInteger(year))throw Error('Enter a username and season.');
  say('Looking up Sleeper account…');const user=await get('/user/'+encodeURIComponent(userName));
- say('Loading leagues…');const leagues=await get('/user/'+encodeURIComponent(user.user_id)+'/leagues/nfl/'+year);
- if(!Array.isArray(leagues)||!leagues.length)throw Error('No NFL leagues found for that user and season.');
+ const currentYear=new Date().getFullYear(),years=allYears.checked?Array.from({length:currentYear-2017+1},(_,i)=>currentYear-i):[year];
+ const leagues=[];const errors=[];
+ for(const y of years){say('Finding leagues for '+y+'…');try{const found=await get('/user/'+encodeURIComponent(user.user_id)+'/leagues/nfl/'+y);if(Array.isArray(found))for(const league of found)leagues.push({league,year:y})}catch(err){errors.push('Season '+y+': '+err.message)}}
+ if(!leagues.length)throw Error('No NFL leagues found for the selected season(s). '+errors.join('; '));
  say('Loading NFL player names…');const players=await get('/players/nfl');
- const workbook=XLSX.utils.book_new(),used=new Set(),errors=[];
- for(let i=0;i<leagues.length;i++){const league=leagues[i];say('Exporting '+(i+1)+' of '+leagues.length+': '+league.name);
+ const workbook=XLSX.utils.book_new(),used=new Set();
+ for(let i=0;i<leagues.length;i++){const {league,year:leagueYear}=leagues[i];say('Exporting '+(i+1)+' of '+leagues.length+': '+league.name+' ('+leagueYear+')');
  try{const [rosters,users,trades]=await Promise.all([get('/league/'+league.league_id+'/rosters'),get('/league/'+league.league_id+'/users'),get('/league/'+league.league_id+'/traded_picks')]);
- const data=rowsForLeague(league,rosters,users,trades,players,year),sheet=XLSX.utils.aoa_to_sheet(data);
+ const data=rowsForLeague(league,rosters,users,trades,players,leagueYear),sheet=XLSX.utils.aoa_to_sheet(data);
  sheet['!cols']=[{wch:24},{wch:10},{wch:29},{wch:12},{wch:12},{wch:16},{wch:40},{wch:12},{wch:12},{wch:16},{wch:13},{wch:12},{wch:29},{wch:29}];
  sheet['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:data.length-1,c:13}})};
- XLSX.utils.book_append_sheet(workbook,sheet,safeName(league.name,used));
- }catch(err){errors.push(league.name+': '+err.message)}
+ XLSX.utils.book_append_sheet(workbook,sheet,safeName(league.name+' '+leagueYear,used));
+ }catch(err){errors.push(league.name+' ('+leagueYear+'): '+err.message)}
  }
  if(!workbook.SheetNames.length)throw Error('No league data could be exported. '+errors.join('; '));
- XLSX.writeFile(workbook,'sleeper-rosters-and-picks-'+year+'.xlsx');
- say('Downloaded '+workbook.SheetNames.length+' league tab(s).'+(errors.length?'\nSkipped: '+errors.join('; '):''));
+ XLSX.writeFile(workbook,'sleeper-rosters-and-picks-'+(allYears.checked?'all-years':year)+'.xlsx');
+ say('Downloaded '+workbook.SheetNames.length+' league-season tab(s).'+(errors.length?'\\nSkipped: '+errors.join('; '):''));
  }catch(err){say('Export failed: '+err.message)}finally{button.disabled=false}});
 })();
 </script></body></html>
