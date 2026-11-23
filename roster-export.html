@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>League Roster Export · Fantasy Assistant</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#2e2823;color:#dbffd6}*{box-sizing:border-box}body{margin:0}.wrap{max-width:850px;margin:38px auto;padding:0 18px}a{color:#84bad7}h1{margin-bottom:8px}p{line-height:1.55;color:#d2dccb}.panel{background:#39322b;border:1px solid #678573;border-radius:16px;padding:22px;margin-top:22px}label{display:block;margin:16px 0 7px;font-weight:700}input{width:100%;max-width:380px;padding:12px;border-radius:9px;border:1px solid #84bad7;background:#ffffed;color:#2e2823;font-size:16px}button{margin-top:18px;background:#dbffd6;border:0;border-radius:10px;padding:13px 20px;font-weight:800;cursor:pointer;color:#2e2823}button:disabled{opacity:.5;cursor:wait}#status{white-space:pre-wrap;margin-top:18px;line-height:1.6}small{color:#c4d5c1}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head><body><main class="wrap"><a href="./index.html">← Dashboard</a><h1>Export League Rosters</h1><p>Download one Excel workbook with a separate worksheet for each of your Sleeper leagues. Includes every manager's players, taxi/IR status, and future draft picks (including traded picks).</p>
+<section class="panel"><label for="username">Sleeper username</label><input id="username" value="tommyberdahl" autocomplete="username"><label for="season">Season</label><input id="season" type="number" min="2020" max="2100" step="1"><div><button id="export">Download Excel Workbook</button></div><div id="status" role="status" aria-live="polite"></div><small>Requires an internet connection to Sleeper and the Excel library. All data is processed in your browser.</small></section></main>
+<script>
+(()=>{'use strict';
+const api='https://api.sleeper.app/v1',username=document.querySelector('#username'),season=document.querySelector('#season'),button=document.querySelector('#export'),status=document.querySelector('#status');
+const params=new URLSearchParams(location.search);username.value=params.get('username')||username.value;season.value=params.get('season')||new Date().getFullYear();
+const say=s=>{status.textContent=s};
+async function get(path){const res=await fetch(api+path);if(!res.ok)throw Error('Sleeper request failed ('+res.status+'): '+path);return res.json()}
+function safeName(name,used){const base=String(name||'League').replace(/[\\/?*\[\]:]/g,' ').trim().slice(0,31)||'League';let value=base,n=2;while(used.has(value.toLowerCase())){const suffix=' '+n++;value=base.slice(0,31-suffix.length)+suffix}used.add(value.toLowerCase());return value}
+function fullName(p,id){return p?([p.first_name,p.last_name].filter(Boolean).join(' ')||p.full_name||id):id}
+function teamLabel(roster,userMap){const u=userMap.get(String(roster.owner_id))||{};return u.metadata?.team_name||u.display_name||u.username||'Roster '+roster.roster_id}
+function rowsForLeague(league,rosters,users,trades,players,year){
+ const userMap=new Map(users.map(u=>[String(u.user_id),u]));const byId=new Map(rosters.map(r=>[Number(r.roster_id),r]));const rows=[['League','Season','Manager / Team','Roster ID','Record','Type','Player / Pick','Position','NFL Team','Player ID','Pick Season','Pick Round','Original Team','Current Owner']];
+ const rounds=Math.max(1,Math.min(20,Number(league.settings?.draft_rounds)||3));
+ for(const roster of rosters){const name=teamLabel(roster,userMap);const record=[roster.settings?.wins??0,roster.settings?.losses??0,roster.settings?.ties??0].join('-');const starters=new Set(roster.starters||[]),taxi=new Set(roster.taxi||[]),reserve=new Set(roster.reserve||[]);
+ for(const id of roster.players||[]){const p=players[id];rows.push([league.name,year,name,roster.roster_id,record,taxi.has(id)?'Taxi':reserve.has(id)?'IR / Reserve':starters.has(id)?'Starter':'Bench',fullName(p,id),p?.position||'',p?.team||'',id,'','','',''])}
+ }
+ // Each roster starts with its own pick in each round. Traded picks override current ownership.
+ // Sleeper traded_picks reports the final owner_id for each original roster_id/round/season.
+ const traded=new Map();for(const pick of trades||[]){traded.set([String(pick.season),Number(pick.round),Number(pick.roster_id)].join(':'),Number(pick.owner_id))}
+ for(let y=Number(year)+1;y<=Number(year)+3;y++){for(let round=1;round<=rounds;round++){for(const original of rosters){
+ const ownerId=traded.get([y,round,Number(original.roster_id)].join(':'))??Number(original.roster_id);
+ const owner=byId.get(ownerId);const originalName=teamLabel(original,userMap);const ownerName=owner?teamLabel(owner,userMap):'Unknown roster '+ownerId;
+ rows.push([league.name,year,ownerName,ownerId,'','Draft Pick',y+' Round '+round+' ('+originalName+')','','','',y,round,originalName,ownerName]);
+ }}}
+ return rows;
+}
+button.addEventListener('click',async()=>{button.disabled=true;try{
+ if(!window.XLSX)throw Error('Excel library could not load. Check your connection or content blocker.');
+ const userName=username.value.trim(),year=Number(season.value);if(!userName||!Number.isInteger(year))throw Error('Enter a username and season.');
+ say('Looking up Sleeper account…');const user=await get('/user/'+encodeURIComponent(userName));
+ say('Loading leagues…');const leagues=await get('/user/'+encodeURIComponent(user.user_id)+'/leagues/nfl/'+year);
+ if(!Array.isArray(leagues)||!leagues.length)throw Error('No NFL leagues found for that user and season.');
+ say('Loading NFL player names…');const players=await get('/players/nfl');
+ const workbook=XLSX.utils.book_new(),used=new Set(),errors=[];
+ for(let i=0;i<leagues.length;i++){const league=leagues[i];say('Exporting '+(i+1)+' of '+leagues.length+': '+league.name);
+ try{const [rosters,users,trades]=await Promise.all([get('/league/'+league.league_id+'/rosters'),get('/league/'+league.league_id+'/users'),get('/league/'+league.league_id+'/traded_picks')]);
+ const data=rowsForLeague(league,rosters,users,trades,players,year),sheet=XLSX.utils.aoa_to_sheet(data);
+ sheet['!cols']=[{wch:24},{wch:10},{wch:29},{wch:12},{wch:12},{wch:16},{wch:40},{wch:12},{wch:12},{wch:16},{wch:13},{wch:12},{wch:29},{wch:29}];
+ sheet['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:data.length-1,c:13}})};
+ XLSX.utils.book_append_sheet(workbook,sheet,safeName(league.name,used));
+ }catch(err){errors.push(league.name+': '+err.message)}
+ }
+ if(!workbook.SheetNames.length)throw Error('No league data could be exported. '+errors.join('; '));
+ XLSX.writeFile(workbook,'sleeper-rosters-and-picks-'+year+'.xlsx');
+ say('Downloaded '+workbook.SheetNames.length+' league tab(s).'+(errors.length?'\nSkipped: '+errors.join('; '):''));
+ }catch(err){say('Export failed: '+err.message)}finally{button.disabled=false}});
+})();
+</script></body></html>
